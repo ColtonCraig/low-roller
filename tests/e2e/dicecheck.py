@@ -13,6 +13,11 @@ CHECK=r"""(()=>{ const P=[]; const own=new Map(); const ds=[...ALLDICE].filter(o
  const area=a=>(a.right-a.left)*(a.bottom-a.top);
  const kind=o=>F.you.includes(o)?(o.banked?'myRail':'myTray'):(F.them.includes(o)?(o.banked?'theirRail':'theirTray'):'stray');
  const R=ds.map(o=>({o,k:kind(o),r:rectOf(o)}));
+ // every resting die must be fully on the felt and not sunk into it
+ R.forEach(a=>{ let bad=''; a.o.mesh.updateMatrixWorld(true); a.o.mesh.traverse(m=>{ if(!m.isMesh||(m.material&&m.material.transparent)) return; const pa=m.geometry.attributes.position; for(let i=0;i<pa.count;i++){ _v.fromBufferAttribute(pa,i).applyMatrix4(m.matrixWorld); if(Math.abs(_v.x)>4.6||Math.abs(_v.z)>3.45) bad='off the felt'; else if(_v.y<-.03) bad=bad||'through the felt'; } }); if(bad) P.push(`${a.k} ${bad}`); });
+ // the fullest rows the rules allow must stay on the felt and clear of each other
+ const row=L=>{ for(let i=0;i<L.length;i++){ if(Math.abs(L[i].x)>4.05||Math.abs(L[i].z)>3.3) P.push('slot off the felt'); for(let j=i+1;j<L.length;j++) if(L[i].distanceTo(L[j])<.74) P.push('slots too close'); } };
+ row([...Array(12).keys()].map(k=>railSlot(k,'them'))); row([...Array(9).keys()].map(k=>railSlot(k,'you'))); row(traySlots(9,'you')); row(traySlots(9,'them'));
  R.forEach(a=>{ if(a.k==='stray') P.push('stray die'); });
  for(let i=0;i<R.length;i++) for(let j=i+1;j<R.length;j++){ const o=ov(R[i].r,R[j].r); if(o>.06*Math.min(area(R[i].r),area(R[j].r))) P.push(`dice touch ${R[i].k}/${R[j].k} ${Math.round(o)}`); }
  const box=s=>{ const e=document.querySelector(s); if(!e) return null; const b=e.getBoundingClientRect(); return b.height?b:null; };
@@ -38,8 +43,10 @@ async def run(p,name):
     elif opp=='boss': await pg.evaluate("startFight('B',makeOpp(ACTS[2].foes.boss,'B',2,8,0,false,0)); 0")
     else: await pg.click('#stops .entry')
     if opp=='heavy':
-      await toTurn(pg); await pg.evaluate("F.heavy=true; tray().forEach(o=>toggleSel(o)); const b=document.querySelector('#bank'); b&&b.click(); 0"); await pg.wait_for_timeout(2500)
+      await toTurn(pg); await pg.evaluate("F.heavy=true; F.oppHp=9999; G.hp=9999; tray().forEach(o=>toggleSel(o)); const b=document.querySelector('#bank'); b&&b.click(); 0")
+      await pg.wait_for_selector('#again',timeout=40000); await pg.click('#again')
     ok=await toTurn(pg); await pg.wait_for_timeout(500)
+    if not ok: out.append(f"{sc}: never reached your turn")
     r=await pg.evaluate(CHECK); tag=f"{sc}:t1"
     if r['P']: out.append(f"{tag} {r['P']}"); await pg.screenshot(path=f'dc_{name}_{sc}_1.png')
     z=(r['zoom'],r['n'])
