@@ -5,7 +5,7 @@
 import asyncio, sys, json, os
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 from harness import *
-DEV={k:(w,h,False) for k,(w,h) in DESKTOP.items()}
+DEV=DESKTOP
 names=sys.argv[1].split(',') if len(sys.argv)>1 and sys.argv[1] else list(DEV)
 SHOT='shots' in sys.argv
 SCREENS=[('title',None),('map',"G.charms=['tip','hothand','penny','cut']; G.gold=40; renderMap()"),
@@ -33,7 +33,7 @@ async def fight(pg,setup):
     if await pg.query_selector('#bank') and not await pg.evaluate('busy'): break
   await pg.wait_for_timeout(500)
 async def run(p,name):
-  w,h,mob=DEV[name]; b,pg,errs,cdp=await open_game(p,w,h,mob); rep=[]
+  w,h=DEV[name]; b,pg,errs=await open_game(p,w,h); rep=[]
   await pg.evaluate("SET.tips=false")
   for scr,js in SCREENS:
     if scr=='map': await pg.click('#go'); await pg.wait_for_timeout(500)

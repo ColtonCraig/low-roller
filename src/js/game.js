@@ -180,7 +180,7 @@ function iconCanvas0(type,val,size=44){ const cv=document.createElement('canvas'
 
 /* ================= 3D ENGINE ================= */
 let R=null, SCN=null, CAM=null, RT=null, POST=null, PCAM=null, PMAT=null, canvas=$('#scene'), GL_OK=typeof THREE!=='undefined';
-let PX=2, NARROW=false, VW=1,VH=1,PORTRAIT=false, camBase=null, camLook=null, shakeAmt=0, swayT=0, lampDim=1, PAUSED=false, TS=1;
+let PX=2, VW=1,VH=1, camBase=null, camLook=null, shakeAmt=0, swayT=0, lampDim=1, PAUSED=false, TS=1;
 function shake(v){ if(SET.shake) shakeAmt=v; }
 const ALLDICE=new Set();
 const tweens=[]; const frameFns=new Set();
@@ -233,15 +233,15 @@ function initGL(){
   requestAnimationFrame(loop);
 }
 function resize(){
-  VW=innerWidth; VH=innerHeight; PORTRAIT=VW/VH<0.9;
+  VW=innerWidth; VH=innerHeight;
   R.setSize(VW,VH,false);
   const px=Math.max(2,Math.min(3,Math.round(Math.min(VW,VH)/240))); document.documentElement.style.setProperty('--u',px+'px'); PX=px;
   const lw=Math.round(VW/px), lh=Math.round(VH/px);
-  RT.setSize(lw,lh); PMAT.uniforms.res.value.set(lw,lh); if(window.SHADE){ SHADE.visible=!PORTRAIT; bulb.visible=!PORTRAIT; }
-  CAM.aspect=VW/VH; CAM.fov=PORTRAIT?44:36; CAM.updateProjectionMatrix();
-  NARROW=VW/VH<0.6; const wNeed=PORTRAIT?5.8*Math.max(1,(VW/VH)/0.5):9.6; const hh=Math.atan(Math.tan(CAM.fov*Math.PI/360)*CAM.aspect); const SHORTL=!PORTRAIT&&VH<540; const dist=Math.max(PORTRAIT?7.2:SHORTL?12.8:11.6,(wNeed/2)/Math.tan(hh));
-  const el=(PORTRAIT?44:38)*Math.PI/180; camLook=new THREE.Vector3(0,PORTRAIT?0.95:SHORTL?.9:1.1,PORTRAIT?-1.2:SHORTL?-1.1:-1.5);
-  camBase=new THREE.Vector3(0,camLook.y+Math.sin(el)*dist,camLook.z+Math.cos(el)*dist); CAMF={el,dist,y0:camLook.y,dy:0,zoom:1};
+  RT.setSize(lw,lh); PMAT.uniforms.res.value.set(lw,lh);
+  CAM.aspect=VW/VH; CAM.fov=36; CAM.updateProjectionMatrix();
+  const wNeed=9.6, hh=Math.atan(Math.tan(CAM.fov*Math.PI/360)*CAM.aspect); const dist=Math.max(11.6,(wNeed/2)/Math.tan(hh));
+  const el=38*Math.PI/180; camLook=new THREE.Vector3(0,1.1,-1.5);
+  camBase=new THREE.Vector3(0,camLook.y+Math.sin(el)*dist,camLook.z+Math.cos(el)*dist); CAMF={el,dist,zoom:1};
   if(typeof F!=='undefined'&&F) requestAnimationFrame(()=>fitCam());
 }
 let CAMF=null;
@@ -701,35 +701,32 @@ function visHalfW(z){ const a=toScreen(new THREE.Vector3(0,0,z)), b=toScreen(new
 //   behind you your banked row: it uses the strip their throws just left
 //   front     your tray, value plates in front of it
 // The camera (fitCam) zooms and tilts to fit the zones to the screen; dice never move to make room.
-const TRAY_Z=()=>PORTRAIT?-.05:.05, THEIR_Z=()=>PORTRAIT?-1.55:-1.7, MYRAIL_Z=()=>TRAY_Z()-(PORTRAIT?1.4:1.65);
-const DIE_GAP=1.0, LANE_IN=()=>1.45+.25*((foe&&foe.userData.S)||1), LANE_SP=.84;
-function traySlots(n,side){ const out=[], z0=side==='you'?TRAY_Z():THEIR_Z(), sp=PORTRAIT?1.0:1.05;
+const TRAY_Z=.05, THEIR_Z=-1.7, MYRAIL_Z=TRAY_Z-1.65;
+const DIE_GAP=1.0, LANE_IN=()=>1.45+.25*((foe&&foe.userData.S)||1);
+function traySlots(n,side){ const out=[], z0=side==='you'?TRAY_Z:THEIR_Z, sp=1.05;
   const half=CAM?visHalfW(z0)-.5:4, s2=Math.max(DIE_GAP,Math.min(sp,n>1?(2*half)/(n-1):sp)), jit=s2<.95?.03:.1;
   for(let i=0;i<n;i++) out.push(new THREE.Vector3((i-(n-1)/2)*s2+(Math.random()-.5)*jit,0,z0+(Math.random()-.5)*.1));
   return out; }
 function railSlot(k,side){
-  if(side==='you'){ const z=MYRAIL_Z(), half=CAM?visHalfW(z)-.5:4, sp=.84, per=Math.max(4,Math.floor((2*half)/sp)+1);
-    const r=Math.floor(k/per), c=k%per, n=Math.min(per,8); return PORTRAIT?new THREE.Vector3((c-(n-1)/2)*sp,0,z-r*.6):new THREE.Vector3(-.4+c*sp,0,z-r*.6); }
-  // phones: a lane each side of them. Landscape: the nameplate sits to their right, so everything goes left.
-  if(PORTRAIT){ const sd=k%2?-1:1, n=Math.floor(k/2), lane=n%3, rank=Math.floor(n/3); return new THREE.Vector3(sd*(LANE_IN()+lane*LANE_SP),0,-2.85-rank*.6); }
+  if(side==='you'){ const z=MYRAIL_Z, half=CAM?visHalfW(z)-.5:4, sp=.84, per=Math.max(4,Math.floor((2*half)/sp)+1);
+    const r=Math.floor(k/per), c=k%per; return new THREE.Vector3(-.4+c*sp,0,z-r*.6); }
+  // The nameplate sits to their right, so everything goes left.
   const sd=k<6?-1:1, lane=k%6; return new THREE.Vector3(sd*(LANE_IN()+lane*.98),0,-2.85); }
 // Fit the camera to this screen: zoom out until your dice, their labels and your banked row all sit above the
-// message and the slip, and both their lanes and a full 7-die hand fit across; on phones also tilt until
-// their hat clears the nameplate.
+// message and the slip, and both their lanes and a full 7-die hand fit across.
 function fitCam(){ if(!CAM||!CAMF||!camLook) return;
-  const apply=(zoom,dy)=>{ camLook.y=CAMF.y0+dy; const d=CAMF.dist*zoom; camBase.set(0,camLook.y+Math.sin(CAMF.el)*d,camLook.z+Math.cos(CAMF.el)*d); CAM.position.copy(camBase); CAM.lookAt(camLook); CAM.updateMatrixWorld(); };
+  const apply=zoom=>{ const d=CAMF.dist*zoom; camBase.set(0,camLook.y+Math.sin(CAMF.el)*d,camLook.z+Math.cos(CAMF.el)*d); CAM.position.copy(camBase); CAM.lookAt(camLook); CAM.updateMatrixWorld(); };
   const yt=document.querySelector('.yourtab');
-  if(!F||!yt||!yt.getBoundingClientRect().height){ apply(1,0); CAMF.zoom=1; CAMF.dy=0; return; }
-  const pl=document.getElementById('plate'), mg=document.querySelector('#ui .msg'), u=foe&&foe.userData;
-  let zoom=1, dy=0;
-  for(let i=0;i<90;i++){ apply(zoom,dy);
+  if(!F||!yt||!yt.getBoundingClientRect().height){ apply(1); CAMF.zoom=1; return; }
+  const pl=document.getElementById('plate'), mg=document.querySelector('#ui .msg');
+  let zoom=1;
+  for(let i=0;i<90;i++){ apply(zoom);
     let floor=yt.getBoundingClientRect().top; const m=mg&&mg.getBoundingClientRect(); if(m&&m.height&&m.right>VW*.25&&m.left<VW*.75) floor=Math.min(floor,m.top);
-    const lab=toScreen(new THREE.Vector3(0,0,TRAY_Z()+.68)).y+16, rail=0, hand=Math.min(G.bag.length,HAND+(F.heavy?1:0));
-    const wide=visHalfW(TRAY_Z())>=(hand-1)/2*DIE_GAP+.6 && visHalfW(-2.85)>=LANE_IN()+(PORTRAIT?2*LANE_SP:5*.98)+.45;
-    let clear=true; if(!PORTRAIT&&pl){ const b=pl.getBoundingClientRect(), x=(hand-1)/2*DIE_GAP+.4; for(const q of [new THREE.Vector3(x,.7,TRAY_Z()-.3),new THREE.Vector3(x*.5,.7,TRAY_Z()-.3)]){ const p=toScreen(q); if(p.x>b.left-6&&p.x<b.right+6&&p.y<b.bottom+6) clear=false; } }
-    let top=true; if(PORTRAIT&&pl&&u){ const hat=new THREE.Vector3(0,u.seatY+2.95*u.S,u.homeZ); top=toScreen(hat).y>=pl.getBoundingClientRect().bottom+8; }
-    if(!top&&dy<3) dy+=.05; else if((lab>floor-8||rail>floor-4||!wide||(!clear&&zoom<1.3))&&zoom<1.8) zoom*=1.02; else break; }
-  CAMF.zoom=zoom; CAMF.dy=dy; }
+    const lab=toScreen(new THREE.Vector3(0,0,TRAY_Z+.68)).y+16, rail=0, hand=Math.min(G.bag.length,HAND+(F.heavy?1:0));
+    const wide=visHalfW(TRAY_Z)>=(hand-1)/2*DIE_GAP+.6 && visHalfW(-2.85)>=LANE_IN()+5*.98+.45;
+    let clear=true; if(pl){ const b=pl.getBoundingClientRect(), x=(hand-1)/2*DIE_GAP+.4; for(const q of [new THREE.Vector3(x,.7,TRAY_Z-.3),new THREE.Vector3(x*.5,.7,TRAY_Z-.3)]){ const p=toScreen(q); if(p.x>b.left-6&&p.x<b.right+6&&p.y<b.bottom+6) clear=false; } }
+    if((lab>floor-8||rail>floor-4||!wide||(!clear&&zoom<1.3))&&zoom<1.8) zoom*=1.02; else break; }
+  CAMF.zoom=zoom; }
 // a throw with three settling bounces; landings make the thocks
 async function throwDice(list,finals,side,hiddenIdx=-1,opts={}){ const hidSet=Array.isArray(hiddenIdx)?hiddenIdx:[hiddenIdx];
   const slots=opts.slots||traySlots(list.length,side); const dur=opts.dur||(side==='you'?1000:820);
@@ -785,7 +782,7 @@ const _hv=new THREE.Vector3();
 frameFns.add(()=>{ const pl=document.getElementById('plate'); if(!pl) return; const w=pl.offsetWidth, hh=pl.offsetHeight;
   let x=VW/2, y=60; if(foe&&foe.userData&&foe.userData.head){ foe.userData.head.getWorldPosition(_hv); _hv.y+=.9*(foe.scale.y||1); const p=toScreen(_hv); x=p.x; y=p.y; }
   const hud=document.querySelector('#ui .hud'), top=(hud?hud.getBoundingClientRect().bottom:40)+6;
-  let L=Math.round(x+70), T=Math.round(y-hh*.6); if(L+w>VW-8) L=Math.round(x-70-w); if(PORTRAIT){ T=top; L=VW<=600?12:Math.round(Math.min(VW-w-10,Math.max(10,x+70))); if(VW>600&&(L+w>VW-10||x+70+w>VW-10)) L=Math.round((VW-w)/2); }
+  let L=Math.round(x+70), T=Math.round(y-hh*.6); if(L+w>VW-8) L=Math.round(x-70-w);
   L=Math.max(8,Math.min(VW-w-8,L)); T=Math.max(top,T); const yt=document.querySelector('.yourtab'); if(yt){ const b=yt.getBoundingClientRect().top-80; if(T+hh>b) T=Math.max(top,b-hh); }
   L=Math.round(L/PX)*PX; T=Math.round(T/PX)*PX; pl.style.transform=`translate(${L}px,${T}px)`; });
 /* pointer */
@@ -826,7 +823,7 @@ function anchorPop(anchor,html){ closePop(); SFX.paper(); const r=anchor.getBoun
   popEl=h(`<div class="pop paper pe qpop">${html}</div>`); document.body.appendChild(popEl);
   const w=popEl.offsetWidth, hh=popEl.offsetHeight; let top=r.bottom+10; if(top+hh>innerHeight-10) top=Math.max(10,r.top-hh-10);
   popEl.style.left=Math.max(10,Math.min(innerWidth-w-10,r.left+r.width/2-w/2))+'px'; popEl.style.top=top+'px'; }
-function screen(html){ if(CAMF&&(CAMF.zoom!==1||CAMF.dy)){ CAMF.zoom=1; CAMF.dy=0; camLook.y=CAMF.y0; camBase.set(0,camLook.y+Math.sin(CAMF.el)*CAMF.dist,camLook.z+Math.cos(CAMF.el)*CAMF.dist); } document.querySelectorAll('.toast').forEach(t=>t.remove()); closePop&&closePop(); const old=ui.querySelector('.modal,.title,.newspaper'); if(old&&!REDUCED){ const r=old.getBoundingClientRect(); const c=old.cloneNode(true); c.removeAttribute('id'); Object.assign(c.style,{position:'fixed',left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',margin:'0',zIndex:30,pointerEvents:'none',boxSizing:'border-box'}); c.classList.add('leaving'); document.body.appendChild(c); setTimeout(()=>c.remove(),420); SFX.paper(); } ui.innerHTML=html; ui.className=html.includes('id="plate"')?'':'page'; ui.scrollTop=0; wireSound(); wireRack(); closePop(); }
+function screen(html){ if(CAMF&&CAMF.zoom!==1){ CAMF.zoom=1; camBase.set(0,camLook.y+Math.sin(CAMF.el)*CAMF.dist,camLook.z+Math.cos(CAMF.el)*CAMF.dist); } document.querySelectorAll('.toast').forEach(t=>t.remove()); closePop&&closePop(); const old=ui.querySelector('.modal,.title,.newspaper'); if(old&&!REDUCED){ const r=old.getBoundingClientRect(); const c=old.cloneNode(true); c.removeAttribute('id'); Object.assign(c.style,{position:'fixed',left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',margin:'0',zIndex:30,pointerEvents:'none',boxSizing:'border-box'}); c.classList.add('leaving'); document.body.appendChild(c); setTimeout(()=>c.remove(),420); SFX.paper(); } ui.innerHTML=html; ui.className=html.includes('id="plate"')?'':'page'; ui.scrollTop=0; wireSound(); wireRack(); closePop(); }
 function clearLabels(){ labels.innerHTML=''; }
 function bagCounts(arr){ const m=new Map(); arr.forEach(t=>m.set(t,(m.get(t)||0)+1)); return [...m.entries()]; }
 function dieKey(d){ return d.type+'|'+facesOf(d).join(','); }
@@ -1516,7 +1513,7 @@ function renderPaper(won,pre){
     <div class="dek">${sub}</div>
     <div class="cols">
       <div class="col">
-        ${shot?`<figure class="photo"><img src="${shot}" alt="The table at the end of the night" style="${PORTRAIT?'object-position:50% 30%':''}"><figcaption>The table where it ${won?'ended':'happened'}. ${won?'':nem+' is pictured.'}</figcaption></figure>`:''}
+        ${shot?`<figure class="photo"><img src="${shot}" alt="The table at the end of the night"><figcaption>The table where it ${won?'ended':'happened'}. ${won?'':nem+' is pictured.'}</figcaption></figure>`:''}
         <p class="lede">${lead}</p>
       </div>
       <div class="col">

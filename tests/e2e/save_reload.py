@@ -11,7 +11,7 @@ async def turn(pg):
     return False
 async def main():
     async with async_playwright() as p:
-        b, pg, errs, _ = await open_game(p, 1280, 800)
+        b, pg, errs = await open_game(p, 1280, 800)
         await pg.click('#go'); await pg.wait_for_timeout(400)
         await pg.evaluate("SET.tips=false; SET.speed=2.4; 0")
         await pg.click('#stops .entry'); assert await turn(pg), 'never reached your turn'

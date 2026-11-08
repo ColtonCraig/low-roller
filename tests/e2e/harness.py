@@ -16,7 +16,7 @@ DESKTOP = {
   'fhd':    (1920, 1080),
   'qhd':    (2560, 1440),
 }
-async def open_game(p, w, h, mobile=False):
+async def open_game(p, w, h):
     args = [] if os.environ.get('LR_GPU') else ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist']
     kw = {'args': args}
     if os.environ.get('CHROME'): kw['executable_path'] = os.environ['CHROME']
@@ -25,4 +25,4 @@ async def open_game(p, w, h, mobile=False):
     pg = await ctx.new_page(); errs = []
     pg.on('pageerror', lambda e: errs.append(str(e)))
     await pg.goto(INDEX); await pg.wait_for_timeout(1600)
-    return b, pg, errs, None
+    return b, pg, errs

@@ -5,7 +5,7 @@
 import asyncio,sys,json,os
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 from harness import *
-SIZES={k:(w,h,0) for k,(w,h) in DESKTOP.items()}
+SIZES=DESKTOP
 names=sys.argv[1].split(',') if len(sys.argv)>1 and sys.argv[1] else list(SIZES)
 CHECK=r"""(()=>{ const P=[]; const own=new Map(); const ds=[...ALLDICE].filter(o=>o.mesh.parent&&o.mesh.visible&&!o.flying);
  const _v=new THREE.Vector3(); const rectOf=o=>{ let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9; o.mesh.updateMatrixWorld(true); o.mesh.traverse(m=>{ if(!m.isMesh||(m.material&&m.material.transparent)) return; const pa=m.geometry.attributes.position; for(let i=0;i<pa.count;i++){ _v.fromBufferAttribute(pa,i).applyMatrix4(m.matrixWorld); const p=toScreen(_v); x0=Math.min(x0,p.x); y0=Math.min(y0,p.y); x1=Math.max(x1,p.x); y1=Math.max(y1,p.y); } }); return {left:x0,top:y0,right:x1,bottom:y1}; };
@@ -23,14 +23,14 @@ CHECK=r"""(()=>{ const P=[]; const own=new Map(); const ds=[...ALLDICE].filter(o
    R.forEach(a=>{ if(a.o.label===v) return; const o=ov(b,a.r); if(o>60) P.push(`label on ${a.k}`); });
    if(ui.slip&&ov(b,ui.slip)>4) P.push('label on slip'); if(textR&&ov(b,textR)>4) P.push('label on message'); });
  if(foe&&ui.plate){ const u=foe.userData, hp=new THREE.Vector3(); u.head.getWorldPosition(hp); const s=toScreen(hp); if(s.x>ui.plate.left&&s.x<ui.plate.right&&s.y>ui.plate.top&&s.y<ui.plate.bottom) P.push('face under nameplate'); }
- return {P:[...new Set(P)], n:R.length, zoom:+(CAMF.zoom||1).toFixed(2), dy:+(CAMF.dy||0).toFixed(2)}; })()"""
+ return {P:[...new Set(P)], n:R.length, zoom:+(CAMF.zoom||1).toFixed(2)}; })()"""
 async def toTurn(pg):
   for i in range(80):
     await pg.wait_for_timeout(250)
     if await pg.query_selector('#bank') and not await pg.evaluate('busy'): return True
   return False
 async def run(p,name):
-  w,h,mob=SIZES[name]; b,pg,errs,cdp=await open_game(p,w,h,bool(mob)); out=[]
+  w,h=SIZES[name]; b,pg,errs=await open_game(p,w,h); out=[]
   await pg.evaluate("SET.tips=false; SET.speed=2.4; 0")
   for sc,setup,opp in [('normal',"",None),('7dice',"G.bag=['d6','d6','d6','d6','d6','d6','d8','d8','coin'].map(newDie)","heavy"),('twins',"","twins"),('boss',"","boss")]:
     await pg.evaluate("document.querySelectorAll('.overlay').forEach(o=>o.remove()); F=null; newRun('run'); "+setup+"; renderMap(); 0"); await pg.wait_for_timeout(500)
@@ -42,13 +42,13 @@ async def run(p,name):
     ok=await toTurn(pg); await pg.wait_for_timeout(500)
     r=await pg.evaluate(CHECK); tag=f"{sc}:t1"
     if r['P']: out.append(f"{tag} {r['P']}"); await pg.screenshot(path=f'dc_{name}_{sc}_1.png')
-    z=(r['zoom'],r['dy'],r['n'])
+    z=(r['zoom'],r['n'])
     await pg.evaluate("tray().filter(o=>!o.hidden).slice(0,2).forEach(o=>toggleSel(o)); document.querySelector('#bank')&&document.querySelector('#bank').click(); 0"); await pg.wait_for_timeout(600)
     await toTurn(pg); await pg.wait_for_timeout(500)
     r=await pg.evaluate(CHECK)
     if r['P']: out.append(f"{sc}:t2 {r['P']}"); await pg.screenshot(path=f'dc_{name}_{sc}_2.png')
     if 'shots' in sys.argv: await pg.screenshot(path=f'dc_{name}_{sc}.png')
-    out.append(f"  ({sc} zoom {z[0]} dy {z[1]} dice {z[2]})") if 'v' in sys.argv else None
+    out.append(f"  ({sc} zoom {z[0]} dice {z[1]})") if 'v' in sys.argv else None
   bad=[o for o in out if not o.startswith('  ')]
   BAD.append(bool(bad) or bool(errs)); print(f"== {name} {w}x{h}: {'OK' if not bad else 'PROBLEMS'}"+''.join('\n  '+o for o in out)+(f"\n  errors {errs[:2]}" if errs else ''),flush=True)
   await b.close()

@@ -23,13 +23,13 @@
 html,body{height:100%;margin:0;background:var(--bg);overflow:hidden;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
 html{-webkit-text-size-adjust:100%}
 body{font-family:var(--f-body);color:var(--cream);font-size:16px}
-button{font:inherit;color:inherit;touch-action:manipulation}
+button{font:inherit;color:inherit}
 canvas.px{image-rendering:pixelated}
-#scene{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:manipulation}
+#scene{position:fixed;inset:0;width:100%;height:100%;display:block}
 #labels{position:fixed;inset:0;pointer-events:none;overflow:hidden}
 #ui{position:fixed;inset:0;pointer-events:none;display:flex;flex-direction:column;box-sizing:border-box;
-  padding-left:max(12px, env(safe-area-inset-left, 0px));padding-right:max(12px, env(safe-area-inset-right, 0px));
-  padding-block:calc(10px + env(safe-area-inset-top, 0px)) calc(12px + env(safe-area-inset-bottom, 0px));
+  padding-left:12px;padding-right:12px;
+  padding-block:10px 12px;
   font-family:var(--f-body);color:var(--cream);font-size:16px;line-height:1.35}
 #ui > *{pointer-events:none}
 .pe,.pe *{pointer-events:auto}
@@ -368,8 +368,8 @@ button.tabnum.owe{border:0;background:none;padding:0;cursor:pointer;font:inherit
 
 /* ================= overlays ================= */
 .overlay{position:fixed;inset:0;z-index:55;display:flex;flex-direction:column;box-sizing:border-box;background:#0a0605c4;animation:fadeIn .25s var(--out);
-  overflow-y:auto;overflow-x:hidden;touch-action:pan-y;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
-  padding:max(12px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px)) max(12px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px))}
+  overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;
+  padding:12px}
 @keyframes fadeIn{from{opacity:0}}
 .overlay .modal{width:min(460px,100%)}
 .overlay > .modal,.pause > .booklet,.overlay > .napkin{flex-shrink:0;margin:auto;max-height:none;overflow:visible}
@@ -409,7 +409,7 @@ button.tabnum.owe{border:0;background:none;padding:0;cursor:pointer;font:inherit
 .hr li::before{content:attr(data-i);flex:none;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#ffffff10;font-family:var(--f-ui);font-size:13px;color:var(--brass)}
 .hr li > span{min-width:0}
 /* the bag, pinned bottom-left on big screens */
-.bagslip{position:fixed;left:max(12px, env(safe-area-inset-left, 0px));bottom:calc(12px + env(safe-area-inset-bottom, 0px));z-index:3;width:auto;max-width:200px;padding:9px 11px 10px;display:none}
+.bagslip{position:fixed;left:12px;bottom:12px;z-index:3;width:auto;max-width:200px;padding:9px 11px 10px;display:block}
 .bagslip .sc{font-size:11px;margin-bottom:7px}
 .slipdice{display:flex;flex-wrap:wrap;gap:6px 10px}
 .slipdice .sd{position:relative;display:inline-flex;align-items:center;gap:3px;cursor:help}
@@ -487,133 +487,31 @@ button.tabnum.owe{border:0;background:none;padding:0;cursor:pointer;font:inherit
 .hrow .kw{font-size:15px;padding:2px 8px 1px}
 
 /* ================= layout modes: #ui.page scrolls (menus), #ui alone is the fight ================= */
-#ui.page{pointer-events:auto;overflow-y:auto;overflow-x:hidden;touch-action:pan-y;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-top:0;scrollbar-width:thin;scrollbar-color:#d9b45a55 transparent}
+#ui.page{pointer-events:auto;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;padding-top:0;scrollbar-width:thin;scrollbar-color:#d9b45a55 transparent}
 #ui.page > *{pointer-events:auto;flex-shrink:0}
 #ui.page .modal{margin:auto auto 16px;max-height:none;overflow:visible;flex-shrink:0}
 #ui.page .title{margin:auto;max-height:none;overflow:visible;flex-shrink:0;padding-block:8px 18px}
 /* the top bar sticks while the page scrolls under it */
-#ui.page .hud{position:sticky;top:0;z-index:6;padding-top:calc(10px + env(safe-area-inset-top, 0px));padding-bottom:10px;
-  margin-inline:calc(-1 * max(12px, env(safe-area-inset-left, 0px))) calc(-1 * max(12px, env(safe-area-inset-right, 0px)));
-  padding-left:max(12px, env(safe-area-inset-left, 0px));padding-right:max(12px, env(safe-area-inset-right, 0px));
+#ui.page .hud{position:sticky;top:0;z-index:6;padding-top:10px;padding-bottom:10px;
+  margin-inline:-12px -12px;
+  padding-left:12px;padding-right:12px;
   background:#120c0a;box-shadow:0 10px 14px -6px #120c0a}
 #ui.page .bottom,#ui.page .msg{display:none}
 
-/* ================= media: width ================= */
-@media (min-width:640px){ .cols{grid-template-columns:1.15fr 1fr} .cols .col + .col{border-left:1px solid #1d140f44;padding-left:16px} }
-/* wide and not portrait: the message sits left of the slip */
-@media (min-aspect-ratio:9/10) and (min-width:760px){
-  .bottom{flex-direction:row;align-items:flex-end;justify-content:center;gap:16px}
-  .msg{flex:0 1 300px;max-width:300px;text-align:right;padding-bottom:10px;font-size:16px}
-  .msg .big{font-size:30px}
-}
-@media (max-aspect-ratio:9/10) and (min-width:601px){ .hud{flex-wrap:wrap} .rack{order:5} }
-@media (min-width:900px){ .tmid{flex-direction:row;justify-content:center;align-items:stretch;gap:14px} .tmid .rules{margin:0;width:min(400px,44vw)} .tmid .picker{width:min(420px,44vw)} }
-@media (min-width:1100px) and (min-height:700px) and (min-aspect-ratio:9/10){ .bagslip{display:block} }
-/* phones */
-@media (max-width:600px){
-  .hud{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;min-height:0}
-  .tabcard{grid-row:1;grid-column:1;justify-content:space-between;gap:10px;padding:7px 11px;min-width:0}
-  .tabcard .sc{display:none} .cash{font-size:19px}
-  .tabcard .statb:first-child{flex:1;min-width:0} .tabcard .inkbar{width:auto;flex:1}
-  .tabs{grid-row:1;grid-column:2}
-  .tab{padding:8px 10px 7px;font-size:14px}
-  .rack{grid-row:2;grid-column:1;justify-self:start}
-  .hud .spacer{display:none}
-  .where{display:block;grid-row:2;grid-column:2;align-self:center;font-size:13px;text-align:right}
-  .modal{width:100%}
-  .mtitle{font-size:32px}
-  .entries{grid-template-columns:1fr}
-  .cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-  .cards.picks{grid-template-columns:1fr}
-  .cards.picks .card{flex-direction:row;text-align:left;padding:12px 12px;gap:12px;margin-bottom:0;align-items:center}
-  .cards.picks .card .k{display:none}
-  .cards.picks .card .art{height:auto}
-  .cards.picks .card .mid{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}
-  .cards.picks .card .p{position:static;transform:none}
-  .svc{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .yourtab{flex-wrap:wrap;row-gap:8px;padding:8px 10px}
-  .duel{order:1} .acts{order:2} .eq{order:3;flex:1 1 100%;justify-content:center}
-  .eq .cell b{font-size:24px}
-  .figure{font-size:26px} .figure small{font-size:10px}
-  .msg{font-size:16px} .msg .big{font-size:28px}
-  .nameplate{width:calc(100vw - 24px);display:grid;grid-template-columns:1fr auto;column-gap:12px;padding:8px 12px}
-  .nameplate .np-top{grid-column:1} .nameplate .np-bar{grid-column:1;margin-top:6px}
-  .nameplate .stamps{grid-column:1/-1;margin-top:6px}
-  .nameplate .sitting{grid-column:2;grid-row:1/3;flex-direction:column;align-items:center;justify-content:center;gap:2px;margin:0;padding:0 0 0 12px;border-top:0;border-left:1px solid #ffffff14;font-size:10px}
-  .nameplate .sitting b{font-size:30px}
-  .row .btn{flex:1 1 auto}
-  .pause{padding:8px}
-  .set{grid-template-columns:86px 1fr 22px;gap:8px}
-  .newspaper{padding:12px 12px 14px} .mast h1{font-size:32px} .headline{font-size:30px} .ear{width:42px;font-size:10px}
-  .dateline span:last-child{display:none}
-  .banner .big{font-size:46px}
-  .payout .pv{font-size:62px} .payout .pm{font-size:14px}
-}
-/* portrait phones: the nameplate is one compact strip */
-@media (max-width:600px) and (max-aspect-ratio:9/10){
- .nameplate{grid-template-columns:auto minmax(0,1fr) auto;column-gap:8px;row-gap:5px;padding:6px 10px 7px}
- .nameplate .np-kind{display:none}
- .nameplate .np-top{grid-area:1/1} .nameplate .foe-name{font-size:17px}
- .nameplate .stamps{grid-area:1/2;margin:0;flex-wrap:nowrap;justify-content:flex-end;overflow-x:auto;scrollbar-width:none}
- .nameplate .stamp{flex:none;font-size:11.5px;padding:5px 8px 4px}
- .nameplate .np-bar{grid-area:2/1/3/3;margin:0} .nameplate .np-bar .inkbar{height:9px} .nameplate .np-bar .tabnum{font-size:14px}
- .nameplate .sitting{grid-area:1/3/3/4;flex-direction:column;align-items:center;justify-content:center;gap:1px;margin:0;padding:0 0 0 10px;border:0;border-left:1px solid #ffffff14;font-size:9px;max-width:72px;text-align:center}
- .nameplate .sitting b{font-size:24px}
-}
-/* short phones: the slip goes back to one row */
-@media (max-width:600px) and (max-height:740px){
-  .yourtab{flex-wrap:nowrap;gap:6px;padding:6px 8px}
-  .duel{gap:4px} .vs{display:none} .duel .figure{font-size:22px;min-width:22px} .duel .figure small{font-size:9px}
-  .eq{order:2;flex:1 1 auto;padding:5px 6px 4px;gap:3px} .acts{order:3;flex:none}
-  .eq .cell{min-width:24px} .eq .cell b{font-size:19px} .eq .cell small{font-size:8px;letter-spacing:.02em} .eq .op{font-size:13px;padding-bottom:10px}
-  .acts .btn{padding:9px 10px 8px;font-size:14px}
-  .msg{font-size:14px;min-height:0}
-}
-@media (max-width:380px){ .acts{flex:0 1 auto;min-width:0} .eq .cell small{display:none} }
-@media (max-width:360px){ .figure{font-size:22px} .btn{font-size:16px;padding:10px 13px 9px} }
+/* ================= desktop layout ================= */
+.cols{grid-template-columns:1.15fr 1fr} .cols .col + .col{border-left:1px solid #1d140f44;padding-left:16px}
+/* the message sits left of the slip */
+.bottom{flex-direction:row;align-items:flex-end;justify-content:center;gap:16px}
+.msg{flex:0 1 300px;max-width:300px;text-align:right;padding-bottom:10px;font-size:16px}
+.msg .big{font-size:30px}
+.tmid{flex-direction:row;justify-content:center;align-items:stretch;gap:14px} .tmid .rules{margin:0;width:min(400px,44vw)} .tmid .picker{width:min(420px,44vw)}
 
-/* ================= media: height ================= */
+/* ================= short windows ================= */
 @media (max-height:700px){
   .title .rules{display:none}
   .picker{gap:5px;padding:7px 8px} .pk+.pk{padding-top:5px} .pv b{font-size:17px} .pv i{font-size:11.5px}
   .pa{width:34px;height:34px} .pk{grid-template-columns:34px minmax(0,1fr) 34px}
 }
-/* landscape phones */
-@media (max-height:540px){
-  .title{gap:6px;padding-block:4px}
-  #neonslot > *{height:min(26vh,120px)!important;width:auto!important}
-  .title .est{margin-top:2px!important}
-  .tmid .picker{grid-template-columns:1fr 1fr;width:min(100%,720px)}
-  .pk+.pk{padding-top:0;border-top:0;padding-left:10px;border-left:1.5px solid #c9a14a33}
-  .pv b{font-size:16px}
-  .pv i,.pv em{display:none}
-  .pk.locked .pv em,.pk.locked .pv i{display:block;font-size:10.5px}
-  .hud{min-height:0;gap:8px}
-  .tabcard .sc,.where{display:none}
-  .mtitle{font-size:28px} .mrule{margin:8px 0}
-  .bottom{gap:4px} .msg{font-size:14px;min-height:0} .msg .big{font-size:24px}
-  .figure{font-size:24px}
-  .btn{padding:9px 14px 8px;font-size:16px}
-  .banner .big{font-size:46px}
-}
-/* (narrower ones are covered by the phone rules above) */
-@media (max-height:540px) and (min-width:601px){
-  .nameplate{width:200px;padding:8px 10px}
-  .eq .cell b{font-size:22px} .eq .cell small{font-size:9px}
-}
 
-/* ================= media: devices and preferences ================= */
-@media (horizontal-viewport-segments:2){
-  .modal,.title,.pause .booklet{margin-left:calc(env(viewport-segment-right 0 0, 50vw) + 12px);width:calc(100vw - env(viewport-segment-right 0 0, 50vw) - 28px)}
-}
-@media (vertical-viewport-segments:2){
-  .modal,.title{margin-top:calc(env(viewport-segment-bottom 0 0, 50vh) + 12px);max-height:calc(100vh - env(viewport-segment-bottom 0 0, 50vh) - 24px)}
-}
-@media (hover:none){ [data-tip]:hover::after{display:none} .card{animation:dealIn .6s var(--spring) backwards} }
-/* bigger hit areas for fingers */
-@media (pointer:coarse){ .tab,.ptab,.opt,.btn.small,.acts .btn,.linkish{min-height:40px}
- #owe,.stamp,.token{position:relative} #owe::before,.stamp::before,.token::before{content:"";position:absolute;inset:-8px -3px} }
+/* ================= preferences ================= */
 @media (prefers-reduced-motion:reduce){ *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important} }
-
-/* short landscape: quirk tags stay on one line so the nameplate stays short */
-@media (max-height:540px) and (min-aspect-ratio:1/1){ .nameplate .stamps{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none} .nameplate .stamp{flex:none} }
