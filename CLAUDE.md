@@ -35,8 +35,8 @@ Browser checks need `pip install playwright && python3 -m playwright install chr
   `tests/logic.test.js` for any new rule a player can read.
 - **Balance targets** (good bot, 800 runs): Penny Ante 22-40% (aim ~30), Quarter 9-26%, The Big Board 1-12%.
   Deaths should spread across Acts II-III, not pile on one fight. Changing a band is a design decision: say why in the PR.
-- **Table zones never overlap.** Their left: their banked dice. Middle: their throws. Behind your tray, to the left:
-  your banked dice. Front: your tray. Every die stays on the felt. `fitCam()` zooms/tilts the camera to fit the zones; never move dice to make room.
+- **Table zones never overlap.** Screen left, at the back: their banked dice. Middle: their throws. Behind your tray, filling leftwards:
+  your banked dice. Front: your tray. Every die stays on the felt. `fitCam()` zooms the camera to fit the zones; never move dice to make room.
 - **Saves can't be gamed.** Checkpoint at each round start (with their pre-rolled throw + seed), at round end, and after
   every shop/reward/event action. Reloading must never dodge a fight, duplicate a reward, or reroll a round.
 - **Desktop only.** Min window 1280×720. Mouse + keyboard first; controller for Steam Deck later.

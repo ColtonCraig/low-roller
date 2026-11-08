@@ -305,10 +305,10 @@ function setActTheme(a){ if(typeof uiTextures==='function') try{ uiTextures(a); 
     c.strokeStyle=T.trim; c.globalAlpha=.55; c.lineWidth=1; for(const [bx,bz] of [[4.46,3.31],[4.38,3.24]]) c.strokeRect(cx(-bx),cy(-bz),bx*55.66,bz*55.66);
     for(const [x,y] of [[-4.38,-3.24],[4.38,-3.24],[-4.38,3.24],[4.38,3.24]]) for(let r=8;r<=20;r+=6){ c.beginPath(); c.arc(cx(x),cy(y),r,0,7); c.stroke(); }
     // running stitches bracket each bank zone; four brass tacks pin the tray
-    c.globalAlpha=.3; c.setLineDash([3,3]); for(const [x0,x1,z0,z1] of [[-4.42,-1.06,-2.86,-.92],[-4.42,-.1,-.9,.9]]) for(const [x,dx] of [[x0,.4],[x1,-.4]]){ c.beginPath(); c.moveTo(cx(x+dx),cy(z0)); c.lineTo(cx(x),cy(z0)); c.lineTo(cx(x),cy(z1)); c.lineTo(cx(x+dx),cy(z1)); c.stroke(); } c.setLineDash([]);
+    c.globalAlpha=.3; c.setLineDash([3,3]); for(const [x0,x1,z0,z1] of [[-4.42,-.7,-2.86,-.68],[-4.42,2.3,-.1,.92]]) for(const [x,dx] of [[x0,.4],[x1,-.4]]){ c.beginPath(); c.moveTo(cx(x+dx),cy(z0)); c.lineTo(cx(x),cy(z0)); c.lineTo(cx(x),cy(z1)); c.lineTo(cx(x+dx),cy(z1)); c.stroke(); } c.setLineDash([]);
     c.globalAlpha=.55; c.fillStyle='#c9a14a'; for(const x of [-4.2,4.2]) for(const z of [1.35,2.75]) c.fillRect(Math.round(cx(x))-1,Math.round(cy(z))-1,2,2);
     if(a===2){ c.globalAlpha=.12; c.fillStyle='#000'; for(let i=0;i<9;i++){ c.beginPath(); c.arc(Math.random()*w,Math.random()*hh,4+Math.random()*12,0,7); c.fill(); } }
-    c.globalAlpha=.62; c.fillStyle=T.trim; c.font="10px 'Jersey 15',monospace"; c.textAlign='center'; c.fillText('LOWEST SCORE WINS',cx(3.2),cy(-2.95),60); c.fillText(A.name.toUpperCase(),cx(3.2),cy(-2.55),60); c.globalAlpha=1; FELT_TEX.needsUpdate=true; }
+    c.globalAlpha=.62; c.fillStyle=T.trim; c.font="10px 'Jersey 15',monospace"; c.textAlign='center'; c.fillText('LOWEST SCORE WINS',cx(3.2),cy(-2.45),60); c.fillText(A.name.toUpperCase(),cx(3.2),cy(-2.05),60); c.globalAlpha=1; FELT_TEX.needsUpdate=true; }
   { const c=WALL_CV.getContext('2d'), w=32; c.globalAlpha=1; c.fillStyle=T.wall; c.fillRect(0,0,w,w); c.strokeStyle=T.pat; c.fillStyle=T.pat;
     if(T.style==='fan'){ c.globalAlpha=.6; for(let r=4;r<=16;r+=4){ c.beginPath(); c.arc(16,32,r,Math.PI,0); c.stroke(); c.beginPath(); c.arc(0,16,r,-Math.PI/2,Math.PI/2); c.stroke(); c.beginPath(); c.arc(32,16,r,Math.PI/2,Math.PI*1.5); c.stroke(); } }
     if(T.style==='diamond'){ c.globalAlpha=.5; c.beginPath(); c.moveTo(16,1); c.lineTo(31,16); c.lineTo(16,31); c.lineTo(1,16); c.closePath(); c.stroke(); c.globalAlpha=.8; c.fillRect(15,15,2,2); c.globalAlpha=.25; for(let i=0;i<40;i++){ c.fillStyle='#000'; c.fillRect(Math.random()*w,Math.random()*w,1,1); } }
@@ -693,25 +693,25 @@ function dieScreen(o){ return toScreen(o.mesh.position.clone().add(new THREE.Vec
 // how wide the table looks at depth z, in world units from the centre line
 function visHalfW(z){ const a=toScreen(new THREE.Vector3(0,0,z)), b=toScreen(new THREE.Vector3(1,0,z)); const px=Math.abs(b.x-a.x)||1; return (VW/2)/px; }
 // The table has fixed zones so dice never meet:
-//   their left  their banked dice in two rows of four, on the felt, clear of their hands; the cup stays on their other side
+//   screen left  their banked dice in two rows of four, on the felt, clear of their hands; the cup stays on their other side
 //   middle       where their throws land (empty again by the time you throw)
-//   your left    your banked dice in rows of five, behind and left of your tray
+//   your row     your banked dice behind your tray, filling leftwards; a sixth and seventh continue to the right
 //   front        your tray, value plates in front of it
 // Every position stays inside the felt (x within 4.5, z within 3.35).
-// The camera (fitCam) zooms and tilts to fit the zones to the screen; dice never move to make room.
-const TRAY_Z=1.9, THEIR_Z=-.05, RAIL_SP=.86, MY_RAIL_X0=-.6, MY_RAIL_Z=.42, MY_RAIL_ROW=.84;
+// The camera (fitCam) zooms to fit the zones to the screen; dice never move to make room.
+const TRAY_Z=1.9, THEIR_Z=-.05, MY_RAIL_SP=.95, MY_RAIL_Z=.42;
 // Only Twins pass 8: the second twin's last four sit far right, past the cup
-const THEIR_SLOTS=[[-1.55,-2.35],[-2.41,-2.35],[-3.27,-2.35],[-4.13,-2.35],[-1.55,-1.15],[-2.41,-1.15],[-3.27,-1.15],[-4.13,-1.15],[2.41,-1.15],[3.27,-1.15],[4.13,-1.15],[4.13,-2.35]];
+const THEIR_SLOTS=[[-1.15,-2.35],[-2.12,-2.35],[-3.09,-2.35],[-4.06,-2.35],[-1.15,-1.15],[-2.12,-1.15],[-3.09,-1.15],[-4.06,-1.15],[2.12,-1.15],[3.09,-1.15],[4.06,-1.15],[4.06,-2.35]];
 function traySlots(n,side){ const out=[], you=side==='you', z0=you?TRAY_Z:THEIR_Z, sp=n>1?Math.min(you?1.18:1.15,(you?7.8:7.4)/(n-1)):0, jit=n>=8?.03:.08;
   for(let i=0;i<n;i++) out.push(new THREE.Vector3((i-(n-1)/2)*sp+(Math.random()-.5)*jit,0,z0+(Math.random()-.5)*jit));
   return out; }
 function railSlot(k,side){
-  if(side==='you') return new THREE.Vector3(MY_RAIL_X0-(k%5)*RAIL_SP,0,MY_RAIL_Z-Math.floor(k/5)*MY_RAIL_ROW);
+  if(side==='you') return new THREE.Vector3(k<5?-.1-k*MY_RAIL_SP:.85+(k-5)*MY_RAIL_SP,0,MY_RAIL_Z);
   const [x,z]=THEIR_SLOTS[k%12]; return new THREE.Vector3(x,0,z); }
 // Fit the camera to this screen: zoom out until your dice, their labels and your banked row all sit above the
 // message and the slip, the felt fits across at your tray, and the opponent's hat stays on screen.
 function fitCam(){ if(!CAM||!CAMF||!camLook) return;
-  const apply=zoom=>{ const d=CAMF.dist*zoom; camBase.set(0,camLook.y+Math.sin(CAMF.el)*d,camLook.z+Math.cos(CAMF.el)*d); CAM.position.copy(camBase); CAM.lookAt(camLook); CAM.updateMatrixWorld(); };
+  const apply=zoom=>{ const d=CAMF.dist*zoom; SCN.fog.near=d+1.4; SCN.fog.far=d+15.4; camBase.set(0,camLook.y+Math.sin(CAMF.el)*d,camLook.z+Math.cos(CAMF.el)*d); CAM.position.copy(camBase); CAM.lookAt(camLook); CAM.updateMatrixWorld(); };
   const yt=document.querySelector('.yourtab');
   if(!F||!yt||!yt.getBoundingClientRect().height){ apply(1); CAMF.zoom=1; return; }
   const mg=document.querySelector('#ui .msg'), u=foe&&foe.userData;
@@ -820,7 +820,7 @@ function anchorPop(anchor,html){ closePop(); SFX.paper(); const r=anchor.getBoun
   popEl=h(`<div class="pop paper pe qpop">${html}</div>`); document.body.appendChild(popEl);
   const w=popEl.offsetWidth, hh=popEl.offsetHeight; let top=r.bottom+10; if(top+hh>innerHeight-10) top=Math.max(10,r.top-hh-10);
   popEl.style.left=Math.max(10,Math.min(innerWidth-w-10,r.left+r.width/2-w/2))+'px'; popEl.style.top=top+'px'; }
-function screen(html){ if(CAMF&&CAMF.zoom!==1){ CAMF.zoom=1; camBase.set(0,camLook.y+Math.sin(CAMF.el)*CAMF.dist,camLook.z+Math.cos(CAMF.el)*CAMF.dist); } document.querySelectorAll('.toast').forEach(t=>t.remove()); closePop&&closePop(); const old=ui.querySelector('.modal,.title,.newspaper'); if(old&&!REDUCED){ const r=old.getBoundingClientRect(); const c=old.cloneNode(true); c.removeAttribute('id'); Object.assign(c.style,{position:'fixed',left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',margin:'0',zIndex:30,pointerEvents:'none',boxSizing:'border-box'}); c.classList.add('leaving'); document.body.appendChild(c); setTimeout(()=>c.remove(),420); SFX.paper(); } ui.innerHTML=html; ui.className=html.includes('id="plate"')?'':'page'; ui.scrollTop=0; wireSound(); wireRack(); closePop(); }
+function screen(html){ if(CAMF&&CAMF.zoom!==1){ CAMF.zoom=1; SCN.fog.near=CAMF.dist+1.4; SCN.fog.far=CAMF.dist+15.4; camBase.set(0,camLook.y+Math.sin(CAMF.el)*CAMF.dist,camLook.z+Math.cos(CAMF.el)*CAMF.dist); } document.querySelectorAll('.toast').forEach(t=>t.remove()); closePop&&closePop(); const old=ui.querySelector('.modal,.title,.newspaper'); if(old&&!REDUCED){ const r=old.getBoundingClientRect(); const c=old.cloneNode(true); c.removeAttribute('id'); Object.assign(c.style,{position:'fixed',left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',margin:'0',zIndex:30,pointerEvents:'none',boxSizing:'border-box'}); c.classList.add('leaving'); document.body.appendChild(c); setTimeout(()=>c.remove(),420); SFX.paper(); } ui.innerHTML=html; ui.className=html.includes('id="plate"')?'':'page'; ui.scrollTop=0; wireSound(); wireRack(); closePop(); }
 function clearLabels(){ labels.innerHTML=''; }
 function bagCounts(arr){ const m=new Map(); arr.forEach(t=>m.set(t,(m.get(t)||0)+1)); return [...m.entries()]; }
 function dieKey(d){ return d.type+'|'+facesOf(d).join(','); }
@@ -1123,7 +1123,7 @@ async function startRound(pre){
   F.target=Math.max(0,F.oScore+adj);
   $('#sitting').innerHTML=`<span>Sitting on</span><b>${F.target}</b>${adj?`<em>(${F.oScore} ${adj>0?'+':'\u2212'} ${Math.abs(adj)})</em>`:''}`;
   setVs(F.target); updOdds();
-  msg(`Get under <b>${F.target}</b>. Tap the dice you want to keep, then bank them.`);
+  msg(`Get under <b>${F.target}</b>. Click the dice you want to keep, then bank them.`);
   if(foe) foe.userData.lookX=0;
   TS=1;
   if(F.opp.q.includes('tax')&&G.gold>0){ addGold(-1,$('#cash')); toast('<b class="r">Cover Charge.</b> A dollar for the seat.'); }
@@ -1335,7 +1335,7 @@ function renderReward(kind){
 
 /* ================= SHOP ================= */
 const TAB_LIMIT=15;
-const tabText=()=>`<b class="tbh">Running a tab</b><span>Short on cash? Tap a price <b>twice</b> and the bartender covers what you\u2019re missing. The favor costs <b class="kw cash">$2</b>. He\u2019ll front up to <b class="kw cash">$${TAB_LIMIT}</b>, and takes it back out of your next winnings before you see them.</span>${G&&G.tab?`<span class="owe">You owe <b>$${G.tab}</b> of $${TAB_LIMIT}.</span>`:''}`;
+const tabText=()=>`<b class="tbh">Running a tab</b><span>Short on cash? Click a price <b>twice</b> and the bartender covers what you\u2019re missing. The favor costs <b class="kw cash">$2</b>. He\u2019ll front up to <b class="kw cash">$${TAB_LIMIT}</b>, and takes it back out of your next winnings before you see them.</span>${G&&G.tab?`<span class="owe">You owe <b>$${G.tab}</b> of $${TAB_LIMIT}.</span>`:''}`;
 const canTab=price=>G&&(price-G.gold+2+G.tab)<=TAB_LIMIT+2&&(price-G.gold)<=TAB_LIMIT-G.tab;
 function renderShop(){
   F=null; clearLabels();
@@ -1351,7 +1351,7 @@ function renderShop(){
     <div class="secthead" style="margin-top:14px" id="baglbl"></div><div id="bagt"></div>
     <div class="tabbox" id="tabbox">${tabText()}</div>
     <div class="row"><button class="btn go" id="leave">Back to the floor</button></div></div>`);
-  const PICK={remove:['Which one goes?','Tap a die. It stays on the bar for good.',d=>true],
+  const PICK={remove:['Which one goes?','Click a die. It stays on the bar for good.',d=>true],
     file:['Which one gets filed?','Its highest face becomes a 1.',d=>canFile(d)],
     gild:['Which one gets a ruby?','Its highest face becomes a ruby crown: worth 0, and +1 odds when you bank it.',d=>canGild(d)]};
   const paint=()=>{ updTop(); els.forEach(({el,c})=>{ const blocked=(c.k==='remove'&&G.bag.length<=HAND)||(c.k==='file'&&!G.bag.some(canFile))||(c.k==='gild'&&!G.bag.some(canGild)); const short=G.gold<c.price; const cred=short&&canTab(c.price); el.classList.toggle('poor',(short&&!cred)||blocked); el.classList.toggle('credit',cred&&!blocked);
@@ -1381,7 +1381,7 @@ function renderShop(){
       if(c.k==='remove'&&G.bag.length<=HAND){ toast(`Your bag is already down to <b>${HAND}</b>.`); return; }
       if(c.k==='heal'&&G.hp>=G.maxHp){ toast('You\u2019re steady already.'); return; }
       if(pickMode){ toast('Pick a die below first.'); return; }
-      if(G.gold<c.price){ if(!canTab(c.price)){ SFX.unpick(); toast('Not enough cash, and your tab is maxed.'); return; } if(!el.dataset.credit){ el.dataset.credit=1; SFX.ui(); toast(`Tap again to put <b>$${c.price-G.gold+2}</b> on your tab.`); return; } onTab=c.price-G.gold; }
+      if(G.gold<c.price){ if(!canTab(c.price)){ SFX.unpick(); toast('Not enough cash, and your tab is maxed.'); return; } if(!el.dataset.credit){ el.dataset.credit=1; SFX.ui(); toast(`Click again to put <b>$${c.price-G.gold+2}</b> on your tab.`); return; } onTab=c.price-G.gold; }
       const pay=()=>{ if(onTab){ G.tab+=onTab+2; G.gold=0; toast(`On the tab. You owe <b>$${G.tab}</b>. It comes out of your next winnings.`); const tb=$('#tabbox'); if(tb) tb.innerHTML=tabText(); } else G.gold-=c.price; G.stats.spent+=c.price; SFX.stamp(); SFX.coin(); };
       const sold=()=>{ c.sold=1; el.dataset.busy=1; el.classList.add('sold'); };
       if(c.k==='charm'){ offerCharm(c.c,()=>{ pay(); sold(); paint(); saveRun(); }); return; }
@@ -1543,18 +1543,18 @@ function renderVictory(){ clearLabels(); SFX.fanfare(); const lv=G.limit||0, up=
 /* ================= THE BARTENDER'S NOTES (first-run tutorial) ================= */
 const TIPS={
   map:['Pick your seat','Each card is somewhere you can go next: who’s sitting there, their nerve, how hard they hit, and what’s in their bag. Start with a table.'],
-  quirk:['Read their tags','The red tags over their head are their tricks. Tap one any time to read it. “Hits ×” is how hard their wins land on you.'],
+  quirk:['Read their tags','The red tags over their head are their tricks. Click one any time to read it. “Hits ×” is how hard their wins land on you.'],
   boss:['The owner','Bosses have a signature move. It’s printed on the bill before you sit down, and it gets worse once they’re at half nerve.'],
   theirs:['They throw first','Watch their total. Whatever they end on is the number you have to get under.'],
-  yours:['Your throw','Tap the dice you want to keep, then press Bank. Low is good. A crown counts for nothing, so a crown is always worth keeping.'],
+  yours:['Your throw','Click the dice you want to keep, then press Bank. Low is good. A crown counts for nothing, so a crown is always worth keeping.'],
   again:['Throw again','Whatever you didn’t bank gets thrown again. Each throw you bank at least one, until every die is on your rail.'],
-  result:['Who bleeds','Lower total takes the round. The winner hits for how far ahead they finished, times their odds. Your odds start at 1, so finishing 3 under is a 3 hit. Charms raise your odds. The sum on your slip shows the hit live. Tap it any time for the breakdown.'],
-  odds:['Your odds went up','Every point you finish under them is now worth more. Your slip shows it: ahead by \u00d7 odds = what they lose. Tap the sum for where your odds come from.'],
+  result:['Who bleeds','Lower total takes the round. The winner hits for how far ahead they finished, times their odds. Your odds start at 1, so finishing 3 under is a 3 hit. Charms raise your odds. The sum on your slip shows the hit live. Click it any time for the breakdown.'],
+  odds:['Your odds went up','Every point you finish under them is now worth more. Your slip shows it: ahead by \u00d7 odds = what they lose. Click the sum for where your odds come from.'],
   reward:['Spoils','Take one. Charms sit in your rack up top and are always working. Gold-edged ones are rare and usually multiply your odds.'],
-  bar:['The bar','You stop here after every table. Spend now; the next seat is meaner. Short on cash? Tap a price twice and he’ll front you the rest for $2. That’s your tab: it comes out of your next winnings automatically.'],
-  rack:['Your charms','Tap a charm up top to read it, or to sell it back for half if you need the room.'],
-  limit:['The limit went up','You beat the house, so now you can raise the limit. Each one makes the night meaner, and stacks on every limit below it. Tap the arrows on Limit to pick. You can always drop back to Penny Ante.'],
-  pocket:['Walk in as someone else','Beating bosses opens new ways to start: more cash, more nerve, different dice. Tap the arrows on Walk in as to pick who you are tonight.'],
+  bar:['The bar','You stop here after every table. Spend now; the next seat is meaner. Short on cash? Click a price twice and he’ll front you the rest for $2. That’s your tab: it comes out of your next winnings automatically.'],
+  rack:['Your charms','Click a charm up top to read it, or to sell it back for half if you need the room.'],
+  limit:['The limit went up','You beat the house, so now you can raise the limit. Each one makes the night meaner, and stacks on every limit below it. Click the arrows on Limit to pick. You can always drop back to Penny Ante.'],
+  pocket:['Walk in as someone else','Beating bosses opens new ways to start: more cash, more nerve, different dice. Click the arrows on Walk in as to pick who you are tonight.'],
   altboss:['Not who you expected','Each room has two possible owners, picked at random every night. Read the signature on the bill before you sit down.'],
 };
 function tipsSeen(){ try{ return JSON.parse(localStorage.getItem('lr-tips')||'{}'); }catch(e){ return {}; } }
@@ -1611,7 +1611,7 @@ function openMenu(tab){ ac(); if(menuEl){ setMenuTab(tab||menuTab); return; } PA
   menuEl.querySelectorAll('.ptab').forEach(b=>b.onclick=()=>{ SFX.paper(); setMenuTab(b.dataset.t); });
   menuEl.querySelector('#resume').onclick=closeMenu;
   menuEl.addEventListener('pointerdown',e=>{ if(e.target===menuEl) closeMenu(); });
-  const q=menuEl.querySelector('#quit'); if(q) q.onclick=()=>{ if(q.dataset.sure){ quitRun(); return; } q.dataset.sure=1; q.textContent='Really? Tap again'; SFX.stamp(); };
+  const q=menuEl.querySelector('#quit'); if(q) q.onclick=()=>{ if(q.dataset.sure){ quitRun(); return; } q.dataset.sure=1; q.textContent='Really? Click again'; SFX.stamp(); };
   setMenuTab(tab||(G?'night':'settings'));
 }
 function setMenuTab(tab){ menuTab=tab; const body=menuEl.querySelector('#pbody'); menuEl.querySelectorAll('.ptab').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
