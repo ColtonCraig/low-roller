@@ -239,19 +239,20 @@ function resize(){
   const lw=Math.round(VW/px), lh=Math.round(VH/px);
   RT.setSize(lw,lh); PMAT.uniforms.res.value.set(lw,lh);
   CAM.aspect=VW/VH; CAM.fov=32; CAM.updateProjectionMatrix();
-  const hh=Math.atan(Math.tan(CAM.fov*Math.PI/360)*CAM.aspect); const dist=Math.max(16.7,5.15/Math.tan(hh)); SCN.fog.near=dist+1.4; SCN.fog.far=dist+15.4;
+  const hh=Math.atan(Math.tan(CAM.fov*Math.PI/360)*CAM.aspect); const dist=Math.max(16.7,5.15/Math.tan(hh)); fogTo(dist);
   const el=46*Math.PI/180; camLook=new THREE.Vector3(0,0,-1);
   camBase=new THREE.Vector3(0,camLook.y+Math.sin(el)*dist,camLook.z+Math.cos(el)*dist); CAMF={el,dist,zoom:1};
   if(typeof F!=='undefined'&&F) requestAnimationFrame(()=>fitCam());
 }
 let CAMF=null;
+function fogTo(d){ SCN.fog.near=d+1.4; SCN.fog.far=d+15.4; }
 function buildRoom(){
   SCN.add(new THREE.AmbientLight(0x3a2a44,.9));
   SCN.add(new THREE.HemisphereLight(0x553a2a,0x0a0608,.35));
   lampLight=new THREE.SpotLight(0xffc27a,1.2,24,.68,.55,1); lampLight.position.set(0,7.5,.2); lampLight.target.position.set(0,0,.2);
   lampLight.castShadow=true; lampLight.shadow.mapSize.set(512,512); lampLight.shadow.camera.near=2; lampLight.shadow.camera.far=14; SCN.add(lampLight); SCN.add(lampLight.target);
   const shade=new THREE.Mesh(new THREE.ConeGeometry(1.1,.75,8,1,true),new THREE.MeshLambertMaterial({color:0x1f4a33,side:THREE.DoubleSide,emissive:0x0b1a12}));
-  shade.position.set(0,7.9,.2); SCN.add(shade); window.SHADE=shade;
+  shade.position.set(0,7.9,.2); SCN.add(shade);
   bulb=new THREE.Mesh(new THREE.SphereGeometry(.22,6,4),new THREE.MeshBasicMaterial({color:0xffe2a8})); bulb.position.set(0,7.62,.2); SCN.add(bulb);
   const cord=new THREE.Mesh(new THREE.CylinderGeometry(.02,.02,6,4),lambert(0x111111)); cord.position.set(0,11.2,.2); SCN.add(cord);
   frameFns.add((dt,t)=>{ lampLight.intensity=1.2*lampDim; bulb.material.color.setScalar((.9+Math.sin(t*7)*.02)*Math.max(.15,lampDim)); });
@@ -595,6 +596,7 @@ async function secondTwin(simA,shownA,pre){ const simB=pre||aiRound(F.opp.bag,F.
     await sleep(240);
     for(const i of th.kept){ if(F!==myF) return simA; const o=B[i]; o.banked=true; const v=effVal(o.face); shownB+=v; SFX.bank(0); floatAt(dieScreen(o),v===0?'0':'+'+v,v===0?'zero':'pts'); moveTo(o,railSlot(F.railN.them++,'them'),.78,380); await sleep(110); }
     sit(); await sleep(320); }
+  if(F!==myF) return simA;
   const keepB=simB.total<simA.total, out=keepB?F.them:B;
   out.forEach(o=>{ o.flying=true; const y0=o.mesh.position.y; anim(520,k=>{ o.mesh.position.y=y0+k*.6; o.mesh.scale.setScalar(Math.max(.01,1-k)); }).then(()=>disposeDie(o)); });
   if(keepB){ F.them=B; F.railN.them=0; await sleep(300); if(F!==myF) return simB; B.filter(o=>o.banked).forEach(o=>moveTo(o,railSlot(F.railN.them++,'them'),.78,420)); } SFX.tok&&SFX.tok(0,.5); await sleep(560);
@@ -711,7 +713,7 @@ function railSlot(k,side){
 // Fit the camera to this screen: zoom out until your dice, their labels and your banked row all sit above the
 // message and the slip, the felt fits across at your tray, and the opponent's hat stays on screen.
 function fitCam(){ if(!CAM||!CAMF||!camLook) return;
-  const apply=zoom=>{ const d=CAMF.dist*zoom; SCN.fog.near=d+1.4; SCN.fog.far=d+15.4; camBase.set(0,camLook.y+Math.sin(CAMF.el)*d,camLook.z+Math.cos(CAMF.el)*d); CAM.position.copy(camBase); CAM.lookAt(camLook); CAM.updateMatrixWorld(); };
+  const apply=zoom=>{ const d=CAMF.dist*zoom; fogTo(d); camBase.set(0,camLook.y+Math.sin(CAMF.el)*d,camLook.z+Math.cos(CAMF.el)*d); CAM.position.copy(camBase); CAM.lookAt(camLook); CAM.updateMatrixWorld(); };
   const yt=document.querySelector('.yourtab');
   if(!F||!yt||!yt.getBoundingClientRect().height){ apply(1); CAMF.zoom=1; return; }
   const mg=document.querySelector('#ui .msg'), u=foe&&foe.userData;
@@ -820,7 +822,7 @@ function anchorPop(anchor,html){ closePop(); SFX.paper(); const r=anchor.getBoun
   popEl=h(`<div class="pop paper pe qpop">${html}</div>`); document.body.appendChild(popEl);
   const w=popEl.offsetWidth, hh=popEl.offsetHeight; let top=r.bottom+10; if(top+hh>innerHeight-10) top=Math.max(10,r.top-hh-10);
   popEl.style.left=Math.max(10,Math.min(innerWidth-w-10,r.left+r.width/2-w/2))+'px'; popEl.style.top=top+'px'; }
-function screen(html){ if(CAMF&&CAMF.zoom!==1){ CAMF.zoom=1; SCN.fog.near=CAMF.dist+1.4; SCN.fog.far=CAMF.dist+15.4; camBase.set(0,camLook.y+Math.sin(CAMF.el)*CAMF.dist,camLook.z+Math.cos(CAMF.el)*CAMF.dist); } document.querySelectorAll('.toast').forEach(t=>t.remove()); closePop&&closePop(); const old=ui.querySelector('.modal,.title,.newspaper'); if(old&&!REDUCED){ const r=old.getBoundingClientRect(); const c=old.cloneNode(true); c.removeAttribute('id'); Object.assign(c.style,{position:'fixed',left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',margin:'0',zIndex:30,pointerEvents:'none',boxSizing:'border-box'}); c.classList.add('leaving'); document.body.appendChild(c); setTimeout(()=>c.remove(),420); SFX.paper(); } ui.innerHTML=html; ui.className=html.includes('id="plate"')?'':'page'; ui.scrollTop=0; wireSound(); wireRack(); closePop(); }
+function screen(html){ if(CAMF&&CAMF.zoom!==1){ CAMF.zoom=1; fogTo(CAMF.dist); camBase.set(0,camLook.y+Math.sin(CAMF.el)*CAMF.dist,camLook.z+Math.cos(CAMF.el)*CAMF.dist); } document.querySelectorAll('.toast').forEach(t=>t.remove()); closePop&&closePop(); const old=ui.querySelector('.modal,.title,.newspaper'); if(old&&!REDUCED){ const r=old.getBoundingClientRect(); const c=old.cloneNode(true); c.removeAttribute('id'); Object.assign(c.style,{position:'fixed',left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',margin:'0',zIndex:30,pointerEvents:'none',boxSizing:'border-box'}); c.classList.add('leaving'); document.body.appendChild(c); setTimeout(()=>c.remove(),420); SFX.paper(); } ui.innerHTML=html; ui.className=html.includes('id="plate"')?'':'page'; ui.scrollTop=0; wireSound(); wireRack(); closePop(); }
 function clearLabels(){ labels.innerHTML=''; }
 function bagCounts(arr){ const m=new Map(); arr.forEach(t=>m.set(t,(m.get(t)||0)+1)); return [...m.entries()]; }
 function dieKey(d){ return d.type+'|'+facesOf(d).join(','); }
