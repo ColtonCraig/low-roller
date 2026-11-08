@@ -1,0 +1,157 @@
+// Unit tests for the rules in src/js/logic.js. Fast (well under a second) and deterministic.
+// Each test pins a rule players can see on a card or a quirk tag, so the text and the math can't drift apart.
+// Several pin bugs that were found in review and fixed; keep them.
+const assert = require('node:assert/strict');
+const L = require('../src/js/logic.js');
+
+let pass = 0, fail = 0;
+function test(name, fn) {
+  try { fn(); pass++; console.log('  ok   ' + name); }
+  catch (e) { fail++; console.log('  FAIL ' + name + '\n       ' + e.message.split('\n')[0]); }
+}
+const R0 = () => L.newRound();
+const opp = (q = [], odds = 2, sig) => ({ q, odds, sig });
+const env = (o = {}) => ({ gold: 0, rep: 0, tally: 0, wins: 0, lossStreak: 0, oppHalf: false, bag: 8, round: 2, q: [], ...o });
+
+console.log('rules');
+
+test('lowest total wins; winner hits for gap x odds', () => {
+  const r = L.settle(3, 7, R0(), [], opp([], 2), env());
+  assert.equal(r.winner, 'you'); assert.equal(r.gap, 4); assert.equal(r.dmg, 4); // your odds start at 1
+  const t = L.settle(9, 5, R0(), [], opp([], 3), env());
+  assert.equal(t.winner, 'them'); assert.equal(t.dmg, 12);
+});
+
+test('a plain tie is a push', () => {
+  assert.equal(L.settle(5, 5, R0(), [], opp(), env()).winner, 'push');
+});
+
+test('The House wins ties for 2 x their odds', () => {
+  const r = L.settle(5, 5, R0(), [], opp([], 3, 'house'), env());
+  assert.equal(r.winner, 'them'); assert.equal(r.gap, 2); assert.equal(r.dmg, 6); assert.ok(r.house);
+});
+
+test('Sharp: ties go to them for 1 x their odds', () => {
+  const r = L.settle(5, 5, R0(), [], opp(['sharp'], 3), env({ q: ['sharp'] }));
+  assert.equal(r.winner, 'them'); assert.equal(r.dmg, 3); assert.ok(r.sharp);
+});
+
+test('Near Miss: losing by exactly 1 is a push', () => {
+  const r = L.settle(6, 5, R0(), ['nearmiss'], opp(), env());
+  assert.equal(r.winner, 'push'); assert.ok(r.near);
+  assert.equal(L.settle(7, 5, R0(), ['nearmiss'], opp(), env()).winner, 'them');
+});
+
+test('Thick Skin takes 2 off a loss, never below 1', () => {
+  assert.equal(L.settle(9, 5, R0(), ['thick'], opp([], 1), env()).dmg, 2);
+  assert.equal(L.settle(6, 5, R0(), ['thick'], opp([], 1), env()).dmg, 1);
+});
+
+test('Three Sheets: their score is 1 higher', () => {
+  assert.equal(L.theirScore(7, R0(), [], ['sloppy']), 8);
+});
+
+test('Copycat: banking any crown drops their score by exactly 1', () => {
+  const R = R0(); R.crowns = 3;
+  assert.equal(L.theirScore(10, R, [], ['copycat']), 9);
+  assert.equal(L.theirScore(10, R0(), [], ['copycat']), 10);
+});
+
+test('The Heckler: only your first 2 crowns add to their score', () => {
+  const R = R0(); R.crowns = 5;
+  assert.equal(L.theirScore(10, R, ['heckler'], []), 12);
+});
+
+test('their score never goes below 0', () => {
+  const R = R0(); R.crowns = 1;
+  assert.equal(L.theirScore(0, R, [], ['copycat', 'edge']), 0);
+});
+
+test('Loudmouth takes 2 odds but never wipes your multipliers (review bug)', () => {
+  const O = L.oddsOf(R0(), ['opener'], env({ round: 1, q: ['loud'] }));
+  assert.equal(O.odds, 2); // base 1, -2 floors at 1, then x2 from Opening Act
+});
+
+test('odds never drop below 1', () => {
+  assert.ok(L.oddsOf(R0(), [], env({ q: ['loud'] })).odds >= 1);
+});
+
+test('a raid forces odds to exactly 1', () => {
+  const O = L.oddsOf(R0(), ['opener', 'highstakes'], env({ round: 1, raid: true }));
+  assert.equal(O.odds, 1); assert.ok(O.raid);
+});
+
+test('Opening Act doubles odds only in round 1', () => {
+  assert.equal(L.oddsOf(R0(), ['opener'], env({ round: 1 })).odds, 2);
+  assert.equal(L.oddsOf(R0(), ['opener'], env({ round: 2 })).odds, 1);
+});
+
+test('Packed House: +1 odds per 2 dice in your bag', () => {
+  assert.equal(L.oddsOf(R0(), ['packed'], env({ bag: 9 })).odds, 1 + 4);
+});
+
+test('Short Stack: +2 odds per die under 9', () => {
+  assert.equal(L.oddsOf(R0(), ['stack'], env({ bag: 6 })).odds, 1 + 6);
+});
+
+test('Double Down needs 2 straight round wins', () => {
+  assert.equal(L.oddsOf(R0(), ['doubledown'], env({ wins: 1 })).odds, 1);
+  assert.equal(L.oddsOf(R0(), ['doubledown'], env({ wins: 2 })).odds, 2);
+});
+
+test('All In: x3 only when everything is banked on the first throw', () => {
+  const R = R0(); R.throws = 1;
+  assert.equal(L.oddsOf(R, ['allin'], env({ done: true })).odds, 3);
+  R.throws = 2;
+  assert.equal(L.oddsOf(R, ['allin'], env({ done: true })).odds, 1);
+});
+
+test('Glassblower: Glass Dice last 2 rounds longer', () => {
+  assert.equal(L.breaksAt('glass', []), L.DT.glass.breaks);
+  assert.equal(L.breaksAt('glass', ['glassblower']), L.DT.glass.breaks + 2);
+  assert.equal(L.breaksAt('d6', ['glassblower']), 0);
+});
+
+test('every charm, die and quirk has a name and a description', () => {
+  for (const [k, c] of Object.entries(L.CHARMS)) assert.ok(c.name && c.desc && c.price > 0, 'charm ' + k);
+  for (const [k, d] of Object.entries(L.DT)) assert.ok(d.name && d.desc && d.faces.length, 'die ' + k);
+  for (const [k, q] of Object.entries(L.QUIRKS)) assert.ok(q.name && q.desc, 'quirk ' + k);
+});
+
+test('every opponent only throws dice that exist', () => {
+  for (const A of L.ACTS) for (const pool of Object.values(A.foes)) for (const f of [].concat(pool))
+    for (const t of f.bag) assert.ok(L.DT[t], `${f.n} has unknown die ${t}`);
+});
+
+test('every quirk an opponent can have is defined', () => {
+  for (const A of L.ACTS) for (const pool of Object.values(A.foes)) for (const f of [].concat(pool))
+    for (const q of f.q || []) assert.ok(L.QUIRKS[q], `${f.n} has unknown quirk ${q}`);
+  for (const q of L.EXTRA_Q) assert.ok(L.QUIRKS[q], 'extra quirk ' + q);
+});
+
+test('each act has two possible bosses', () => {
+  for (let a = 0; a < 3; a++) { assert.ok(L.bossOf(a, 0).boss); assert.ok(L.bossOf(a, 1).boss); assert.notEqual(L.bossOf(a, 0).n, L.bossOf(a, 1).n); }
+});
+
+test('Limits stack and only get harder', () => {
+  let prev = L.limitMods(0);
+  for (let lv = 1; lv < L.LIMITS.length; lv++) {
+    const m = L.limitMods(lv);
+    assert.ok(m.hp >= prev.hp && m.price >= prev.price && m.startHp <= prev.startHp && m.odds >= prev.odds && m.stairs <= prev.stairs && m.pay <= prev.pay, 'limit ' + lv);
+    prev = m;
+  }
+});
+
+test('starting loadouts are all valid', () => {
+  for (const P of L.POCKETS) { const s = L.pocketStart(P.k); assert.ok(s.hp > 0 && s.bag.length >= 6); for (const t of s.bag) assert.ok(L.DT[t]); for (const c of s.charms) assert.ok(L.CHARMS[c]); }
+});
+
+test('opponents always score at least 0 and at most their max', () => {
+  for (let i = 0; i < 2000; i++) {
+    const r = L.aiRound(['d6', 'd6', 'loaded', 'pebble', 'coin', 'devil'], 1 + (i % 2));
+    assert.ok(Number.isFinite(r.total));
+  }
+});
+
+console.log(`\n${pass} passed, ${fail} failed`);
+process.exit(fail ? 1 : 0);

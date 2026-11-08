@@ -1,0 +1,39 @@
+{
+  "name": "low-roller",
+  "productName": "Low Roller",
+  "version": "0.1.0",
+  "description": "A speakeasy dice roguelike. Lowest total wins.",
+  "main": "electron/main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "test": "npm run test:logic && npm run test:balance",
+    "test:logic": "node tests/logic.test.js",
+    "test:balance": "node tests/sim/check-balance.js",
+    "test:e2e": "python3 tests/e2e/run_all.py",
+    "verify": "npm test && npm run test:e2e",
+    "sim": "node tests/sim/sim.js",
+    "bundle": "node tools/bundle.js",
+    "pack": "electron-builder --dir",
+    "dist:win": "electron-builder --win",
+    "dist:mac": "electron-builder --mac"
+  },
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.coltoncraig.lowroller",
+    "productName": "Low Roller",
+    "files": ["electron/**", "src/**", "package.json"],
+    "directories": { "output": "dist", "buildResources": "build" },
+    "mac": {
+      "category": "public.app-category.games",
+      "target": [{ "target": "dmg", "arch": ["universal"] }, { "target": "zip", "arch": ["universal"] }],
+      "hardenedRuntime": true
+    },
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }, { "target": "portable", "arch": ["x64"] }]
+    }
+  }
+}
