@@ -3,7 +3,7 @@
 Running tally, top = next. Each item is one PR unless noted. Tick it off in the PR that finishes it.
 
 ## Now
-1. **Remove mobile.** Delete portrait/phone/fold layouts and touch-only code: `PORTRAIT`/`NARROW` branches in
+1. ✅ **Remove mobile.** Delete portrait/phone/fold layouts and touch-only code: `PORTRAIT`/`NARROW` branches in
    `resize`, `traySlots`, `railSlot`, `fitCam`; the compact nameplate; `@media (pointer:coarse)`, `(hover:none)`,
    viewport-segment and `max-width:600px` rules; `drag`/touch gestures. Keep 1280×800 (Steam Deck).
    *Done when:* `npm run test:e2e` passes on all desktop sizes and the stylesheet + game.js shrink noticeably.
