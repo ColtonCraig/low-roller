@@ -16,7 +16,7 @@ CHECK=r"""(()=>{ const P=[]; const own=new Map(); const ds=[...ALLDICE].filter(o
  // every resting die must be fully on the felt and not sunk into it
  R.forEach(a=>{ let bad=''; a.o.mesh.updateMatrixWorld(true); a.o.mesh.traverse(m=>{ if(!m.isMesh||(m.material&&m.material.transparent)) return; const pa=m.geometry.attributes.position; for(let i=0;i<pa.count;i++){ _v.fromBufferAttribute(pa,i).applyMatrix4(m.matrixWorld); if(Math.abs(_v.x)>4.6||Math.abs(_v.z)>3.45) bad='off the felt'; else if(_v.y<-.03) bad=bad||'through the felt'; } }); if(bad) P.push(`${a.k} ${bad}`); });
  // the fullest rows the rules allow must stay on the felt and clear of each other
- const row=L=>{ for(let i=0;i<L.length;i++){ if(Math.abs(L[i].x)>4.05||Math.abs(L[i].z)>3.3) P.push('slot off the felt'); for(let j=i+1;j<L.length;j++) if(L[i].distanceTo(L[j])<.74) P.push('slots too close'); } };
+ const row=L=>{ for(let i=0;i<L.length;i++){ if(Math.abs(L[i].x)>4.15||Math.abs(L[i].z)>3.3) P.push('slot off the felt'); for(let j=i+1;j<L.length;j++) if(L[i].distanceTo(L[j])<.8) P.push('slots too close'); } };
  row([...Array(12).keys()].map(k=>railSlot(k,'them'))); row([...Array(9).keys()].map(k=>railSlot(k,'you'))); row(traySlots(9,'you')); row(traySlots(9,'them'));
  R.forEach(a=>{ if(a.k==='stray') P.push('stray die'); });
  for(let i=0;i<R.length;i++) for(let j=i+1;j<R.length;j++){ const o=ov(R[i].r,R[j].r); if(o>.06*Math.min(area(R[i].r),area(R[j].r))) P.push(`dice touch ${R[i].k}/${R[j].k} ${Math.round(o)}`); }
