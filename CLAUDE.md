@@ -51,3 +51,11 @@ Browser checks need `pip install playwright && python3 -m playwright install chr
 1. Run the checks that cover what you touched (rules → logic + balance; layout/3D → e2e; saves → `save_reload.py`).
 2. Have a fresh-context subagent review the diff against REVIEW.md. Run `/code-review` and `/security-review`.
 3. Fill in the PR template (Testing with real output, Risk tier, How to revert).
+
+## Git workflow
+Everything lives in https://github.com/ColtonCraig/low-roller (`origin`, with `gh` logged in).
+1. Start a new branch off `main` for each task.
+2. Commit as you go and push the branch to GitHub.
+3. When a task is done, run the checks above, have a subagent review the diff against REVIEW.md, then open a PR with
+   `gh pr create` using the PR template.
+4. Wait for CI. Fix anything red and any review findings, then tell Colton it's ready to merge.
