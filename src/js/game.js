@@ -1375,7 +1375,7 @@ async function fightWon(){ const F0kind=F.kind;
 }
 
 /* ================= REWARD ================= */
-function dieCard(type,price){ const d=DT[type]; const el=h(`<button class="card k-die ${d.rare?'t-r':''}"><span class="k">${d.rare?'Rare die':'Die'}</span><span class="art"><span class="slot"></span></span><span class="mid"><span class="n">${d.name}</span><span class="d">${kw(d.desc)}</span><span class="f">${facesHTML({type})}</span></span>${price!=null?`<span class="p">$${price}</span>`:''}</button>`); el.querySelector('.slot').replaceWith(iconCanvas(type,'C',46)); return el; }
+function dieCard(type,price){ const d=DT[type]; const el=h(`<button class="card k-die t-${d.tier}"><span class="k">${TIER_NAME[d.tier]} die</span><span class="art"><span class="slot"></span></span><span class="mid"><span class="n">${d.name}</span><span class="d">${kw(d.desc)}</span><span class="f">${facesHTML({type})}</span></span>${price!=null?`<span class="p">$${price}</span>`:''}</button>`); el.querySelector('.slot').replaceWith(iconCanvas(type,'C',46)); return el; }
 function charmCard(c,price){ const d=CHARMS[c]; return h(`<button class="card t-${d.tier}"><span class="k">${TIER_NAME[d.tier]}</span><span class="art">${chipHTML(c)}</span><span class="mid"><span class="n">${d.name}</span><span class="d">${kw(d.desc)}</span></span>${price!=null?`<span class="p">$${price}</span>`:''}</button>`); }
 const SVC_OF={'?':'back','+':'heal','W':'heal','\u2715':'remove','1':'file','$':'bar','\u263E':'alley'};
 function svcIcon(ico,key){ const k=key||(String(ico).includes('ruby')?'gild':SVC_OF[ico]); return SVC_ICON[k]?`<span class="cicon sv"><img src="${SVC_ICON[k]}" alt=""></span>`:`<span class="pchip plain"><span>${ico}</span></span>`; }
@@ -1403,7 +1403,7 @@ function renderReward(kind){
   const choices=[];
   if(kind==='B'){ const r=pick(rarePool()); choices.push(r.k==='die'?{k:'die',t:r.t}:{k:'charm',c:r.c}); shuffle(charmPool('u')).slice(0,2).forEach(c=>choices.push({k:'charm',c})); }
   else if(kind==='E') shuffle(charmPool('u')).slice(0,3).forEach(c=>choices.push({k:'charm',c}));
-  else { choices.push({k:'die',t:pick(SHOP_DICE)}); shuffle(charmPool('c')).slice(0,2).forEach(c=>choices.push({k:'charm',c})); }
+  else { choices.push({k:'die',t:shopDie(G.act)}); shuffle(charmPool('c')).slice(0,2).forEach(c=>choices.push({k:'charm',c})); }
   while(choices.length<3) choices.push({k:'heal'});
   W={kind,quick,gold,choices}; }
   G.rw=W; G.at='reward'; saveRun();
@@ -1430,7 +1430,7 @@ const canTab=price=>G&&(price-G.gold+2+G.tab)<=TAB_LIMIT+2&&(price-G.gold)<=TAB_
 function renderShop(){
   F=null; clearLabels();
   let pickMode=null; const els=[];
-  const up=LIM().price; const stockFor=()=>[...shuffle(SHOP_DICE).slice(0,2).map(t=>({k:'die',t,price:DT[t].price+up})),...stockCharms(3).map(c=>({k:'charm',c,price:CHARMS[c].price+up,rare:CHARMS[c].tier==='r'}))];
+  const up=LIM().price; const stockFor=()=>[...shopDice(G.act,2).map(t=>({k:'die',t,price:DT[t].price+up})),...stockCharms(3).map(c=>({k:'charm',c,price:CHARMS[c].price+up,rare:CHARMS[c].tier==='r'}))];
   const fixed=()=>[{k:'back',price:4+up},{k:'heal',price:6+up},{k:'remove',price:6+up},{k:'file',price:G.filePrice+up},{k:'gild',price:G.gildPrice+up}];
   const S=G.shop||(G.shop={stock:stockFor(),fixed:fixed(),pick:null}); pickMode=S.pick||null; G.rw=null; G.at='bar'; saveRun();
   screen(`${hud()}<div class="modal wide paper pe">
@@ -1542,7 +1542,7 @@ const EVENTS=[
   {t:'The Fortune Teller',p:'A woman with a cracked crystal ball waves you over. \u201cThe cards want something from you. A little of your nerve.\u201d',
    o:[{t:'Let her read you',d:'Lose 8 nerve. Gain a random Uncommon charm.',ok:()=>G.hp>8&&G.charms.length<MAX_CHARMS&&charmPool('u').length>0,go:()=>{ G.hp-=8; const c=pick(charmPool('u')); gainCharm(c); return `She presses <b>${CHARMS[c].name}</b> into your palm and closes your fingers.`; }},{t:'Ask about love',d:'Heal 8.',go:()=>{ G.hp=Math.min(G.maxHp,G.hp+8); return 'She says somebody\u2019s waiting. It helps more than it should.'; }}]},
   {t:'The Bootlegger',p:'A truck idles in the alley. The driver lifts a tarp: crates of dice, still smelling of the factory.',
-   o:[{t:'Buy a crate',d:'Pay $9 for two random dice.',ok:()=>G.gold>=9,go:()=>{ G.gold-=9; const a=pick(SHOP_DICE), b=pick(SHOP_DICE); G.bag.push(newDie(a),newDie(b)); return `Inside: ${DT[a].name} and ${DT[b].name}.`; }},{t:'Rat him out',d:'+$6 from the bartender.',go:()=>{ G.gold+=6; SFX.coin(); return 'The bartender slides you six and a look. +$6.'; }}]},
+   o:[{t:'Buy a crate',d:'Pay $9 for two random dice.',ok:()=>G.gold>=9,go:()=>{ G.gold-=9; const [a,b]=shopDice(G.act,2); G.bag.push(newDie(a),newDie(b)); return `Inside: ${DT[a].name} and ${DT[b].name}.`; }},{t:'Rat him out',d:'+$6 from the bartender.',go:()=>{ G.gold+=6; SFX.coin(); return 'The bartender slides you six and a look. +$6.'; }}]},
   {t:'Arm Wrestle',p:'A dockworker slams his elbow on the bar. \u201cBeat me and the shaved one\u2019s yours.\u201d He has a die you\u2019d kill for.',
    o:[{t:'Lock hands',d:'Half the time: a Shaved Die. Half: lose 10 nerve.',ok:()=>G.hp>10,go:()=>{ if(Math.random()<.5){ G.bag.push(newDie('shaved')); return 'His wrist gives. The <b>Shaved Die</b> is yours.'; } G.hp-=10; return 'Your arm hits the bar like a dropped plank. \u221210 nerve.'; }},{t:'Buy him a beer instead',d:'Pay $3, heal 5.',ok:()=>G.gold>=3,go:()=>{ G.gold-=3; G.hp=Math.min(G.maxHp,G.hp+5); return 'He tells you about his mother. You feel better somehow.'; }}]},
   {t:'The Photographer',p:'Flashbulb. A man from the Herald wants a picture of the hot hand in the room. Fifteen bucks for the front page.',

@@ -5,21 +5,21 @@
 const DT = {
   d6:     {name:'House Die',   short:'d6', skin:'bone',   faces:[1,2,3,4,5,'C'],              tier:'c', price:4,  desc:'The standard die. A crown scores 0.'},
   d8:     {name:'Octo',        short:'d8', skin:'octo',   faces:[1,2,3,4,5,6,7,'C'],          tier:'c', price:3,  desc:'Eight sides. Usually rolls high.'},
-  pebble: {name:'Pebble',      short:'d4', skin:'pebble', faces:[1,2,3,'C'],                  tier:'c', price:6,  size:.46, desc:'Four sides, all low.'},
-  loaded: {name:'Loaded Die',  short:'LD', skin:'loaded', faces:[1,1,2,3,4,'C'],              tier:'u', price:8,  desc:'Weighted low. Never rolls a 5.'},
+  pebble: {name:'Pebble',      short:'d4', skin:'pebble', faces:[1,2,3,'C'],                  tier:'u', price:8,  size:.46, desc:'Four sides, all low.'},
+  loaded: {name:'Loaded Die',  short:'LD', skin:'loaded', faces:[1,1,2,3,4,'C'],              tier:'c', price:6,  desc:'Weighted low. Never rolls a 5.'},
   glass:  {name:'Glass Die',   short:'GL', skin:'glass',  faces:[1,1,1,2,'C','C'],            tier:'c', price:5,  breaks:3, desc:'Great faces, but it shatters after you draw it for 3 rounds.'},
   ember:  {name:'Ember',       short:'EM', skin:'ember',  faces:[1,2,3,4,5,6,'C','C'],        tier:'u', price:7,  desc:'Two crowns on eight sides. Bank a crown: you get +2 odds this round.'},
   devil:  {name:"Devil's Die", short:'−1', skin:'devil',  faces:[-1,2,3,4,5,'C'],             tier:'u', price:9,  desc:'One face is −1: it takes a point off your score.'},
-  coin:   {name:'Lucky Coin',  short:'¢',  skin:'coin',   faces:[1,'C'],                      tier:'u', price:14, desc:'Only ever a 1 or a crown.'},
-  twin:   {name:'Twin',        short:'TW', skin:'twin',   faces:[1,2,3,4,5,'C'],              tier:'u', price:8,  desc:'Copies your lowest other die in the same throw.'},
-  gamble: {name:'High Roller', short:'12', skin:'gamble', faces:[1,2,3,4,5,6,7,8,9,10,11,'C'], tier:'u', price:6, size:.62, desc:'Mostly awful. Bank its crown: you get ×2 odds this round and $3.'},
-  shaved: {name:'Shaved Die',  short:'SH', skin:'shaved', faces:[1,1,2,2,'C','C'],            tier:'r', price:16, rare:true, desc:'Two 1s, two 2s, two crowns.'},
+  coin:   {name:'Lucky Coin',  short:'¢',  skin:'coin',   faces:[1,'C'],                      tier:'r', price:12, desc:'Only ever a 1 or a crown.'},
+  twin:   {name:'Twin',        short:'TW', skin:'twin',   faces:[1,2,3,4,5,'C'],              tier:'r', price:11,  desc:'Copies your lowest other die in the same throw.'},
+  gamble: {name:'High Roller', short:'12', skin:'gamble', faces:[1,2,3,4,5,6,7,8,9,10,11,'C'], tier:'c', price:6, size:.62, desc:'Mostly awful. Bank its crown: you get ×2 odds this round and $3.'},
+  shaved: {name:'Shaved Die',  short:'SH', skin:'shaved', faces:[1,1,2,2,'C','C'],            tier:'r', price:16, desc:'Two 1s, two 2s, two crowns.'},
   gilded: {name:'Gilded Die',  short:'GD', skin:'gilded', faces:[1,2,3,4,5,'C'],              tier:'u', price:9,  desc:'Bank its crown: you get $2.'},
   bomb:   {name:'Cherry Bomb', short:'CB', skin:'bomb',   faces:[1,2,3,4,5,'C'],              tier:'u', price:8,  desc:'Bank its crown: the opponent loses 8% of their max nerve on the spot (at least 2).'},
   goose:  {name:'Goose Egg',   short:'00', skin:'goose',  faces:[0,0,4,5,6,'C'],              tier:'c', price:5,  desc:'Two faces are 0. The rest run high.'},
-  boxcar: {name:'Boxcars',     short:'BX', skin:'boxcar', faces:[1,1,1,6,6,'C'],              tier:'u', price:7,  desc:'Three 1s, two 6s. Pairs well with Snake Eyes.'},
+  boxcar: {name:'Boxcars',     short:'BX', skin:'boxcar', faces:[1,1,1,6,6,'C'],              tier:'c', price:6,  desc:'Three 1s, two 6s. Pairs well with Snake Eyes.'},
 };
-const SHOP_DICE=['pebble','loaded','glass','ember','devil','coin','twin','gamble','gilded','bomb','goose','boxcar'];
+const SHOP_DICE=['pebble','loaded','glass','ember','devil','coin','twin','gamble','gilded','bomb','goose','boxcar','shaved'];
 // tier: c common · u uncommon · r rare.  Odds math: (1 + every +odds) × every ×odds
 const CHARMS={
   jewels:  {name:'Crown Jewels',  ico:'♛', tier:'c', price:6, desc:'You get +1 odds per crown you bank.'},
@@ -205,7 +205,7 @@ const FLOORS=[['F'],['F','?'],['F','E','?'],['R','?'],['F','E','?'],['F','E'],['
 const HAND=6;
 // ---- scaling: each act is a new tier, like a new ante. HP grows geometrically, their odds climb. ----
 // nerve at the top of each act for a regular / shark / boss. Regulars and sharks ramp up floor by floor.
-const ACT_HP=[{F:13,E:30,B:52},{F:58,E:84,B:114},{F:150,E:185,B:335}];
+const ACT_HP=[{F:13,E:30,B:52},{F:52,E:74,B:100},{F:132,E:162,B:295}];
 const ACT_ODDS=[1,2,2.5];           // how hard their wins hit you
 const LAP_HP=3;                     // endless: every lap triples nerve
 function rnd(n){return Math.floor(Math.random()*n)}
@@ -289,8 +289,14 @@ const EXTRA_STOPS=['F','?','E'];
 function genFloors(){ return FLOORS.map((pool,f)=>{ const out=shuffle(pool).slice(0,Math.min(2,pool.length));
   if(f>0&&f<FLOORS.length-1&&Math.random()<.35){ const ex=shuffle(EXTRA_STOPS.filter(x=>!out.includes(x)&&!(f<2&&x==='E')))[0]; if(ex) out.push(ex); }
   return out; }); }
-// shop and reward rarity climbs with the act: mostly commons in the Nail, rares turn up upstairs
-function rollTier(act){ const r=Math.random(), a=Math.max(0,Math.min(2,act||0)); return r<[.7,.58,.48][a]?'c':r<[.995,.95,.9][a]?'u':'r'; }
+// Rarity, for dice and charms alike (Balatro-style): every slot rolls common / uncommon / rare. Rares can turn up
+// from the first room; they just get likelier the deeper you go.
+const RARITY=[[.70,.275,.025],[.63,.32,.05],[.57,.35,.08]];
+// dice lean less common than charms: there are fewer of them and a common die is a small upgrade at best
+const RARITY_DICE=[[.5,.44,.06],[.44,.48,.08],[.38,.5,.12]];
+function rollTier(act,W){ const r=Math.random(), w=(W||RARITY)[Math.max(0,Math.min(2,act||0))]; return r<w[0]?'c':r<w[0]+w[1]?'u':'r'; }
+function shopDie(act,not){ const t=rollTier(act,RARITY_DICE), pool=SHOP_DICE.filter(d=>DT[d].tier===t&&!(not||[]).includes(d)); return pick(pool.length?pool:SHOP_DICE.filter(d=>!(not||[]).includes(d))); }
+function shopDice(act,n){ const out=[]; for(let i=0;i<n;i++) out.push(shopDie(act,out)); return out; }
 /*LOGIC-END*/
 
-if(typeof module!=='undefined'&&module.exports) module.exports={rollTier,ACT_HP,DT,SHOP_DICE,CHARMS,QUIRKS,ACTS,FLOORS,HAND,ACT_ODDS,rnd,pick,shuffle,facesOf,rollInst,rollFace,effVal,aiRound,makeOpp,newRound,bankVals,noteBank,oddsOf,settle,genFloors,fileDie,gildDie,canFile,canGild,LIMITS,limitMods,POCKETS,pocketStart,theirScore,breaksAt,bombDmg,isRaid,bossOf,EXTRA_Q};
+if(typeof module!=='undefined'&&module.exports) module.exports={rollTier,shopDie,shopDice,RARITY,RARITY_DICE,ACT_HP,DT,SHOP_DICE,CHARMS,QUIRKS,ACTS,FLOORS,HAND,ACT_ODDS,rnd,pick,shuffle,facesOf,rollInst,rollFace,effVal,aiRound,makeOpp,newRound,bankVals,noteBank,oddsOf,settle,genFloors,fileDie,gildDie,canFile,canGild,LIMITS,limitMods,POCKETS,pocketStart,theirScore,breaksAt,bombDmg,isRaid,bossOf,EXTRA_Q};
