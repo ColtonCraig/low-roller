@@ -1,5 +1,6 @@
 // Rebuilds the old single-file version (dist/low-roller.html) from src/, for sharing a quick web preview.
 // Fonts and Three.js are inlined so the file works offline. Not used by the desktop app.
+// Published as a private Claude artifact with capabilities {db:{}, user:{}} so saves sync between devices.
 // (Replacements use functions so `$` sequences in the game code aren't treated as patterns.)
 const fs = require('fs');
 const path = require('path');
@@ -15,7 +16,10 @@ let html = read('index.html')
   .replace('<link rel="stylesheet" href="styles.css">', () => `<style>${read('styles.css')}</style>`)
   .replace('<script src="vendor/three.min.js"></script>', () => `<script>${read('vendor/three.min.js')}</script>`)
   .replace('<script src="js/logic.js"></script>', () => `<script>${read('js/logic.js')}</script>`)
-  .replace('<script src="js/game.js"></script>', () => `<script>${read('js/game.js')}</script>`);
+  // game.js is held as text and started by cloud-save.js once the save is synced (see that file).
+  .replace('<script src="js/game.js"></script>', () =>
+    `<script type="text/plain" id="lr-game">${read('js/game.js')}</script>\n` +
+    `<script>${fs.readFileSync(path.join(__dirname, 'web', 'cloud-save.js'), 'utf8')}</script>`);
 
 fs.mkdirSync(path.join(__dirname, '..', 'dist'), { recursive: true });
 const out = path.join(__dirname, '..', 'dist', 'low-roller.html');
