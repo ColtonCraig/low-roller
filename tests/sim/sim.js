@@ -51,8 +51,10 @@ function playRound(hand,G,o,F,T,env,lam,smart){
   return {p,R,crowns}; }
 
 // ---------- a table ----------
-function pickFoe(G,kind,act,floor){ const Af=ACTS[act].foes; if(kind==='B') return L.bossOf(act,G.bossIx[act]); if(kind==='E') return L.pick(floor<=3?Af.e1:Af.e2);
-  let pool=floor<=3?Af.t1:Af.t2; if(floor<2&&act===0&&G.lap===0) pool=pool.filter(p=>!(p.q||[]).some(q=>!L.QUIRKS[q].help)); return L.pick(pool); }
+function pickFoe(G,kind,act,floor){ const Af=ACTS[act].foes; if(kind==='B') return L.bossOf(act,G.bossIx[act]);
+  const used=G.used=G.used||{}, fresh=pool=>{ const un=pool.filter(p=>!used[act+p.n]); const d=L.pick(un.length?un:pool); used[act+d.n]=1; return d; }; // like chooseFoe: no repeats in a room
+  if(kind==='E') return fresh(floor<=3?Af.e1:Af.e2);
+  let pool=floor<=3?Af.t1:Af.t2; if(floor<2&&act===0&&G.lap===0) pool=pool.filter(p=>!(p.q||[]).some(q=>!L.QUIRKS[q].help)); return fresh(pool); }
 function fight(G,kind,act,floor,smart,stats){ const def=pickFoe(G,kind,act,floor);
   const o=L.makeOpp(def,kind,act,floor,G.lap,kind==='F'&&act===0&&floor<2&&G.lap===0,LV); let oh=o.hp; const F={p2:false,wins:0,loss:0,rabbit:false,heavy:false,rounds:0};
   while(G.hp>0&&oh>0&&F.rounds<80){ F.rounds++; const T=o.q.includes('pair')?Math.min(L.aiRound(o.bag,o.t).total,L.aiRound(o.bag,o.t).total):L.aiRound(o.bag,o.t).total;
