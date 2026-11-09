@@ -306,10 +306,10 @@ function setActTheme(a){ if(typeof uiTextures==='function') try{ uiTextures(a); 
     c.strokeStyle=T.trim; c.globalAlpha=.55; c.lineWidth=1; for(const [bx,bz] of [[4.46,3.31],[4.38,3.24]]) c.strokeRect(cx(-bx),cy(-bz),bx*55.66,bz*55.66);
     for(const [x,y] of [[-4.38,-3.24],[4.38,-3.24],[-4.38,3.24],[4.38,3.24]]) for(let r=8;r<=20;r+=6){ c.beginPath(); c.arc(cx(x),cy(y),r,0,7); c.stroke(); }
     // running stitches bracket each bank zone; four brass tacks pin the tray
-    c.globalAlpha=.3; c.setLineDash([3,3]); for(const [x0,x1,z0,z1] of [[-4.42,-.7,-2.86,-.68],[-4.42,2.3,-.1,.92]]) for(const [x,dx] of [[x0,.4],[x1,-.4]]){ c.beginPath(); c.moveTo(cx(x+dx),cy(z0)); c.lineTo(cx(x),cy(z0)); c.lineTo(cx(x),cy(z1)); c.lineTo(cx(x+dx),cy(z1)); c.stroke(); } c.setLineDash([]);
+    c.globalAlpha=.3; c.setLineDash([3,3]); for(const [x0,x1,z0,z1] of [[-.88,4.42,-2.52,-1.38],[-4.42,2.3,-.1,.92]]) for(const [x,dx] of [[x0,.4],[x1,-.4]]){ c.beginPath(); c.moveTo(cx(x+dx),cy(z0)); c.lineTo(cx(x),cy(z0)); c.lineTo(cx(x),cy(z1)); c.lineTo(cx(x+dx),cy(z1)); c.stroke(); } c.setLineDash([]);
     c.globalAlpha=.55; c.fillStyle='#c9a14a'; for(const x of [-4.2,4.2]) for(const z of [1.35,2.75]) c.fillRect(Math.round(cx(x))-1,Math.round(cy(z))-1,2,2);
     if(a===2){ c.globalAlpha=.12; c.fillStyle='#000'; for(let i=0;i<9;i++){ c.beginPath(); c.arc(Math.random()*w,Math.random()*hh,4+Math.random()*12,0,7); c.fill(); } }
-    c.globalAlpha=.62; c.fillStyle=T.trim; c.font="10px 'Jersey 15',monospace"; c.textAlign='center'; c.fillText('LOWEST SCORE WINS',cx(3.2),cy(-2.45),60); c.fillText(A.name.toUpperCase(),cx(3.2),cy(-2.05),60); c.globalAlpha=1; FELT_TEX.needsUpdate=true; }
+    c.globalAlpha=.62; c.fillStyle=T.trim; c.font="10px 'Jersey 15',monospace"; c.textAlign='center'; c.fillText('LOWEST SCORE WINS',cx(-2.55),cy(-2.45),60); c.fillText(A.name.toUpperCase(),cx(-2.55),cy(-2.05),60); c.globalAlpha=1; FELT_TEX.needsUpdate=true; }
   { const c=WALL_CV.getContext('2d'), w=32; c.globalAlpha=1; c.fillStyle=T.wall; c.fillRect(0,0,w,w); c.strokeStyle=T.pat; c.fillStyle=T.pat;
     if(T.style==='fan'){ c.globalAlpha=.6; for(let r=4;r<=16;r+=4){ c.beginPath(); c.arc(16,32,r,Math.PI,0); c.stroke(); c.beginPath(); c.arc(0,16,r,-Math.PI/2,Math.PI/2); c.stroke(); c.beginPath(); c.arc(32,16,r,Math.PI/2,Math.PI*1.5); c.stroke(); } }
     if(T.style==='diamond'){ c.globalAlpha=.5; c.beginPath(); c.moveTo(16,1); c.lineTo(31,16); c.lineTo(16,31); c.lineTo(1,16); c.closePath(); c.stroke(); c.globalAlpha=.8; c.fillRect(15,15,2,2); c.globalAlpha=.25; for(let i=0;i<40;i++){ c.fillStyle='#000'; c.fillRect(Math.random()*w,Math.random()*w,1,1); } }
@@ -695,15 +695,15 @@ function dieScreen(o){ return toScreen(o.mesh.position.clone().add(new THREE.Vec
 // how wide the table looks at depth z, in world units from the centre line
 function visHalfW(z){ const a=toScreen(new THREE.Vector3(0,0,z)), b=toScreen(new THREE.Vector3(1,0,z)); const px=Math.abs(b.x-a.x)||1; return (VW/2)/px; }
 // The table has fixed zones so dice never meet:
-//   screen left  their banked dice in two rows of four, on the felt, clear of their hands; the cup stays on their other side
+//   back row     their banked dice in one tight row, from the cup out to the right corner
 //   middle       where their throws land (empty again by the time you throw)
 //   your row     your banked dice behind your tray, filling leftwards; a sixth and seventh continue to the right
 //   front        your tray, value plates in front of it
 // Every position stays inside the felt (x within 4.5, z within 3.35).
 // The camera (fitCam) zooms to fit the zones to the screen; dice never move to make room.
-const TRAY_Z=1.9, THEIR_Z=-.05, MY_RAIL_SP=.95, MY_RAIL_Z=.42;
-// Only Twins pass 8: the second twin's last four sit far right, past the cup
-const THEIR_SLOTS=[[-1.15,-2.35],[-2.12,-2.35],[-3.09,-2.35],[-4.06,-2.35],[-1.15,-1.15],[-2.12,-1.15],[-3.09,-1.15],[-4.06,-1.15],[2.12,-1.15],[3.09,-1.15],[4.06,-1.15],[4.06,-2.35]];
+const TRAY_Z=1.9, THEIR_Z=.15, MY_RAIL_SP=.95, MY_RAIL_Z=.42;
+// Only Twins pass 6, and only while the second twin throws: the pair keep one set, which re-slots into the row
+const THEIR_SLOTS=[[-.4,-1.95],[.5,-1.95],[1.4,-1.95],[2.3,-1.95],[3.2,-1.95],[4.1,-1.95],[-1.3,-1.95],[-2.2,-1.95],[-3.1,-1.95],[-4,-1.95],[-1.3,-.6],[-2.2,-.6]];
 function traySlots(n,side){ const out=[], you=side==='you', z0=you?TRAY_Z:THEIR_Z, sp=n>1?Math.min(you?1.18:1.15,(you?7.8:7.4)/(n-1)):0, jit=n>=8?.03:.08;
   for(let i=0;i<n;i++) out.push(new THREE.Vector3((i-(n-1)/2)*sp+(Math.random()-.5)*jit,0,z0+(Math.random()-.5)*jit));
   return out; }

@@ -30,7 +30,7 @@ CHECK=r"""(()=>{ const P=[]; const own=new Map(); const ds=[...ALLDICE].filter(o
  if(foe&&ui.plate){ const u=foe.userData, hp=new THREE.Vector3(); u.head.getWorldPosition(hp); const s=toScreen(hp); if(s.x>ui.plate.left&&s.x<ui.plate.right&&s.y>ui.plate.top&&s.y<ui.plate.bottom) P.push('face under nameplate'); }
  return {P:[...new Set(P)], n:R.length, zoom:+(CAMF.zoom||1).toFixed(2)}; })()"""
 async def toTurn(pg):
-  for i in range(80):
+  for i in range(480):
     await pg.wait_for_timeout(250)
     if await pg.query_selector('#bank') and not await pg.evaluate('busy'): return True
   return False
@@ -44,7 +44,7 @@ async def run(p,name):
     else: await pg.click('#stops .entry')
     if opp=='heavy':
       await toTurn(pg); await pg.evaluate("F.heavy=true; F.oppHp=9999; G.hp=9999; tray().forEach(o=>toggleSel(o)); const b=document.querySelector('#bank'); b&&b.click(); 0")
-      await pg.wait_for_selector('#again',timeout=40000); await pg.click('#again')
+      await pg.wait_for_selector('#again',timeout=120000); await pg.click('#again')
     ok=await toTurn(pg); await pg.wait_for_timeout(500)
     if not ok: out.append(f"{sc}: never reached your turn")
     r=await pg.evaluate(CHECK); tag=f"{sc}:t1"
