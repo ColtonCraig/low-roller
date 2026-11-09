@@ -52,10 +52,11 @@ Browser checks need `pip install playwright && python3 -m playwright install chr
 2. Have a fresh-context subagent review the diff against REVIEW.md. Run `/code-review` and `/security-review`.
 3. Fill in the PR template (Testing with real output, Risk tier, How to revert).
 
-## Git workflow
-Everything lives in https://github.com/ColtonCraig/low-roller (`origin`, with `gh` logged in).
-1. Start a new branch off `main` for each task.
-2. Commit as you go and push the branch to GitHub.
-3. When a task is done, run the checks above, have a subagent review the diff against REVIEW.md, then open a PR with
-   `gh pr create` using the PR template.
-4. Wait for CI. Fix anything red and any review findings, then tell Colton it's ready to merge.
+## How Colton plays it, and the git workflow
+Colton isn't publishing this for now; he plays it as a private Claude artifact (https://claude.ai/artifact/449QPYqwVu23fBv1WuRwhD)
+on his Mac and phone. It's the desktop layout; one save syncs across devices (`tools/web/cloud-save.js`).
+GitHub (private repo, `origin`) is only the backup of the full project. Colton doesn't want PRs or CI waits.
+1. Clone/pull `main`, make the change, run the checks that cover it (rules → logic + balance; layout/saves → a quick
+   Playwright pass).
+2. `node tools/bundle.js`, then republish `dist/low-roller.html` to the artifact URL above (capabilities `{db:{}, user:{}}`).
+3. Commit and push straight to `main`.
