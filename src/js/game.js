@@ -502,7 +502,7 @@ function buildFoe(look){
   // a soft key light rides with them, so their clothes and props read against the dark room
   const key=new THREE.PointLight(0xffd8a8,1.15,6.5,1.5); key.position.set(.6,3.6,2.4); root.add(key); const fill=new THREE.PointLight(L.eye||0xffffff,.25,3,2); fill.position.set(0,3.1,1.1); root.add(fill);
   if(L.twins===1) root.children.forEach(c=>c.position.x+=.775); // a pair sits side by side, centered
-  const S=L.scale||1; g.scale.setScalar(S);
+  const S=1+((L.scale||1)-1)*.55; g.scale.setScalar(S);
   g.userData={twins:twinG,root,torso,head,eyes,eyeM,eyeColor:new THREE.Color(L.eye),hat,armL,armR,cup,mouth,cigarTip,S,
     seatY:-.55, standY:.25, homeZ:-4.55-(S-1)*1.58, lean:0, lookX:0, mode:'idle', breath:1, tapT:0, laugh:0, slump:0, hunch:L.hunch||0, jitter:L.jitter||0, noBlink:!!L.noBlink};
   SCN.add(g); foe=g;
@@ -738,15 +738,18 @@ function fitCam(){ if(!CAM||!CAMF||!camLook) return;
   const apply=zoom=>{ const d=CAMF.dist*zoom; fogTo(d); camBase.set(0,camLook.y+Math.sin(CAMF.el)*d,camLook.z+Math.cos(CAMF.el)*d); CAM.position.copy(camBase); CAM.lookAt(camLook); CAM.updateMatrixWorld(); };
   const yt=document.querySelector('.yourtab');
   if(!F||!yt||!yt.getBoundingClientRect().height){ apply(1); CAMF.zoom=1; return; }
-  const mg=document.querySelector('#ui .msg'), bg=document.getElementById('bagslip'), u=foe&&foe.userData;
-  let hatY=0, hatMin=4; if(u){ hatY=new THREE.Box3().setFromObject(foe).max.y-foe.position.y+u.seatY+.1; if(u.twins.length){ const h=document.querySelector('#ui .hud'); if(h) hatMin=h.getBoundingClientRect().bottom+2; } }
+  const mg=document.querySelector('#ui .msg'), u=foe&&foe.userData;
+  // the opponent's bounding box as seated (all 8 corners: the back of a big hat sits higher on screen than its middle)
+  let hatPts=[], hatMin=Math.max(30,VH*.04); if(u){ const bx=new THREE.Box3().setFromObject(foe), dy=u.seatY-foe.position.y+.1;
+    for(const x of [bx.min.x,bx.max.x]) for(const z of [bx.min.z,bx.max.z]) hatPts.push(new THREE.Vector3(x,bx.max.y+dy,z-foe.position.z+u.homeZ));
+    if(u.twins.length){ const h=document.querySelector('#ui .hud'); if(h) hatMin=h.getBoundingClientRect().bottom+2; } }
   let zoom=1;
   for(let i=0;i<90;i++){ apply(zoom);
     let floor=yt.getBoundingClientRect().top; const m=mg&&mg.getBoundingClientRect(); if(m&&m.height&&m.right>VW*.25&&m.left<VW*.75) floor=Math.min(floor,m.top);
     const lab=toScreen(new THREE.Vector3(0,0,TRAY_Z+.68)).y+16;
-    let cornerFloor=VH; for(const e of [bg,mg]){ const b=e&&e.getBoundingClientRect(); if(b&&b.height) cornerFloor=Math.min(cornerFloor,b.top); }
+    let cornerFloor=VH; for(const e of [mg]){ const b=e&&e.getBoundingClientRect(); if(b&&b.height) cornerFloor=Math.min(cornerFloor,b.top); }
     const corner=toScreen(new THREE.Vector3(-4.1,0,MY_BANK_Z+.45)).y<=cornerFloor-4;
-    const wide=visHalfW(TRAY_Z)>=5.05, hat=!u||toScreen(new THREE.Vector3(0,hatY,u.homeZ)).y>=hatMin;
+    const wide=visHalfW(TRAY_Z)>=5.05, hat=hatPts.every(v=>toScreen(v).y>=hatMin);
     if((lab>floor-8||!wide||!hat||!corner)&&zoom<1.8) zoom*=1.02; else break; }
   CAMF.zoom=zoom; }
 // a throw with three settling bounces; landings make the thocks
@@ -791,7 +794,10 @@ async function gatherYours(list){ await Promise.all(list.map((o,i)=>{ const m=o.
 function shatter(o){ const p=o.mesh.position.clone(); disposeDie(o); SFX.shatter();
   const mat=new THREE.MeshLambertMaterial({color:0xa6e2f2,emissive:0x1a3a44,transparent:true,opacity:.85});
   for(let i=0;i<9;i++){ const sh=new THREE.Mesh(new THREE.TetrahedronGeometry(R_(.06,.13)),mat); sh.position.copy(p); sh.castShadow=true; SCN.add(sh);
-    debris.push({o:sh,v:new THREE.Vector3(R_(-2.5,2.5),R_(2,4.5),R_(-2.5,2.5)),w:new THREE.Vector3(R_(-9,9),R_(-9,9),R_(-9,9)),floor:.04,shard:true}); } }
+    debris.push({o:sh,v:new THREE.Vector3(R_(-2.5,2.5),R_(2,4.5),R_(-2.5,2.5)),w:new THREE.Vector3(R_(-9,9),R_(-9,9),R_(-9,9)),floor:.04,shard:true}); }
+  // the shards fade off the felt once they've landed
+  const mine=debris.filter(d=>d.o.material===mat);
+  sleep(1300).then(()=>anim(700,k=>{ mat.opacity=.85*(1-k); })).then(()=>{ mine.forEach(d=>{ SCN.remove(d.o); d.o.geometry.dispose(); }); debris=debris.filter(d=>!mine.includes(d)); mat.dispose(); }); }
 frameFns.add((dt,t)=>{ if(!F||!F.you) return; F.you.forEach(o=>{ if(!o.home||o.banked||o.flying) return; const target=o.sel?.45:(o.hover?.12:0); o.lift+=(target-o.lift)*Math.min(1,dt*14);
   o.mesh.position.y=o.home.y+o.lift+(o.sel?Math.sin(t*5+o.inst.uid)*.04:0); o.pop=(o.pop||0)*Math.max(0,1-dt*6); o.mesh.scale.setScalar(1+Math.sin((1-o.pop)*Math.PI*3)*o.pop*.08); }); });
 // value plates under each die in your tray
@@ -998,7 +1004,6 @@ const NODE={
   '?':{t:'A stranger',d:'Someone wants something.',pay:'?',ico:'?'},
   B:{t:'Big Sal',d:'The owner. Beat her and the Nail is yours.',pay:'the keys'}};
 const STYLE={1:'Tight. Only keeps 1s and crowns.',2:'Loose. Keeps anything 2 or under.'}, STYLE_S={1:'Tight',2:'Loose'};
-const SIG=['Slams the table at half nerve: your two best dice jump.','Swaps one of your dice for an Octo every round.','Every tie goes to him.'];
 function preview(){ G.preview=G.preview||{}; if(!G.preview[G.floor]) G.preview[G.floor]=G.floors[G.floor].map(n=>({n,opp:'FEB'.includes(n)?chooseFoe(n):null})); return G.preview[G.floor]; }
 function theirDice(types){ const w=h('<div class="drow"></div>'); bagCounts(types).forEach(([t,n])=>{ const b=h(`<span class="dchip"><span class="ic"></span>${n>1?`${n} × `:''}${DT[t].name}</span>`); b.querySelector('.ic').replaceWith(iconCanvas(t,null,24)); w.appendChild(b); }); return w; }
 function entry(p,i){
@@ -1079,7 +1084,6 @@ async function startFight(kind,pre,snap){
       <div class="stamps" id="quirks">${quirkChips()}</div>
       <div class="sitting" id="sitting"><span>Taking a seat</span></div>
     </div>
-    <div class="bagslip paper pe" id="bagslip"></div>
     <div class="bottom">
       <div class="msg" id="msg"></div>
       <div class="slipcol"><div class="oddsline" id="oddsline"></div>
@@ -1093,7 +1097,7 @@ async function startFight(kind,pre,snap){
         <div class="acts" id="acts"></div>
       </div></div>
     </div>`);
-  wireChips(ui); bagSlip(); F.target=null; updOpp(); updOdds(); $('#eq').onclick=()=>{ SFX.ui(); oddsHelp(); };
+  wireChips(ui); F.target=null; updOpp(); updOdds(); $('#eq').onclick=()=>{ SFX.ui(); oddsHelp(); };
   busy=true;
   if(GL_OK){ buildFoe({...opp.look,...(LOOKX[opp.n]||{})}); if(kind==='B'&&!snap){ for(const v of [.3,1,.2,1]){ lampDim=v; await sleep(90); } } await foeWalkIn(); }
   if(snap){ if(!F||F.opp!==opp) return; if(snap.end) return resumeEnd(snap.end); return startRound(snap.sim?snap:null); }
@@ -1275,7 +1279,7 @@ async function endRound(){
   await sleep(1100); await tip('result');
   const broke=F.hand.filter(d=>DT[d.type].breaks&&d.cracks>=breaksAt(d.type,G.charms));
   for(const d of broke){ const o=F.you.find(x=>x.inst===d); if(o){ shatter(o); F.you=F.you.filter(x=>x!==o); } G.bag=G.bag.filter(x=>x!==d); }
-  if(broke.length){ bagSlip(); toast('Your <b>Glass Die</b> shattered.'); await sleep(700); }
+  if(broke.length){ toast('Your <b>Glass Die</b> shattered.'); await sleep(700); }
   const yours=F.you, theirs=F.them; F.you=[]; F.them=[];
   const g1=gatherYours(yours);
   const g2= GL_OK&&foe&&F.oppHp>0 ? cupScoop(theirs).then(()=>{ theirs.forEach(disposeDie); return cupRest(); }) : Promise.resolve(theirs.forEach(o=>{ o.mesh.visible=true; })).then(()=>gatherTheirs(theirs));
@@ -1655,9 +1659,6 @@ document.addEventListener('pointermove',e=>{ const c=e.target.closest&&e.target.
 document.addEventListener('pointerout',e=>{ const c=e.target.closest&&e.target.closest('.card'); if(c&&!c.contains(e.relatedTarget)){ c.style.setProperty('--ry','0deg'); c.style.setProperty('--rx','0deg'); } });
 function dustAt(p){ if(REDUCED) return; for(let i=0;i<10;i++){ const s=h('<i class="dust"></i>'); s.style.left=p.x+'px'; s.style.top=p.y+'px'; fx.appendChild(s); const a=Math.PI+Math.random()*Math.PI, r=20+Math.random()*30;
   s.animate([{transform:'translate(-50%,-50%) scale(1)',opacity:.8},{transform:`translate(${Math.cos(a)*r}px,${Math.sin(a)*r*.5-10}px) scale(2.2)`,opacity:0}],{duration:500+Math.random()*300,easing:'cubic-bezier(.2,.8,.2,1)'}).onfinish=()=>s.remove(); } }
-function bagSlip(){ const el=$('#bagslip'); if(!el||!G) return; el.innerHTML='<div class="sc">In the bag</div><div class="slipdice"></div>';
-  bagCounts(G.bag.map(d=>d.type)).forEach(([t,n])=>{ const s=h(`<span class="sd" data-tip="${DT[t].name}: ${DT[t].desc}"></span>`); s.appendChild(iconCanvas(t,null,28)); if(n>1) s.appendChild(h(`<b>×${n}</b>`)); el.querySelector('.slipdice').appendChild(s); });
-}
 
 function saveRun(){ if(!G) return; try{ const o={...G,bag:G.bag.map(d=>({type:d.type,cracks:d.cracks,f:d.f})),stats:{...G.stats,el:Date.now()-G.stats.t0}}; delete o._newCharm; localStorage.setItem('lr-save',JSON.stringify(o)); }catch(e){} }
 function loadRun(){ try{ const o=JSON.parse(localStorage.getItem('lr-save')||'null'); if(!o||!o.bag) return null; o.bag=o.bag.map(d=>({uid:uidN++,type:d.type,cracks:d.cracks||0,...(d.f?{f:d.f}:{})})); o.rep=o.rep||0; o.tally=o.tally||0; o.tab=o.tab||0; o.limit=o.limit||0; o.pocket=o.pocket||'regular'; o.filePrice=o.filePrice||5; o.gildPrice=o.gildPrice||8; o.stats.t0=Date.now()-(o.stats.el||0); return o; }catch(e){ return null; } }

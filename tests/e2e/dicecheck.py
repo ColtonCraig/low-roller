@@ -22,8 +22,8 @@ CHECK=r"""(()=>{ const P=[]; const own=new Map(); const ds=[...ALLDICE].filter(o
  R.forEach(a=>{ if(a.k==='stray') P.push('stray die'); });
  for(let i=0;i<R.length;i++) for(let j=i+1;j<R.length;j++){ const o=ov(R[i].r,R[j].r); if(o>(R[i].k===R[j].k&&R[i].k.endsWith('Rail')?.65:.06)*Math.min(area(R[i].r),area(R[j].r))) P.push(`dice touch ${R[i].k}/${R[j].k} ${Math.round(o)}`); }
  const box=s=>{ const e=document.querySelector(s); if(!e) return null; const b=e.getBoundingClientRect(); return b.height?b:null; };
- const ui={slip:box('.yourtab'),msg:box('#ui .msg'),plate:box('#plate'),hud:box('#ui .hud'),bag:box('#bagslip')};
- R.forEach(a=>{ if(a.k==='myRail') for(const q of [ui.bag,ui.msg,ui.slip]) if(q&&ov(a.r,q)>4) P.push('banked die under a panel'); if(a.k==='theirRail'&&ui.plate&&ov(a.r,ui.plate)>4) P.push('banked die under nameplate'); });
+ const ui={slip:box('.yourtab'),msg:box('#ui .msg'),plate:box('#plate'),hud:box('#ui .hud')};
+ R.forEach(a=>{ if(a.k==='myRail') for(const q of [ui.msg,ui.slip]) if(q&&ov(a.r,q)>4) P.push('banked die under a panel'); if(a.k==='theirRail'&&ui.plate&&ov(a.r,ui.plate)>4) P.push('banked die under nameplate'); });
  R.forEach(a=>{ for(const [n,b] of Object.entries(ui)) if(b){ const o=ov(a.r,b); if(o>.15*area(a.r)) P.push(`${a.k} under ${n}`); } });
  const msgEl=document.querySelector('#ui .msg'); const textR=msgEl&&msgEl.textContent.trim()?(()=>{ const rg=document.createRange(); rg.selectNodeContents(msgEl); return rg.getBoundingClientRect(); })():null;
  [...document.querySelectorAll('.vp')].filter(v=>v.getBoundingClientRect().height&&getComputedStyle(v).opacity>.1).forEach(v=>{ const b=v.getBoundingClientRect();
