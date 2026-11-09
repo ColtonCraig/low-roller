@@ -106,13 +106,12 @@ function schedule(){ while(nextBeat<AC.currentTime+.4){ if(beatN%4===0) musScene
     if(b===1||b===3) ch.slice(1).forEach((m,i)=>{ osc('triangle',mf(m+12),t+.008*i,spb*.55,.022,null,musicBus,.006); osc('sine',mf(m+24),t+.008*i,spb*.35,.008,null,musicBus,.006); });
     if(Math.random()<.45) osc('sine',mf(ch[Math.floor(Math.random()*4)]+24),t+spb*.66,spb*.5,.022,null,musicBus,.008);
     nz(t+spb*.66,.04,.014,8000,.9,musicBus);
-  } else { // the boss: hard chromatic bass, a kick you feel, chords that won't settle
+  } else { // the boss: the same band, playing tense. Chromatic walking bass an octave up (no sub), brushes, stabs that won't settle
     const hot=musScene==='boss2';
-    bassNote(t,[ch[0],ch[0]+1,ch[0]+3,next[0]-1][b],spb*.9,'sawtooth',hot?720:540,.22);
-    if(b===0||b===2) osc('sine',120,t,.16,.26,44,musicBus,.003);
-    if(b===1||b===3) nz(t,.16,.1,1900,.8,musicBus);
-    nz(t+spb*.5,.04,.035,7500,.9,musicBus);
-    if(b===0||b===3) ch.forEach((m,i)=>osc('sawtooth',mf(m+12),b===3?t+spb*.5:t,spb*.4,.02,null,musicBus,.005));
+    bassNote(t,[ch[0],ch[0]+1,ch[0]+3,next[0]-1][b]+12,spb*.8,'triangle',hot?900:700,.2);
+    if(b===1||b===3) nz(t,.16,.08,2600,.8,musicBus);
+    nz(t+spb*.5,.04,.03,7500,.9,musicBus);
+    if(b===0||b===3) ch.forEach((m,i)=>osc('triangle',mf(m+12),b===3?t+spb*.5:t,spb*.4,.026,null,musicBus,.005));
     if(hot) for(let i=0;i<4;i++) osc('sine',mf(ch[3]+24+(i%2)),t+i*spb/4,spb*.2,.012,null,musicBus,.004);
   }
   if(Math.random()<.6) nz(t+Math.random()*spb,.01,.03,R_(2500,6000),3,musicBus);
@@ -498,7 +497,8 @@ function buildFoe(look){
       [-1,1].forEach(q=>{ const e=new THREE.Mesh(Bx(.12,.06,.04),eyeM); e.position.set(q*.15,.06,.4); th2.add(e); eyes.push(e); });
       if(k<2){ const bh=new THREE.Group(); add(bh,Cy(.58,.58,.05,12),hatM); add(bh,new THREE.SphereGeometry(.43,10,5,0,Math.PI*2,0,Math.PI/2),hatM); bh.position.y=.34; th2.add(bh); }
       else { const ch=new THREE.Group(); const cm=lambert(0x3a3428); add(ch,Cy(.48,.46,.22,10),cm,0,.1,0); add(ch,Bx(.54,.04,.32),cm,0,0,.44); ch.position.y=.34; th2.add(ch); }
-      [-1,1].forEach(q=>{ const a=box(.32,1.3,.32,coat); a.position.set(q*.86,1.1,.12); a.rotation.x=-.5; tw.add(a); }); } }
+      [-1,1].forEach(q=>{ const a=box(.32,1.3,.32,coat); a.position.set(q*.86,1.1,.12); a.rotation.x=-.5; tw.add(a); });
+      if(k===0){ const c2=cup.clone(true); c2.position.set(s*.86,.62,.6); c2.scale.setScalar(.9); tw.add(c2); } } } // the other twin holds their own cup, in the outside hand
   // a soft key light rides with them, so their clothes and props read against the dark room
   const key=new THREE.PointLight(0xffd8a8,1.15,6.5,1.5); key.position.set(.6,3.6,2.4); root.add(key); const fill=new THREE.PointLight(L.eye||0xffffff,.25,3,2); fill.position.set(0,3.1,1.1); root.add(fill);
   if(L.twins===1) root.children.forEach(c=>c.position.x+=.775); // a pair sits side by side, centered
@@ -528,7 +528,7 @@ const LOOKX={
   'Vito':         {body:'broad',outfit:'suit',pat:'pin',hat:'fedora',tilt:.12,grin:true,scar:true,toothpick:true,double:true},
   'Mr. Velvet':   {body:'avg',outfit:'suit',pat:'velvet',hat:'top',band:0x5a1a2a,monocle:true,neck:'cravat',notie:true,stache:'handlebar',flower:0xff6a9a,gloves:0xf0eadc},
   'Lady Chance':  {body:'slim',outfit:'dress',pat:'sequin',hat:'headband',band:0xf0bd4a,feather:0x1a1a1a,hair:'bob',hairc:0x0a0a0a,neck:'dice',gloves:0x1a1a1a,longGloves:true,lips:0xff3a5a},
-  'The Twins Again':{body:'slim',outfit:'suit',hat:'bowler',twins:3,stache:'thin'},
+  'The Twins Again':{body:'slim',outfit:'suit',hat:'bowler',twins:1,stache:'thin'},
   'The Countess': {body:'slim',outfit:'dress',pat:'velvet',hat:'tiara',hair:'bun',hairc:0x0a0a10,cape:0x3a0a14,neck:'black',gloves:0x0a0a0a,longGloves:true,lips:0xc01030,headShape:'long'},
   'The Accountant':{body:'slim',outfit:'vest',braces:0x2a2a2a,hat:'visor',glasses:'round',hair:'sides',hairc:0x3a3a3a,pencil:true,hold:'ledger',stache:'thin',headShape:'egg'},
   'Miss Ruby':    {body:'slim',outfit:'dress',pat:'velvet',hat:'none',hair:'curls',hairc:0x7a1a1a,neck:'ruby',hold:'holder',lips:0xff2a3a,earrings:true,gloves:0x8a1a2a,longGloves:true},
@@ -550,6 +550,24 @@ const LOOKX={
   'Lucky Lucy':   {body:'slim',outfit:'dress',pat:'sequin',hat:'headband',band:0x2a8a4a,feather:0xa0ffb0,hair:'curls',hairc:0xe8c060,neck:'beads',lips:0xff4a6a,hold:'holder',earrings:true},
   'Doc Mortimer': {body:'slim',outfit:'vest',braces:0x3a3a3a,shirt:0xe8e4dc,hat:'none',hair:'bald',glasses:'round',beard:'goatee',hunch:.4,headShape:'egg',pencil:true,gloves:0xe8e4dc},
   'The Commissioner':{body:'broad',outfit:'suit',pat:'pin',hat:'cap',hatc:0x1a2236,stache:'walrus',chin:'double',chain:true,rings:true,cigar:true,brow:'angry',headShape:'square',flower:0x2a4a8a},
+  'Cousin Vinnie':{body:'avg',outfit:'vest',braces:0x5a2a1a,hat:'cap',hatc:0x4a3a2a,beard:'stubble',nose:'big',grin:true,toothpick:true},
+  'Granny Mae':   {body:'stout',outfit:'dress',pat:'check',hat:'none',hair:'bun',hairc:0xd8d4cc,glasses:'round',neck:'pearls',hunch:.5,hold:'glass',headShape:'big'},
+  'Slim Jim':     {body:'slim',outfit:'suit',pat:'pin',hat:'fedora',tilt:.18,toothpick:true,eyes:'narrow',chin:'narrow',headShape:'long'},
+  'Dockside Rosie':{body:'broad',outfit:'tank',shirt:0xe0d8c8,hat:'headband',band:0xc0303f,feather:0xc0303f,hair:'curls',hairc:0x7a2a1a,lips:0xc0303f,knuckles:true,brow:'angry'},
+  'The Kid':      {body:'slim',outfit:'vest',braces:0x2a4a6a,hat:'cap',hatc:0x6a3a1a,hair:'spiky',hairc:0xc0802a,eyes:'wide',jitter:.6,bowtie:true,tie:0xc0303f},
+  'Mister Smiles':{body:'avg',outfit:'tux',hat:'top',band:0xffd27a,grin:true,eyes:'wide',monocle:true,gloves:0xf0eadc,flower:0xffd27a,noBlink:true},
+  'Fingers Malone':{body:'slim',outfit:'suit',pat:'check',hat:'fedora',tilt:-.12,gloves:0x1a1a1a,rings:true,stache:'thin',eyes:'narrow'},
+  'Velma':        {body:'slim',outfit:'dress',pat:'sequin',hat:'headband',band:0xffd27a,feather:0xff9ac0,hair:'bob',hairc:0x2a0e0a,neck:'beads',lips:0xff4a8a,earrings:true,gloves:0xf0eadc,longGloves:true},
+  'Rocco':        {body:'broad',outfit:'suit',pat:'pin',hat:'fedora',tilt:.08,scar:true,nose:'broken',brow:'angry',chin:'double',knuckles:true,rings:true},
+  'Sister Grace': {body:'slim',outfit:'dress',hat:'veil',neck:'black',glasses:'round',gloves:0xf0eadc,hold:'ball',noBlink:true},
+  'Ironjaw Pete': {body:'broad',outfit:'turtle',hat:'cap',hatc:0x2a2a2a,chin:'double',scar:true,brow:'angry',nose:'broken',headShape:'square',knuckles:true},
+  'Madame Noir':  {body:'slim',outfit:'cape',cape:0x0a0a12,hat:'veil',neck:'ruby',gloves:0x0a0a0a,longGloves:true,lips:0x8a0a2a,hold:'holder',eyes:'narrow'},
+  'Benny Blue':   {body:'avg',outfit:'vest',braces:0x1a2a5a,hat:'fedora',tilt:-.2,stache:'thin',bowtie:true,tie:0x2a4a9a,eyes:'sleepy',cig:true},
+  'Judge Harlan': {body:'stout',outfit:'cape',cape:0x0e0e10,hat:'none',hair:'sides',hairc:0xd0ccc4,glasses:'gold',brow:'angry',chin:'double',headShape:'big',stache:'walrus'},
+  'Lola Diamond': {body:'slim',outfit:'dress',pat:'sequin',hat:'headband',band:0xe0f0ff,feather:0xffffff,hair:'bob',hairc:0xf0e0b0,neck:'pearls',rings:true,earrings:true,lips:0xff3a5a,hold:'holder'},
+  'Mack Cutter':  {body:'avg',outfit:'suit',pat:'pin',hat:'fedora',tilt:.1,grin:true,scar:true,toothpick:true,chain:true,stache:'thin'},
+  'The Undertaker':{body:'slim',outfit:'tux',hat:'top',band:0x1a1a1a,cape:0x0a0a0c,headShape:'long',chin:'narrow',brow:'sad',gloves:0x1a1a1a,noBlink:true},
+  'Diamond Dolores':{body:'stout',outfit:'dress',pat:'velvet',hat:'tiara',hair:'curls',hairc:0xe8e0d0,neck:'pearls',rings:true,earrings:true,lips:0xc01060,gloves:0xf0eadc,longGloves:true,boa:0xf0e8f0},
   'The House':    {coat:0x1e1a20,body:'stout',outfit:'tux',hat:'top',band:0xc9a14a,monocle:true,gloves:0xf0eadc,cape:0x1a0a10,rings:true,chin:'double',stache:'handlebar',headShape:'big'},
 };
 // arm poses: [shoulderX, shoulderZ, elbowX, handX]
@@ -838,12 +856,25 @@ function wireSound(){ const m=$('#menubtn'), b=$('#bagbtn'); if(m) m.onclick=()=
 function updTop(){ if(G&&G.stats) G.stats.rich=Math.max(G.stats.rich||0,G.gold); const b=$('#hpbar'); if(b){ b.style.width=Math.max(0,100*G.hp/G.maxHp)+'%'; $('#hptxt').innerHTML=`${Math.max(0,G.hp)}<small>/${G.maxHp}</small>`; const w=$('#hpw'); if(w) w.classList.toggle('low',G.hp<=G.maxHp*.25); } const c=$('#cash'); if(c) c.textContent='$'+G.gold; const o=$('#owe'); if(o) o.textContent=G.tab?`tab $${G.tab}`:''; }
 function heal(n,el){ const b=G.hp; G.hp=Math.min(G.maxHp,G.hp+n); if(G.hp>b&&el) floatEl(el,'+'+(G.hp-b),'heal'); updTop(); }
 function addGold(n,el){ G.gold=Math.max(0,G.gold+n); if(n>0) G.stats.earned+=n; if(el&&n) floatEl(el,(n>0?'+$':'−$')+Math.abs(n),'gold'); if(n>0) SFX.coin(); updTop(); }
-function wireChips(root=document){ root.querySelectorAll('[data-q]').forEach(el=>el.onclick=(e)=>{ e.stopPropagation(); SFX.pick(); const q=QUIRKS[el.dataset.q]; anchorPop(el,`<div class="pn r">${q.name}</div><div class="pd">${kw(q.desc)}</div>`); }); }
+function wireChips(root=document){ root.querySelectorAll('[data-q]').forEach(el=>el.onclick=(e)=>{ e.stopPropagation(); SFX.pick(); if(popEl&&popEl._for===el){ closePop(); return; } anchorPop(el,tipHTML(el)); }); }
 // a small card pinned to whatever you tapped: below it if there's room, otherwise above, always on screen
-function anchorPop(anchor,html){ closePop(); SFX.paper(); const r=anchor.getBoundingClientRect();
-  popEl=h(`<div class="pop paper pe qpop">${html}</div>`); document.body.appendChild(popEl);
-  const w=popEl.offsetWidth, hh=popEl.offsetHeight; let top=r.bottom+10; if(top+hh>innerHeight-10) top=Math.max(10,r.top-hh-10);
-  popEl.style.left=Math.max(10,Math.min(innerWidth-w-10,r.left+r.width/2-w/2))+'px'; popEl.style.top=top+'px'; }
+// One card for every hover and click: hover shows it, clicking a charm adds Sell/Keep. Always straight, never on top of its anchor.
+function tipHTML(el){
+  if(el.dataset.q&&QUIRKS[el.dataset.q]){ const q=QUIRKS[el.dataset.q]; return `<div class="pn r">${q.name}</div><div class="pd">${kw(q.desc)}</div>`; }
+  if(el.dataset.c&&CHARMS[el.dataset.c]){ const c=el.dataset.c, d=CHARMS[c]; return `<div class="phead">${chipHTML(c)}<div><span class="tier ${d.tier}">${TIER_NAME[d.tier]}</span><div class="pn">${d.name}</div></div></div><div class="pd">${kw(charmDesc(c))}</div>`; }
+  const s=el.dataset.tip||'', i=s.indexOf(': ');
+  return i>0&&i<28?`<div class="pn">${s.slice(0,i)}</div><div class="pd">${kw(s.slice(i+2))}</div>`:`<div class="pd" style="margin:0">${kw(s)}</div>`; }
+function placePop(p,anchor){ const r=anchor.getBoundingClientRect(), w=p.offsetWidth, hh=p.offsetHeight;
+  let top=r.bottom+10; if(top+hh>innerHeight-10) top=Math.max(10,r.top-hh-10);
+  p.style.left=Math.max(10,Math.min(innerWidth-w-10,r.left+r.width/2-w/2))+'px'; p.style.top=top+'px'; }
+function anchorPop(anchor,html){ closePop(); hideTip(); SFX.paper();
+  popEl=h(`<div class="pop paper pe qpop">${html}</div>`); document.body.appendChild(popEl); popEl._for=anchor; placePop(popEl,anchor); }
+let tipEl=null;
+function hideTip(){ if(tipEl){ tipEl.remove(); tipEl=null; } }
+document.addEventListener('pointerover',e=>{ if(e.pointerType!=='mouse') return; const t=e.target.closest('[data-tip]');
+  if(!t){ hideTip(); return; } if(tipEl&&tipEl._for===t) return; hideTip(); if(popEl) return;
+  tipEl=h(`<div class="pop paper qpop htip">${tipHTML(t)}</div>`); tipEl._for=t; document.body.appendChild(tipEl); placePop(tipEl,t); });
+document.addEventListener('pointerdown',hideTip,true);
 function screen(html){ if(CAMF&&CAMF.zoom!==1){ CAMF.zoom=1; fogTo(CAMF.dist); camBase.set(0,camLook.y+Math.sin(CAMF.el)*CAMF.dist,camLook.z+Math.cos(CAMF.el)*CAMF.dist); } document.querySelectorAll('.toast').forEach(t=>t.remove()); closePop&&closePop(); const old=ui.querySelector('.modal,.title,.newspaper'); if(old&&!REDUCED){ const r=old.getBoundingClientRect(); const c=old.cloneNode(true); c.removeAttribute('id'); Object.assign(c.style,{position:'fixed',left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',margin:'0',zIndex:30,pointerEvents:'none',boxSizing:'border-box'}); c.classList.add('leaving'); document.body.appendChild(c); setTimeout(()=>c.remove(),420); SFX.paper(); } ui.innerHTML=html; ui.className=html.includes('id="plate"')?'':'page'; ui.scrollTop=0; wireSound(); wireRack(); closePop(); }
 function clearLabels(){ labels.innerHTML=''; }
 function bagCounts(arr){ const m=new Map(); arr.forEach(t=>m.set(t,(m.get(t)||0)+1)); return [...m.entries()]; }
@@ -1024,7 +1055,7 @@ function entry(p,i){
   return el;
 }
 function routeLine(){ return `<div class="route">${FLOORS.map((_,i)=>{ const done=i<G.floor, now=i===G.floor, boss=i===FLOORS.length-1;
-  return `<span class="rn ${done?'done':''} ${now?'now':''} ${boss?'boss':''}" title="${boss?'Boss':'Floor '+(i+1)}"></span>`; }).join('')}</div>`; }
+  return `<span class="rn ${done?'done':''} ${now?'now':''} ${boss?'boss':''}" data-tip="${boss?'Boss':'Floor '+(i+1)}"></span>`; }).join('')}</div>`; }
 function renderMap(fresh){
   F=null; clearLabels(); setActTheme(G.act); G.at='map'; G.fight=G.rw=G.shop=G.ev=null; saveRun();
   const opts=preview();
@@ -1105,7 +1136,7 @@ async function startFight(kind,pre,snap){
   if(opp.q.length) await tip('quirk'); if(kind==='B'){ await tip('boss'); if(opp!==ACTS[G.act].foes.boss&&ACTS[G.act].foes.bosses.some(b=>b.n===opp.n&&b!==ACTS[G.act].foes.boss)) await tip('altboss'); }
   startRound();
 }
-const quirkChips=()=>`<span class="stamp odds" title="Their wins hit you for the gap times this">Hits \u00d7${fmtOdds(F.opp.odds)}</span>`+F.opp.q.map(q=>`<button class="stamp" data-q="${q}" data-tip="${QUIRKS[q].desc}">${QUIRKS[q].name}</button>`).join('');
+const quirkChips=()=>`<span class="stamp odds" data-tip="When the opponent wins a round, they hit you for the gap times this.">Hits \u00d7${fmtOdds(F.opp.odds)}</span>`+F.opp.q.map(q=>`<button class="stamp" data-q="${q}" data-tip="${QUIRKS[q].desc}">${QUIRKS[q].name}</button>`).join('');
 function msg(x){ const m=$('#msg'); if(m) m.innerHTML=x; }
 function acts(x){ const a=$('#acts'); if(a) a.innerHTML=x; }
 function setP(v){ const e=$('#pscore'); if(e) e.innerHTML=`${v<0?'\u2212'+(-v):v}<small>You</small>`; }
@@ -1313,8 +1344,7 @@ function svcIcon(ico,key){ const k=key||(String(ico).includes('ruby')?'gild':SVC
 function plainCard(k,ico,n,d,price){ return h(`<button class="card"><span class="k">${k}</span><span class="art">${svcIcon(ico)}</span><span class="mid"><span class="n">${n}</span><span class="d">${kw(d)}</span></span>${price!=null?`<span class="p">$${price}</span>`:''}</button>`); }
 const charmPool=(tier)=>Object.keys(CHARMS).filter(c=>!G.charms.includes(c)&&(!tier||CHARMS[c].tier===tier));
 const rarePool=()=>[...charmPool('r').map(c=>({k:'charm',c,price:CHARMS[c].price,rare:1})),{k:'die',t:'shaved',price:DT.shaved.price,rare:1}];
-const rollTier=()=>{ const r=Math.random(); return r<.66?'c':r<.98?'u':'r'; };
-function stockCharms(n){ const out=[]; for(let i=0;i<n;i++){ let t=rollTier(), pool=charmPool(t).filter(c=>!out.includes(c)); if(!pool.length) pool=charmPool().filter(c=>!out.includes(c)); if(pool.length) out.push(pick(pool)); } return out; }
+function stockCharms(n){ const out=[]; for(let i=0;i<n;i++){ let t=rollTier(G.act), pool=charmPool(t).filter(c=>!out.includes(c)); if(!pool.length) pool=charmPool().filter(c=>!out.includes(c)); if(pool.length) out.push(pick(pool)); } return out; }
 function gainCharm(c){ if(G.charms.includes(c)) return; G.charms.push(c); G._newCharm=c; setTimeout(refreshRack,0); if(c==='liver'){ G.maxHp+=12; G.hp=Math.min(G.maxHp,G.hp+12); } if(c==='tally') G.tally=0; updTop(); toast(`<b>${CHARMS[c].name}</b><br><i>${kw(CHARMS[c].desc)}</i>`); }
 function loseCharm(c){ G.charms=G.charms.filter(x=>x!==c); setTimeout(refreshRack,0); if(c==='liver'){ G.maxHp-=12; G.hp=Math.min(G.hp,G.maxHp); } updTop(); }
 function offerCharm(c,done,cancel){
@@ -1427,11 +1457,10 @@ function wireRack(){ document.querySelectorAll('#rack .token[data-c]').forEach(t
 function refreshRack(){ const r=$('#rack'); if(r){ const n=h(rackHTML()); r.replaceWith(n); wireRack(); } }
 function refreshTabs(){ const b=$('#bagbtn .tc'); if(b&&G) b.textContent=G.bag.length; }
 let popEl=null;
-function closePop(){ if(popEl){ popEl.remove(); popEl=null; } }
-function charmPop(t){ closePop(); SFX.paper(); const c=t.dataset.c, d=CHARMS[c], v=Math.floor(d.price/2); const r=t.getBoundingClientRect();
-  popEl=h(`<div class="pop paper pe"><div class="phead">${chipHTML(c)}<div><span class="tier ${d.tier}">${TIER_NAME[d.tier]}</span><div class="pn">${d.name}</div></div></div><div class="pd">${kw(charmDesc(c))}</div><div class="row" style="margin-top:12px;justify-content:flex-start"><button class="btn small" id="psell">Sell for $${v}</button><button class="btn ghost small" id="pclose">Keep it</button></div></div>`);
-  document.body.appendChild(popEl);
-  const w=popEl.offsetWidth; popEl.style.left=Math.max(12,Math.min(innerWidth-w-12,r.left+r.width/2-w/2))+'px'; popEl.style.top=(r.bottom+10)+'px';
+function closePop(){ if(popEl){ popEl.remove(); popEl=null; } hideTip(); }
+function charmPop(t){ if(popEl&&popEl._for===t){ closePop(); return; } closePop(); hideTip(); SFX.paper(); const c=t.dataset.c, d=CHARMS[c], v=Math.floor(d.price/2);
+  popEl=h(`<div class="pop paper pe qpop">${tipHTML(t)}<div class="row" style="margin-top:12px;justify-content:flex-start"><button class="btn small" id="psell">Sell for $${v}</button><button class="btn ghost small" id="pclose">Keep it</button></div></div>`);
+  document.body.appendChild(popEl); popEl._for=t; placePop(popEl,t);
   popEl.querySelector('#pclose').onclick=closePop;
   popEl.querySelector('#psell').onclick=()=>{ loseCharm(c); G.gold+=v; G.stats.earned+=v; SFX.stamp(); SFX.coin(); updTop(); toast(`Sold <b>${d.name}</b> for $${v}.`); closePop(); if(window.__paint) window.__paint(); if(!F) saveRun(); }; }
 document.addEventListener('pointerdown',e=>{ if(popEl&&!popEl.contains(e.target)&&!e.target.closest('.token,#owe,[data-q]')) closePop(); });

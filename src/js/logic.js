@@ -109,7 +109,7 @@ const ACTS=[
     {n:'Vito',         s:'Smiles with his mouth only.', hp:21, bag:['loaded','loaded','d6','d6','d6','pebble'], t:1, q:['edge'], look:{coat:0x1a1a2a,hat:'fedora',eye:0xff5470}},
     {n:'Mr. Velvet',   s:'Named the room after himself.',hp:22, bag:['loaded','pebble','pebble','d6','d6','d6'], t:1, q:['cold','hot'], look:{coat:0x5a0f1f,hat:'fedora',band:0xc9a14a,eye:0xffb547}}],
   e1:[{n:'Lady Chance',  s:'Wears your luck as a necklace.',hp:26, bag:['pebble','pebble','loaded','loaded','d6','d6'], t:1, q:['steal','haze','hot'], look:{coat:0x1a0a20,hat:'cloche',hatc:0x6a1a5a,eye:0xff9ad0,scale:1.1}}],
-  e2:[{n:'The Twins Again',s:'They brought cousins.',     hp:24, bag:['loaded','loaded','pebble','pebble','d6','glass'], t:2, q:['pair','cold'], look:{coat:0x2b2440,hat:'bowler',eye:0xc9a0ff,scale:1.15}}],
+  e2:[{n:'The Twins Again',s:'Back for your wallet.',     hp:24, bag:['loaded','loaded','pebble','pebble','d6','glass'], t:2, q:['pair','steal'], look:{coat:0x1e3a36,hat:'bowler',eye:0x9ff5d3,scale:1.15}}],
   boss:{n:'The Countess', s:'Holds court upstairs', hp:42, bag:['loaded','loaded','loaded','pebble','d6','glass'], t:1, q:[], boss:true, sig:'gift', look:{coat:0x2a0a1a,hat:'cloche',hatc:0x12040c,eye:0xd8a8ff,scale:1.3,tie:0xc9a14a}}}},
  {name:'The Back Room', boss:'The House', short:'The House', bossD:'Nobody’s seen his face. Ties go to the house.', est:'NO EXIT',
   theme:{felt:'#2c383a',trim:'#8f8a74',wall:'#262824',pat:'#3a3c36',style:'brick',lamp:0xd8ffe4,neon:'NO EXIT',neonC:'#ff2a2a',neonT:'#ffb0a0'},
@@ -147,6 +147,27 @@ const MORE=[
   alt:{n:'The Commissioner', s:'Owns the cops. Owns you.', hp:64, bag:['shaved','coin','loaded','loaded','pebble','pebble'], t:1, q:['loud'], boss:true, sig:'raid', short:'The Commissioner',
    d:'Every third round is a raid: your odds drop to 1.', sigT:'Every third round is a raid and your odds drop to 1. Every other round at half nerve.',
    half:{add:['sharp'],t:1,big:'Up against the wall',small:'Raids every other round, and Sharp'}, look:{coat:0x1a2236,hat:'cap',eye:0xffd27a,scale:1.35}}}];
+// ---- a deeper bench: enough faces that no two runs meet the same people in the same order ----
+const BENCH=[
+ {t1:[{n:'Cousin Vinnie', s:'Owes everybody five bucks.',     hp:9,  bag:['d6','d6','d6','d6','d6','pebble'], t:2, q:['tax'], look:{coat:0x4a3a2a,hat:'cap',eye:0xffd27a}},
+      {n:'Granny Mae',    s:'Knits between throws.',          hp:10, bag:['d6','d6','d6','d6','d6','d6'], t:2, q:['sloppy'], look:{coat:0x5a4a6a,hat:'none',eye:0xfff1c0}}],
+  t2:[{n:'Slim Jim',      s:'All elbows.',                    hp:13, bag:['d6','d6','d6','d6','d6','loaded'], t:2, q:['fuse'], look:{coat:0x2a3a2a,hat:'fedora',eye:0x9ff5d3}},
+      {n:'Dockside Rosie',s:'Hands like anchors.',            hp:14, bag:['loaded','pebble','d6','d6','d6','d6'], t:2, q:['heavy'], look:{coat:0x2a3a5a,hat:'headband',eye:0xffb070}}],
+  e1:[{n:'The Kid',       s:'Too young to be in here.',       hp:14, bag:['pebble','d6','d6','d6','d6','d8'], t:2, q:['hot'], look:{coat:0x5a2a1a,hat:'cap',eye:0x9fd3ff,scale:1.05}}],
+  e2:[{n:'Mister Smiles', s:'Grins the whole time.',          hp:21, bag:['loaded','loaded','pebble','d6','d6','d6'], t:2, q:['sharp','tax'], look:{coat:0x3a2a4a,hat:'top',eye:0xffe070,scale:1.15}}]},
+ {t1:[{n:'Fingers Malone',s:'Counts cards. Wrong game.',      hp:16, bag:['loaded','pebble','d6','d6','d6','d6'], t:2, q:['steal'], look:{coat:0x3a3a3a,hat:'fedora',eye:0xc9f0ff}},
+      {n:'Velma',         s:'Sings between rounds.',          hp:17, bag:['loaded','pebble','d6','d6','d6','d6'], t:2, q:['heavy'], look:{coat:0x7a1a3a,hat:'headband',eye:0xffa0d0}}],
+  t2:[{n:'Rocco',         s:'Breaks thumbs on weekends.',     hp:21, bag:['loaded','loaded','pebble','d6','d6','d6'], t:2, q:['grudge','tax'], look:{coat:0x2a2420,hat:'fedora',eye:0xff8a5a}},
+      {n:'Sister Grace',  s:'Prays for your dice.',           hp:21, bag:['loaded','loaded','pebble','d6','d6','coin'], t:1, q:['haze','edge'], look:{coat:0x18181e,hat:'veil',eye:0xf0f0ff}}],
+  e1:[{n:'Ironjaw Pete',  s:'Never blinks first.',            hp:26, bag:['loaded','loaded','pebble','d6','d6','d6'], t:1, q:['fuse','sharp'], look:{coat:0x3a2a1a,hat:'cap',eye:0xff5470,scale:1.15}}],
+  e2:[{n:'Madame Noir',   s:'Plays with a stranger’s money.', hp:25, bag:['loaded','loaded','pebble','pebble','d6','glass'], t:1, q:['loud','cold'], look:{coat:0x0e0e14,hat:'veil',eye:0xc9a0ff,scale:1.1}}]},
+ {t1:[{n:'Benny Blue',    s:'Plays the horn. Badly.',         hp:25, bag:['loaded','loaded','pebble','coin','d6','d6'], t:1, q:['cold','tax'], look:{coat:0x1a2a5a,hat:'fedora',eye:0x8fd3ff}},
+      {n:'Judge Harlan',  s:'Overrules your dice.',           hp:26, bag:['loaded','loaded','pebble','coin','d6','d6'], t:1, q:['sharp','nervous'], look:{coat:0x101010,hat:'none',eye:0xfff1c0}}],
+  t2:[{n:'Lola Diamond',  s:'Wears her winnings.',            hp:29, bag:['loaded','loaded','pebble','pebble','coin','d6'], t:1, q:['steal','hot'], look:{coat:0xd8d2e4,hat:'headband',eye:0xa0e8ff}},
+      {n:'Mack Cutter',   s:'Takes a cut of every pot.',      hp:30, bag:['loaded','loaded','pebble','pebble','d6','d6'], t:1, q:['edge','copycat'], look:{coat:0x2a1a1a,hat:'fedora',eye:0xff7a5a}}],
+  e1:[{n:'The Undertaker',s:'Measures you for a box.',        hp:35, bag:['loaded','loaded','pebble','pebble','shaved','d6'], t:1, q:['grudge','heavy','cold'], look:{coat:0x0a0a0c,hat:'top',eye:0xb0ffb0,scale:1.2}}],
+  e2:[{n:'Diamond Dolores',s:'Buys the table, then the room.',hp:37, bag:['shaved','loaded','loaded','pebble','pebble','coin'], t:1, q:['loud','steal'], look:{coat:0xe8e0f0,hat:'tiara',eye:0x9ff5ff,scale:1.2}}]}];
+ACTS.forEach((A,i)=>['t1','t2','e1','e2'].forEach(k=>A.foes[k].push(...BENCH[i][k])));
 const SIG0=['Once she’s at half nerve, she slams the table on your first throw each round: your two best dice get rerolled.','Swaps one of your dice for an Octo every round (two at half nerve).','Every tie goes to the opponent and hits you for 2.'];
 ACTS.forEach((A,i)=>{ const f=A.foes, b=f.boss; b.short=A.short; b.d=A.bossD; b.half=A.half; b.sigT=SIG0[i];
   ['t1','t2','e1','e2'].forEach(k=>{ if(MORE[i][k]) f[k].push(...MORE[i][k]); }); f.bosses=[b,MORE[i].alt]; });
@@ -263,7 +284,13 @@ function fileDie(d){ const f=facesOf(d).slice(); let m=-1; f.forEach((x,i)=>{ if
 function gildDie(d){ const f=facesOf(d).slice(); let m=-1; f.forEach((x,i)=>{ if(typeof x==='number'&&(m<0||x>f[m])) m=i; }); if(m<0){ m=f.indexOf('C'); } if(m>=0) f[m]='G'; d.f=f; return d; }
 const canFile=d=>facesOf(d).some(x=>typeof x==='number'&&x>1);
 const canGild=d=>facesOf(d).some(x=>typeof x==='number'||x==='C');
-function genFloors(){ return FLOORS.map(pool=>shuffle(pool).slice(0,Math.min(2,pool.length))); }
+// the map: two doors per floor, sometimes a third, so no two runs walk the same route
+const EXTRA_STOPS=['F','?','E'];
+function genFloors(){ return FLOORS.map((pool,f)=>{ const out=shuffle(pool).slice(0,Math.min(2,pool.length));
+  if(f>0&&f<FLOORS.length-1&&Math.random()<.35){ const ex=shuffle(EXTRA_STOPS.filter(x=>!out.includes(x)&&!(f<2&&x==='E')))[0]; if(ex) out.push(ex); }
+  return out; }); }
+// shop and reward rarity climbs with the act: mostly commons in the Nail, rares turn up upstairs
+function rollTier(act){ const r=Math.random(), a=Math.max(0,Math.min(2,act||0)); return r<[.7,.58,.48][a]?'c':r<[.995,.95,.9][a]?'u':'r'; }
 /*LOGIC-END*/
 
-if(typeof module!=='undefined'&&module.exports) module.exports={ACT_HP,DT,SHOP_DICE,CHARMS,QUIRKS,ACTS,FLOORS,HAND,ACT_ODDS,rnd,pick,shuffle,facesOf,rollInst,rollFace,effVal,aiRound,makeOpp,newRound,bankVals,noteBank,oddsOf,settle,genFloors,fileDie,gildDie,canFile,canGild,LIMITS,limitMods,POCKETS,pocketStart,theirScore,breaksAt,bombDmg,isRaid,bossOf,EXTRA_Q};
+if(typeof module!=='undefined'&&module.exports) module.exports={rollTier,ACT_HP,DT,SHOP_DICE,CHARMS,QUIRKS,ACTS,FLOORS,HAND,ACT_ODDS,rnd,pick,shuffle,facesOf,rollInst,rollFace,effVal,aiRound,makeOpp,newRound,bankVals,noteBank,oddsOf,settle,genFloors,fileDie,gildDie,canFile,canGild,LIMITS,limitMods,POCKETS,pocketStart,theirScore,breaksAt,bombDmg,isRaid,bossOf,EXTRA_Q};

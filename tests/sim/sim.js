@@ -91,7 +91,6 @@ function charmOption(G,c,act,floor){ if(G.charms.includes(c)) return null;
   if(G.charms.length<5){ const g=cloneG(G); applyCharm(g,c); return {cost:evalBuild(g,act,floor)-(c==='liver'?6:0)-(c==='cigar'?4:0),drop:null}; }
   let best=null; G.charms.forEach((_,i)=>{ const g=cloneG(G); applyCharm(g,c,i); const v=evalBuild(g,act,floor); if(!best||v<best.cost) best={cost:v,drop:i}; }); return best; }
 
-const rollTier=()=>{ const r=Math.random(); return r<.66?'c':r<.98?'u':'r'; };
 const poolT=(G,t)=>Object.keys(CHARMS).filter(c=>!G.charms.includes(c)&&CHARMS[c].tier===t);
 const remaining=(act,floor)=> (2-act)*6+Math.max(1,(8-floor)*.66);
 const PAY=(kind,fast)=>kind==='B'?20:kind==='E'?10:Math.max(1,5+(fast?3:0)+LM.pay);
@@ -105,7 +104,7 @@ function reward(G,kind,fast,act,floor,smart){ G.gold+=PAY(kind,fast);
   if(best&&best.cost<base){ if(best.x.c) applyCharm(G,best.x.c,best.drop); else G.bag.push({type:best.x.t}); }
   else if(G.hp<G.maxHp) G.hp=Math.min(G.maxHp,G.hp+12); }
 function shop(G,act,floor,smart){
-  const up=LM.price; const stock=L.shuffle(L.SHOP_DICE).slice(0,2).map(t=>({t,price:DT[t].price+up})); for(let i=0;i<3;i++){ const c=L.pick(poolT(G,rollTier()).filter(c=>!stock.some(s=>s.c===c))); if(c) stock.push({c,price:CHARMS[c].price+up}); }
+  const up=LM.price; const stock=L.shuffle(L.SHOP_DICE).slice(0,2).map(t=>({t,price:DT[t].price+up})); for(let i=0;i<3;i++){ const c=L.pick(poolT(G,L.rollTier(act)).filter(c=>!stock.some(s=>s.c===c))); if(c) stock.push({c,price:CHARMS[c].price+up}); }
   if(!smart){ stock.filter(s=>s.c).forEach(s=>{ if(G.gold>=s.price&&G.charms.length<5&&Math.random()<.6){ G.gold-=s.price; applyCharm(G,s.c); } }); if(G.hp<G.maxHp*.5&&G.gold>=6){ G.gold-=6; G.hp=Math.min(G.maxHp,G.hp+12); } return; }
   let backUsed=false;
   for(let guard=0;guard<6;guard++){ const base=evalBuild(G,act,floor), fights=remaining(act,floor); const opts=[];
@@ -131,7 +130,7 @@ function rewardGood(G,kind,fast){ G.gold+=PAY(kind,fast);
   let ch=[]; if(kind==='B'){ ch.push(L.pick([...poolT(G,'r').map(c=>({c})),{t:'shaved'}])); L.shuffle(poolT(G,'u')).slice(0,2).forEach(c=>ch.push({c})); }
   else if(kind==='E') L.shuffle(poolT(G,'u')).slice(0,3).forEach(c=>ch.push({c})); else { ch.push({t:L.pick(L.SHOP_DICE)}); L.shuffle(poolT(G,'c')).slice(0,2).forEach(c=>ch.push({c})); }
   const b=ch.filter(x=>x.c&&wantC(G,x.c)).sort((a,b)=>VAL[b.c]-VAL[a.c])[0]; if(b) takeC(G,b.c); else { const d=ch.find(x=>x.t&&DVAL[x.t]>=2); if(d) G.bag.push({type:d.t}); else G.hp=Math.min(G.maxHp,G.hp+12); } }
-function shopGood(G){ const up=LM.price; const stock=L.shuffle(L.SHOP_DICE).slice(0,2).map(t=>({t,price:DT[t].price+up})); for(let i=0;i<3;i++){ const c=L.pick(poolT(G,rollTier()).filter(c=>!stock.some(s=>s.c===c))); if(c) stock.push({c,price:CHARMS[c].price+up}); }
+function shopGood(G,act){ const up=LM.price; const stock=L.shuffle(L.SHOP_DICE).slice(0,2).map(t=>({t,price:DT[t].price+up})); for(let i=0;i<3;i++){ const c=L.pick(poolT(G,L.rollTier(act)).filter(c=>!stock.some(s=>s.c===c))); if(c) stock.push({c,price:CHARMS[c].price+up}); }
   if(G.hp<G.maxHp*.5&&G.gold>=6+up){ G.gold-=6+up; G.hp=Math.min(G.maxHp,G.hp+12); }
   stock.filter(s=>s.c).sort((a,b)=>VAL[b.c]-VAL[a.c]).forEach(s=>{ if(G.gold>=s.price&&wantC(G,s.c)){ G.gold-=s.price; takeC(G,s.c); } });
   const w=G.bag.reduce((m,d)=>DVAL[d.type]<DVAL[m.type]?d:m); if(G.bag.length>6&&DVAL[w.type]<0&&G.gold>=6+up){ G.gold-=6+up; G.bag=G.bag.filter(d=>d!==w); }
@@ -176,7 +175,7 @@ function run(smart){ if(A.tune&&!tuned){ require(path.resolve(A.tune))(L); tuned
       const hpb=G.hp; const r=fight(G,n,act,f,playSmart,out.stats); out.fights.push({act,kind:n,rounds:r.rounds,lost:hpb-Math.max(0,G.hp),won:r.won,hp:r.hp,name:r.name});
       if(!r.won){ out.died={act,f,kind:n,name:r.name}; out.G=G; return out; }
       if(n==='B') G.rep++; if(has(G,'tally')) G.tally++; if(has(G,'cigar')) G.hp=Math.min(G.maxHp,G.hp+6);
-      if(SKILL==='good'){ rewardGood(G,n,r.rounds<=3); shopGood(G); } else { reward(G,n,r.rounds<=3,act,f,smart); shop(G,act,f,smart); } }
+      if(SKILL==='good'){ rewardGood(G,n,r.rounds<=3); shopGood(G,act); } else { reward(G,n,r.rounds<=3,act,f,smart); shop(G,act,f,smart); } }
     out.acts=act+1; G.hp=Math.min(G.maxHp,G.hp+Math.ceil(G.maxHp*LM.stairs)); }
   out.G=G; out.won=true; return out; }
 
