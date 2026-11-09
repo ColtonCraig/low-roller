@@ -57,9 +57,9 @@ test('Copycat: banking any crown drops their score by exactly 1', () => {
   assert.equal(L.theirScore(10, R0(), [], ['copycat']), 10);
 });
 
-test('The Heckler: only your first 2 crowns add to their score', () => {
+test('The Heckler: only your first crown adds to their score', () => {
   const R = R0(); R.crowns = 5;
-  assert.equal(L.theirScore(10, R, ['heckler'], []), 12);
+  assert.equal(L.theirScore(10, R, ['heckler'], []), 11);
 });
 
 test('their score never goes below 0', () => {
@@ -162,9 +162,9 @@ test('Lucky Penny: 1s score 0 (game passes penny only on the first throw)', () =
   assert.equal(L.effVal(1, { penny: true }), 0);
   assert.equal(L.effVal(1, { penny: false }), 1);
 });
-test('High Stakes: losses hit 2 harder', () => {
+test('High Stakes: losses hit 1 harder', () => {
   const r = L.settle(6, 3, R0(), ['highstakes'], { q: [], odds: 1 }, env({}));
-  assert.equal(r.dmg, 5);
+  assert.equal(r.dmg, 4);
 });
 
 console.log(`\n${pass} passed, ${fail} failed`);

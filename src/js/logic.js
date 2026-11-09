@@ -43,19 +43,19 @@ const CHARMS={
   rabbit:  {name:"Rabbit's Foot", ico:'R', tier:'u', price:9,  desc:'The first round you lose at each table doesn’t hurt you.'},
   closer:  {name:'The Closer',    ico:'C', tier:'u', price:12, desc:'Win a round by 5 or more: you get ×1.5 odds.'},
   kingpin: {name:'Kingpin',       ico:'K', tier:'r', price:18, rare:true, desc:'You get ×1.25 odds per crown you bank. Stacks.'},
-  lowball: {name:'Low Ball',      ico:'0', tier:'r', price:16, rare:true, desc:'Finish a round on 2 or less: you get ×1.5 odds.'},
+  lowball: {name:'Low Ball',      ico:'0', tier:'r', price:16, rare:true, desc:'Finish a round on 2 or less: you get ×2 odds.'},
   opener:  {name:'Opening Act',   ico:'O', tier:'c', price:6, desc:'Your first round at each table: you get ×2 odds.'},
   packed:  {name:'Packed House',  ico:'P', tier:'c', price:6, desc:'You get +1 odds per 2 dice in your bag.'},
   stack:   {name:'Short Stack',   ico:'S', tier:'u', price:9, desc:'You get +2 odds per die your bag is short of 9.'},
   allin:   {name:'All In',        ico:'A', tier:'u', price:10, desc:'Bank every die on your first throw: you get ×3 odds.'},
   glassblower:{name:'Glassblower',ico:'G', tier:'c', price:5, desc:'You get +2 odds per Glass Die you bank. Your Glass Dice last 2 more rounds.'},
   nearmiss:{name:'Near Miss',     ico:'N', tier:'c', price:5, desc:'You lose a round by exactly 1: nobody gets hit.'},
-  blood:   {name:'Blood Money',   ico:'D', tier:'u', price:8, desc:'You get +5 odds. You lose 1 nerve every round (never your last).'},
+  blood:   {name:'Blood Money',   ico:'D', tier:'u', price:8, desc:'You get +6 odds. You lose 1 nerve every round (never your last).'},
   threes:  {name:'Three\u2019s Company',ico:'3', tier:'c', price:5, desc:'You get +2 odds per 3 you bank.'},
   regular: {name:'The Regular',   ico:'r', tier:'u', price:9, desc:'You get +1 odds per round already played at this table.'},
-  heckler: {name:'The Heckler',   ico:'H', tier:'u', price:10, desc:'Your first 2 crowns each round add 1 each to the opponent’s score.'},
+  heckler: {name:'The Heckler',   ico:'H', tier:'u', price:10, desc:'Your first crown each round adds 1 to the opponent’s score.'},
   doubledown:{name:'Double Down', ico:'2', tier:'r', price:16, rare:true, desc:'Won your last round at this table: you get ×2 odds.'},
-  highstakes:{name:'High Stakes', ico:'×', tier:'r', price:15, rare:true, desc:'You get ×2 odds, but rounds you lose hit you 2 harder.'},
+  highstakes:{name:'High Stakes', ico:'×', tier:'r', price:15, rare:true, desc:'You get ×2 odds, but rounds you lose hit you 1 harder.'},
   bookie:  {name:'The Bookie',    ico:'§', tier:'r', price:15, rare:true, desc:'Win a round: you get $1 per point you won by, up to $8.'},
 };
 const TIER_NAME={c:'Common',u:'Uncommon',r:'Rare'};
@@ -175,14 +175,14 @@ function bossOf(act,i){ return ACTS[act].foes.bosses[i||0]; }
 // ---- Limits: raise the limit, the house raises the stakes. Each one stacks on the last. ----
 const LIMITS=[
  {n:'Penny Ante',   d:'House rules. Nothing extra.'},
- {n:'Nickel',       d:'Everyone you face has 15% more nerve.'},
+ {n:'Nickel',       d:'Everyone you face has 10% more nerve.'},
  {n:'Dime',         d:'Sharks and bosses bring an extra quirk.'},
  {n:'Quarter',      d:'Everything at the bar costs $1 more.'},
  {n:'Half Dollar',  d:'You walk in with 10 less nerve.'},
  {n:'Silver Dollar',d:'From Act II on, their odds are 1 higher.'},
  {n:'Gold Eagle',   d:'No breather on the stairs. The alley heals less.'},
- {n:'The Big Board',d:'Everyone has 30% more nerve. Tables pay $2 less.'}];
-function limitMods(lv){ lv=lv||0; return {hp:lv>=7?1.3:lv>=1?1.15:1, extraQ:lv>=2, price:lv>=3?1:0, startHp:lv>=4?-10:0, odds:lv>=5?1:0, stairs:lv>=6?0:.5, rest:lv>=6?.25:.4, pay:lv>=7?-2:0}; }
+ {n:'The Big Board',d:'Everyone has 18% more nerve. Tables pay $2 less.'}];
+function limitMods(lv){ lv=lv||0; return {hp:lv>=7?1.18:lv>=1?1.1:1, extraQ:lv>=2, price:lv>=3?1:0, startHp:lv>=4?-10:0, odds:lv>=5?1:0, stairs:lv>=6?0:.5, rest:lv>=6?.25:.4, pay:lv>=7?-2:0}; }
 const EXTRA_Q=['cold','fuse','haze','steal','grudge','hot','copycat','sharp','loud'];
 // ---- who you walk in as ----
 const POCKETS=[
@@ -196,7 +196,7 @@ function pocketStart(k){ const P={hp:50,gold:8,bag:['d6','d6','d6','d6','d6','d6
   if(k==='jeweler'){ P.gild=6; P.ruby=1; } if(k==='heavy'){ P.hp=60; P.gold=2; P.charms=['thick']; } return P; }
 // what they're really sitting on, after charms and quirks that move it
 function theirScore(oRaw,R,charms,q){ let o=oRaw+(charms.includes('bouncer')?1:0)-(q.includes('edge')?1:0)+(q.includes('sloppy')?1:0);
-  if(charms.includes('heckler')) o+=Math.min(2,R.crowns); if(q.includes('copycat')&&R.crowns) o-=1; return Math.max(0,o); }
+  if(charms.includes('heckler')) o+=Math.min(1,R.crowns); if(q.includes('copycat')&&R.crowns) o-=1; return Math.max(0,o); }
 const breaksAt=(type,charms)=>DT[type].breaks?DT[type].breaks+(charms.includes('glassblower')?2:0):0;
 const bombDmg=max=>Math.max(2,Math.round(max*.08));
 const isRaid=(opp,round,p2)=>opp.sig==='raid'&&round>0&&round%(p2?2:3)===0;
@@ -205,7 +205,7 @@ const FLOORS=[['F'],['F','?'],['F','E','?'],['R','?'],['F','E','?'],['F','E'],['
 const HAND=6;
 // ---- scaling: each act is a new tier, like a new ante. HP grows geometrically, their odds climb. ----
 // nerve at the top of each act for a regular / shark / boss. Regulars and sharks ramp up floor by floor.
-const ACT_HP=[{F:13,E:30,B:52},{F:58,E:92,B:124},{F:150,E:185,B:335}];
+const ACT_HP=[{F:13,E:30,B:52},{F:58,E:84,B:114},{F:150,E:185,B:335}];
 const ACT_ODDS=[1,2,2.5];           // how hard their wins hit you
 const LAP_HP=3;                     // endless: every lap triples nerve
 function rnd(n){return Math.floor(Math.random()*n)}
@@ -250,7 +250,7 @@ function oddsOf(R,charms,env){ const P=[]; let add=0, mul=1; const has=c=>charms
   if(has('barfly')) A('Bar Fly',Math.floor((env.gold||0)/6));
   if(has('packed')) A('Packed House',Math.floor((env.bag||0)/2));
   if(has('stack')) A('Short Stack',2*Math.max(0,9-(env.bag||9)));
-  if(has('blood')) A('Blood Money',5);
+  if(has('blood')) A('Blood Money',6);
   if(has('threes')) A('Three\u2019s Company',2*R.threes);
   if(has('glassblower')) A('Glassblower',2*R.glass);
   if(has('regular')) A('The Regular',Math.max(0,(env.round||1)-1));
@@ -258,7 +258,7 @@ function oddsOf(R,charms,env){ const P=[]; let add=0, mul=1; const has=c=>charms
   if(R.roller) M('High Roller',Math.pow(2,R.roller));
   if(has('kingpin')&&R.crowns) M('Kingpin',Math.pow(1.25,R.crowns));
   if(has('closer')&&(env.margin||0)>=5) M('The Closer',1.5);
-  if(has('lowball')&&env.done&&env.score<=2) M('Low Ball',1.5);
+  if(has('lowball')&&env.done&&env.score<=2) M('Low Ball',2);
   if(has('opener')&&env.round===1) M('Opening Act',2);
   if(has('allin')&&env.done&&R.throws===1) M('All In',3);
   if(has('doubledown')&&(env.wins||0)>=1) M('Double Down',2);
@@ -276,7 +276,7 @@ function settle(p,oRaw,R,charms,opp,env){ const q=opp.q, has=c=>charms.includes(
   if(p>o||house||sharp){ const gap=house?2:sharp?1:p-o; let dmg=Math.ceil(gap*opp.odds);
     if(q.includes('hot')&&env.lossStreak>0) dmg+=env.lossStreak;
     if(q.includes('grudge')&&env.oppHalf) dmg+=2;
-    if(has('thick')) dmg-=2; dmg=Math.max(1,dmg); if(has('highstakes')) dmg+=2;
+    if(has('thick')) dmg-=2; dmg=Math.max(1,dmg); if(has('highstakes')) dmg+=1;
     return {winner:'them',gap,dmg,odds:opp.odds,oFinal:o,house,sharp}; }
   return {winner:'push',dmg:0,oFinal:o}; }
 // bar services that change a die for good
