@@ -1,0 +1,78 @@
+name: CI
+# Required checks for every PR to main. Red blocks the merge (turn on branch protection: Settings → Branches).
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rules:
+    name: Rules + balance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: node tests/logic.test.js
+      - run: node tests/sim/check-balance.js
+
+  browser:
+    name: Browser checks (${{ matrix.os }})
+    needs: rules
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install playwright
+      - run: python -m playwright install chromium
+      - name: Layout, dice and save checks
+        run: python tests/e2e/run_all.py
+        env:
+          QUICK: ${{ github.event_name == 'pull_request' && '1' || '' }}
+      - name: Screenshots on failure
+        if: failure()
+        run: python tests/e2e/dicecheck.py deck,fhd shots
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: screenshots-${{ matrix.os }}
+          path: '**/dc_*.png'
+
+  package:
+    name: Package (${{ matrix.os }})
+    needs: rules
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install
+      - name: Build unsigned app folder
+        run: npx electron-builder --dir
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: low-roller-${{ matrix.os }}
+          path: dist/*-unpacked/**
+          if-no-files-found: ignore
+      - uses: actions/upload-artifact@v4
+        if: runner.os == 'macOS'
+        with:
+          name: low-roller-mac-app
+          path: dist/mac*/**
+          if-no-files-found: ignore
