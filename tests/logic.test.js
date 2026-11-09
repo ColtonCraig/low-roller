@@ -94,9 +94,9 @@ test('Short Stack: +2 odds per die under 9', () => {
   assert.equal(L.oddsOf(R0(), ['stack'], env({ bag: 6 })).odds, 1 + 6);
 });
 
-test('Double Down needs 2 straight round wins', () => {
-  assert.equal(L.oddsOf(R0(), ['doubledown'], env({ wins: 1 })).odds, 1);
-  assert.equal(L.oddsOf(R0(), ['doubledown'], env({ wins: 2 })).odds, 2);
+test('Double Down needs the last round won', () => {
+  assert.equal(L.oddsOf(R0(), ['doubledown'], env({ wins: 0 })).odds, 1);
+  assert.equal(L.oddsOf(R0(), ['doubledown'], env({ wins: 1 })).odds, 2);
 });
 
 test('All In: x3 only when everything is banked on the first throw', () => {
@@ -151,6 +151,20 @@ test('opponents always score at least 0 and at most their max', () => {
     const r = L.aiRound(['d6', 'd6', 'loaded', 'pebble', 'coin', 'devil'], 1 + (i % 2));
     assert.ok(Number.isFinite(r.total));
   }
+});
+
+test('Last Call: the highest die in your final bank counts 1 less', () => {
+  assert.deepEqual(L.bankVals([5, 2], {}, ['lastcall'], true), [4, 2]);
+  assert.deepEqual(L.bankVals([1], {}, ['lastcall'], true), [0]);
+  assert.deepEqual(L.bankVals([5, 2], {}, ['lastcall'], false), [5, 2]);
+});
+test('Lucky Penny: 1s score 0 (game passes penny only on the first throw)', () => {
+  assert.equal(L.effVal(1, { penny: true }), 0);
+  assert.equal(L.effVal(1, { penny: false }), 1);
+});
+test('High Stakes: losses hit 2 harder', () => {
+  const r = L.settle(6, 3, R0(), ['highstakes'], { q: [], odds: 1 }, env({}));
+  assert.equal(r.dmg, 5);
 });
 
 console.log(`\n${pass} passed, ${fail} failed`);

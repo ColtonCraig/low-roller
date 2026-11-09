@@ -24,7 +24,7 @@ function finishRound(left,p,R,G,o,first,ctxOf,policy){ while(left.length){ const
 function playRound(hand,G,o,F,T,env,lam,smart){
   let left=hand.slice(), p=0, R=L.newRound(), first=true, spoon=has(G,'spoon');
   if(o.sig==='gift'){ const n=F.p2?2:1; for(let i=0;i<n&&i<left.length;i++) left[i]={type:'d8'}; }
-  const ctxOf=fst=>({cold:o.q.includes('cold')&&fst,penny:has(G,'penny')});
+  const ctxOf=fst=>({cold:o.q.includes('cold')&&fst,penny:has(G,'penny')&&fst});
   const crowns=[];
   while(left.length){ const ctx=ctxOf(first); let faces=faceSet(left,ctx);
     if(o.sig==='slam'&&F.p2&&first&&left.length>2){ const ord=faces.map((f,i)=>[L.effVal(f,ctx),i]).sort((a,b)=>a[0]-b[0]); ord.slice(0,2).forEach(([,i])=>faces[i]=L.rollInst(left[i])); }
@@ -168,6 +168,9 @@ function choose(G,opts,act,floor,smart){
 let tuned=false;
 function run(smart){ if(A.tune&&!tuned){ require(path.resolve(A.tune))(L); tuned=true; } const P=L.pocketStart(POCKET), hp0=P.hp+LM.startHp;
   const G={hp:hp0,maxHp:hp0,gold:P.gold,lap:0,rep:0,tally:0,filePrice:5,gildPrice:P.gild,bag:P.bag.map(type=>({type})),charms:P.charms.slice(),bossIx:[L.rnd(2),L.rnd(2),L.rnd(2)]}; if(P.ruby) L.gildDie(G.bag[0]);
+  // give=charm[,charm] / givedie=type: start every run holding it (to measure a card's power without pick bias)
+  if(A.give) A.give.split(',').forEach(c=>{ if(!G.charms.includes(c)) G.charms.push(c); if(c==='liver'){ G.maxHp+=12; G.hp+=12; } });
+  if(A.givedie) for(let k=0;k<2;k++){ const d=G.bag.find(x=>x.type==='d6'); if(d) d.type=A.givedie; }
   const out={acts:0,fights:[],stats:{rounds:0,w:0,l:0,odds:0,hit:0,taken:0,best:0}};
   for(let act=0;act<3;act++){ const floors=L.genFloors();
     for(let f=0;f<FLOORS.length;f++){ const n=choose(G,floors[f],act,f,smart);
@@ -176,7 +179,7 @@ function run(smart){ if(A.tune&&!tuned){ require(path.resolve(A.tune))(L); tuned
       if(!r.won){ out.died={act,f,kind:n,name:r.name}; out.G=G; return out; }
       if(n==='B') G.rep++; if(has(G,'tally')) G.tally++; if(has(G,'cigar')) G.hp=Math.min(G.maxHp,G.hp+6);
       if(SKILL==='good'){ rewardGood(G,n,r.rounds<=3); shopGood(G,act); } else { reward(G,n,r.rounds<=3,act,f,smart); shop(G,act,f,smart); } }
-    out.acts=act+1; G.hp=Math.min(G.maxHp,G.hp+Math.ceil(G.maxHp*LM.stairs)); }
+    out.acts=act+1; (out.snap=out.snap||[])[act]={charms:G.charms.slice(),bag:G.bag.map(d=>d.type)}; G.hp=Math.min(G.maxHp,G.hp+Math.ceil(G.maxHp*LM.stairs)); }
   out.G=G; out.won=true; return out; }
 
 const smart=SKILL==='pro'; const playSmart=SKILL!=='casual'; const res=[]; const t0=Date.now();
@@ -192,4 +195,17 @@ const S=res.reduce((a,r)=>{ for(const k in r.stats) a[k]=(a[k]||0)+(k==='best'?0
 console.log(`  rounds won ${pct(S.w/S.rounds)} lost ${pct(S.l/S.rounds)} · avg odds on wins ${(S.odds/S.w).toFixed(2)} · avg hit ${(S.hit/S.w).toFixed(1)} · avg hit taken ${(S.taken/Math.max(1,S.l)).toFixed(1)} · best hit/run ${(S.best/N).toFixed(0)}`);
 const win=res.filter(r=>r.won), cc={}; win.forEach(r=>r.G.charms.forEach(c=>cc[c]=(cc[c]||0)+1));
 if(win.length) console.log('  winning builds use:',Object.entries(cc).sort((a,b)=>b[1]-a[1]).slice(0,12).map(([c,n])=>c+' '+pct(n/win.length)).join(', '));
+// report=1: what's pulling its weight. Opponents by how often they end runs; charms and dice by the win rate of runs
+// that held them after Act I (vs runs that didn't). Use a random-shopping bot (mid/casual) so picks don't skew it.
+if(A.report){
+  const opp={}; res.forEach(r=>r.fights.forEach(f=>{ const k=`A${f.act+1}${f.kind} ${f.name}`; const o=opp[k]=opp[k]||{n:0,lost:0,dead:0,rounds:0}; o.n++; o.lost+=f.lost; o.rounds+=f.rounds; if(!f.won) o.dead++; }));
+  console.log('  OPPONENTS  (encounters · avg nerve you lost · avg rounds · % of encounters that ended the run)');
+  Object.entries(opp).sort().forEach(([k,o])=>console.log(`    ${k.padEnd(26)} n=${String(o.n).padStart(5)}  lost ${(o.lost/o.n).toFixed(1).padStart(5)}  rounds ${(o.rounds/o.n).toFixed(1).padStart(4)}  ended ${(100*o.dead/o.n).toFixed(1).padStart(5)}%`));
+  const base=res.filter(r=>r.snap&&r.snap[0]); const bw=base.filter(r=>r.won).length/Math.max(1,base.length);
+  const impact=(get,keys,label)=>{ console.log(`  ${label}  (runs that reached Act II holding it · their win rate · vs without)  baseline ${pct(bw)}`);
+    keys.map(k=>{ const w=base.filter(r=>get(r).includes(k)), wo=base.filter(r=>!get(r).includes(k)); return [k,w.length,w.filter(r=>r.won).length/Math.max(1,w.length),wo.filter(r=>r.won).length/Math.max(1,wo.length)]; })
+      .sort((a,b)=>(b[2]-b[3])-(a[2]-a[3])).forEach(([k,n,a,b])=>console.log(`    ${k.padEnd(12)} n=${String(n).padStart(5)}  win ${pct(a).padStart(4)}  without ${pct(b).padStart(4)}  ${(a-b>=0?'+':'')+((a-b)*100).toFixed(0)}`)); };
+  impact(r=>r.snap[0].charms,Object.keys(CHARMS),'CHARMS');
+  impact(r=>r.snap[0].bag,Object.keys(DT),'DICE');
+}
 console.log(`  time ${((Date.now()-t0)/1000).toFixed(0)}s`);
