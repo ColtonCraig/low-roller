@@ -306,7 +306,7 @@ function setActTheme(a){ if(typeof uiTextures==='function') try{ uiTextures(a); 
     c.strokeStyle=T.trim; c.globalAlpha=.55; c.lineWidth=1; for(const [bx,bz] of [[4.46,3.31],[4.38,3.24]]) c.strokeRect(cx(-bx),cy(-bz),bx*55.66,bz*55.66);
     for(const [x,y] of [[-4.38,-3.24],[4.38,-3.24],[-4.38,3.24],[4.38,3.24]]) for(let r=8;r<=20;r+=6){ c.beginPath(); c.arc(cx(x),cy(y),r,0,7); c.stroke(); }
     // running stitches bracket each bank zone; four brass tacks pin the tray
-    c.globalAlpha=.3; c.setLineDash([3,3]); for(const [x0,x1,z0,z1] of [[-.88,4.42,-2.52,-1.38],[-4.42,2.3,-.1,.92]]) for(const [x,dx] of [[x0,.4],[x1,-.4]]){ c.beginPath(); c.moveTo(cx(x+dx),cy(z0)); c.lineTo(cx(x),cy(z0)); c.lineTo(cx(x),cy(z1)); c.lineTo(cx(x+dx),cy(z1)); c.stroke(); } c.setLineDash([]);
+    c.globalAlpha=.3; c.setLineDash([3,3]); for(const [x0,x1,z0,z1] of [[1.4,4.42,-3.2,-2.3],[-4.42,-.9,2.35,3.2]]) for(const [x,dx] of [[x0,.4],[x1,-.4]]){ c.beginPath(); c.moveTo(cx(x+dx),cy(z0)); c.lineTo(cx(x),cy(z0)); c.lineTo(cx(x),cy(z1)); c.lineTo(cx(x+dx),cy(z1)); c.stroke(); } c.setLineDash([]);
     c.globalAlpha=.55; c.fillStyle='#c9a14a'; for(const x of [-4.2,4.2]) for(const z of [1.35,2.75]) c.fillRect(Math.round(cx(x))-1,Math.round(cy(z))-1,2,2);
     if(a===2){ c.globalAlpha=.12; c.fillStyle='#000'; for(let i=0;i<9;i++){ c.beginPath(); c.arc(Math.random()*w,Math.random()*hh,4+Math.random()*12,0,7); c.fill(); } }
     c.globalAlpha=.62; c.fillStyle=T.trim; c.font="10px 'Jersey 15',monospace"; c.textAlign='center'; c.fillText('LOWEST SCORE WINS',cx(-2.55),cy(-2.45),60); c.fillText(A.name.toUpperCase(),cx(-2.55),cy(-2.05),60); c.globalAlpha=1; FELT_TEX.needsUpdate=true; }
@@ -470,7 +470,7 @@ function buildFoe(look){
       const tw=new THREE.Group(); twinG.push(tw); tw.position.set(off,-.08-(k>1?.12:0),-.25-(k>1?.35:0)); root.add(tw);
       const tch=new THREE.Mesh(new THREE.CylinderGeometry(rt*.9,rb*.9,th*.9,8),coat); tch.scale.z=.72; tch.position.y=.95; tch.castShadow=true; tw.add(tch);
       add(tw,Bx(.5,1.0,.1),shirt,0,1.12,.52); add(tw,Bx(.14,.6,.06),tie,0,1.1,.56); add(tw,Bx(1.8,.34,.8),coat,0,1.66,0);
-      const th2=new THREE.Group(); th2.position.y=2.32; tw.add(th2); tw.userData.head=th2; const sk2=new THREE.Mesh(new THREE.IcosahedronGeometry(.42,1),skin); sk2.scale.set(.9,1.04,.94); th2.add(sk2);
+      const th2=new THREE.Group(); th2.position.y=2.32; tw.add(th2); const sk2=new THREE.Mesh(new THREE.IcosahedronGeometry(.42,1),skin); sk2.scale.set(.9,1.04,.94); th2.add(sk2);
       [-1,1].forEach(q=>{ const e=new THREE.Mesh(Bx(.12,.06,.04),eyeM); e.position.set(q*.15,.06,.4); th2.add(e); eyes.push(e); });
       if(k<2){ const bh=new THREE.Group(); add(bh,Cy(.58,.58,.05,12),hatM); add(bh,new THREE.SphereGeometry(.43,10,5,0,Math.PI*2,0,Math.PI/2),hatM); bh.position.y=.34; th2.add(bh); }
       else { const ch=new THREE.Group(); const cm=lambert(0x3a3428); add(ch,Cy(.48,.46,.22,10),cm,0,.1,0); add(ch,Bx(.54,.04,.32),cm,0,0,.44); ch.position.y=.34; th2.add(ch); }
@@ -479,7 +479,7 @@ function buildFoe(look){
   const key=new THREE.PointLight(0xffd8a8,1.15,6.5,1.5); key.position.set(.6,3.6,2.4); root.add(key); const fill=new THREE.PointLight(L.eye||0xffffff,.25,3,2); fill.position.set(0,3.1,1.1); root.add(fill);
   if(L.twins===1) root.children.forEach(c=>c.position.x+=.775); // a pair sits side by side, centered
   const S=L.scale||1; g.scale.setScalar(S);
-  g.userData={twins:twinG,plateHead:twinG.length?twinG.reduce((a,t)=>t.position.x>a.position.x?t:a).userData.head:null,root,torso,head,eyes,eyeM,eyeColor:new THREE.Color(L.eye),hat,armL,armR,cup,mouth,cigarTip,S,
+  g.userData={twins:twinG,root,torso,head,eyes,eyeM,eyeColor:new THREE.Color(L.eye),hat,armL,armR,cup,mouth,cigarTip,S,
     seatY:-.55, standY:.25, homeZ:-4.55-(S-1)*1.58, lean:0, lookX:0, mode:'idle', breath:1, tapT:0, laugh:0, slump:0, hunch:L.hunch||0, jitter:L.jitter||0, noBlink:!!L.noBlink};
   SCN.add(g); foe=g;
   setRestPose(1);
@@ -594,12 +594,12 @@ async function secondTwin(simA,shownA,pre){ const simB=pre||aiRound(F.opp.bag,F.
     await throwDice(list,th.faces,'them',-1,from?{from,dur:800}:{});
     if(foe) foe.userData.lookX=list.reduce((a,o)=>a+o.mesh.position.x,0)/list.length;
     await sleep(240);
-    for(const i of th.kept){ if(F!==myF) return simA; const o=B[i]; o.banked=true; const v=effVal(o.face); shownB+=v; SFX.bank(0); floatAt(dieScreen(o),v===0?'0':'+'+v,v===0?'zero':'pts'); moveTo(o,railSlot(F.railN.them++,'them'),.78,380); await sleep(110); }
+    for(const i of th.kept){ if(F!==myF) return simA; const o=B[i]; o.banked=true; const v=effVal(o.face); shownB+=v; SFX.bank(0); floatAt(dieScreen(o),v===0?'0':'+'+v,v===0?'zero':'pts'); moveTo(o,railSlot(F.railN.them++,'them'),BANK_SCALE,380); await sleep(110); }
     sit(); await sleep(320); }
   if(F!==myF) return simA;
   const keepB=simB.total<simA.total, out=keepB?F.them:B;
   out.forEach(o=>{ o.flying=true; const y0=o.mesh.position.y; anim(520,k=>{ o.mesh.position.y=y0+k*.6; o.mesh.scale.setScalar(Math.max(.01,1-k)); }).then(()=>disposeDie(o)); });
-  if(keepB){ F.them=B; F.railN.them=0; await sleep(300); if(F!==myF) return simB; B.filter(o=>o.banked).forEach(o=>moveTo(o,railSlot(F.railN.them++,'them'),.78,420)); } SFX.tok&&SFX.tok(0,.5); await sleep(560);
+  if(keepB){ F.them=B; F.railN.them=0; await sleep(300); if(F!==myF) return simB; B.filter(o=>o.banked).forEach(o=>moveTo(o,railSlot(F.railN.them++,'them'),BANK_SCALE,420)); } SFX.tok&&SFX.tok(0,.5); await sleep(560);
   toast(`<b class="r">Two Heads.</b> They keep <b>${Math.min(simA.total,simB.total)}</b> and drop ${Math.max(simA.total,simB.total)}.`);
   return keepB?simB:simA; }
 // cup routines
@@ -695,35 +695,35 @@ function dieScreen(o){ return toScreen(o.mesh.position.clone().add(new THREE.Vec
 // how wide the table looks at depth z, in world units from the centre line
 function visHalfW(z){ const a=toScreen(new THREE.Vector3(0,0,z)), b=toScreen(new THREE.Vector3(1,0,z)); const px=Math.abs(b.x-a.x)||1; return (VW/2)/px; }
 // The table has fixed zones so dice never meet:
-//   back row     their banked dice in one tight row, from the cup out to the right corner
+//   back right   their banked dice in one tight row, from the cup out to the corner
 //   middle       where their throws land (empty again by the time you throw)
-//   your row     your banked dice behind your tray, filling leftwards; a sixth and seventh continue to the right
+//   front left   your banked dice in one tight row from the corner; the next throw re-slots your tray clear of it
 //   front        your tray, value plates in front of it
 // Every position stays inside the felt (x within 4.5, z within 3.35).
 // The camera (fitCam) zooms to fit the zones to the screen; dice never move to make room.
-const TRAY_Z=1.9, THEIR_Z=.15, MY_RAIL_SP=.95, MY_RAIL_Z=.42;
-// Only Twins pass 6, and only while the second twin throws: the pair keep one set, which re-slots into the row
-const THEIR_SLOTS=[[-.4,-1.95],[.5,-1.95],[1.4,-1.95],[2.3,-1.95],[3.2,-1.95],[4.1,-1.95],[-1.3,-1.95],[-2.2,-1.95],[-3.1,-1.95],[-4,-1.95],[-1.3,-.6],[-2.2,-.6]];
+const TRAY_Z=1.9, THEIR_Z=.15, MY_BANK_Z=2.85, THEIR_BANK_Z=-2.75, BANK_SP=.46, BANK_SCALE=.7, BANK_YAW=[.2,-.16,.1,-.22,.14,-.1];
 function traySlots(n,side){ const out=[], you=side==='you', z0=you?TRAY_Z:THEIR_Z, sp=n>1?Math.min(you?1.18:1.15,(you?7.8:7.4)/(n-1)):0, jit=n>=8?.03:.08;
   for(let i=0;i<n;i++) out.push(new THREE.Vector3((i-(n-1)/2)*sp+(Math.random()-.5)*jit,0,z0+(Math.random()-.5)*jit));
   return out; }
-function railSlot(k,side){
-  if(side==='you') return new THREE.Vector3(k<5?-.1-k*MY_RAIL_SP:.85+(k-5)*MY_RAIL_SP,0,MY_RAIL_Z);
-  const [x,z]=THEIR_SLOTS[k%12]; return new THREE.Vector3(x,0,z); }
+// Banked dice sit in tight rows that overlap a little, each turned slightly so no two faces line up.
+// Only Twins pass 6, and only while the second twin throws: those run the other way from the cup.
+function railSlot(k,side){ const x=side==='you'?-4.1+k*BANK_SP:k<6?1.8+k*BANK_SP:.35-(k-6)*BANK_SP, p=new THREE.Vector3(x,0,side==='you'?MY_BANK_Z:THEIR_BANK_Z); p.yaw=BANK_YAW[k%6]; return p; }
 // Fit the camera to this screen: zoom out until your dice, their labels and your banked row all sit above the
 // message and the slip, the felt fits across at your tray, and the opponent's hat stays on screen.
 function fitCam(){ if(!CAM||!CAMF||!camLook) return;
   const apply=zoom=>{ const d=CAMF.dist*zoom; fogTo(d); camBase.set(0,camLook.y+Math.sin(CAMF.el)*d,camLook.z+Math.cos(CAMF.el)*d); CAM.position.copy(camBase); CAM.lookAt(camLook); CAM.updateMatrixWorld(); };
   const yt=document.querySelector('.yourtab');
   if(!F||!yt||!yt.getBoundingClientRect().height){ apply(1); CAMF.zoom=1; return; }
-  const mg=document.querySelector('#ui .msg'), u=foe&&foe.userData;
+  const mg=document.querySelector('#ui .msg'), bg=document.getElementById('bagslip'), u=foe&&foe.userData;
   let hatY=0, hatMin=4; if(u){ hatY=new THREE.Box3().setFromObject(foe).max.y-foe.position.y+u.seatY+.1; if(u.twins.length){ const h=document.querySelector('#ui .hud'); if(h) hatMin=h.getBoundingClientRect().bottom+2; } }
   let zoom=1;
   for(let i=0;i<90;i++){ apply(zoom);
     let floor=yt.getBoundingClientRect().top; const m=mg&&mg.getBoundingClientRect(); if(m&&m.height&&m.right>VW*.25&&m.left<VW*.75) floor=Math.min(floor,m.top);
     const lab=toScreen(new THREE.Vector3(0,0,TRAY_Z+.68)).y+16;
+    let cornerFloor=VH; for(const e of [bg,mg]){ const b=e&&e.getBoundingClientRect(); if(b&&b.height) cornerFloor=Math.min(cornerFloor,b.top); }
+    const corner=toScreen(new THREE.Vector3(-4.1,0,MY_BANK_Z+.45)).y<=cornerFloor-4;
     const wide=visHalfW(TRAY_Z)>=5.05, hat=!u||toScreen(new THREE.Vector3(0,hatY,u.homeZ)).y>=hatMin;
-    if((lab>floor-8||!wide||!hat)&&zoom<1.8) zoom*=1.02; else break; }
+    if((lab>floor-8||!wide||!hat||!corner)&&zoom<1.8) zoom*=1.02; else break; }
   CAMF.zoom=zoom; }
 // a throw with three settling bounces; landings make the thocks
 async function throwDice(list,finals,side,hiddenIdx=-1,opts={}){ const hidSet=Array.isArray(hiddenIdx)?hiddenIdx:[hiddenIdx];
@@ -757,7 +757,7 @@ async function throwDice(list,finals,side,hiddenIdx=-1,opts={}){ const hidSet=Ar
   list.forEach(o=>{ o.flying=false; o.mesh.visible=true; o.mesh.scale.setScalar(1); o.mesh.quaternion.copy(o.qEnd); uprightTop(o); });
   if(finals.some((f,i)=>f==='C'&&!hidSet.includes(i))) SFX.crown();
 }
-async function moveTo(o,target,scale=1,dur=420){ const m=o.mesh, s=m.position.clone(), s0=m.scale.x; const t=target.clone(); t.y=restY(o)*scale; o.flying=true; const q0=m.quaternion.clone(), qT=o.restQ?o.restQ.clone():new THREE.Quaternion();
+async function moveTo(o,target,scale=1,dur=420){ const m=o.mesh, s=m.position.clone(), s0=m.scale.x; const t=target.clone(); t.y=restY(o)*scale; o.flying=true; const q0=m.quaternion.clone(), qT=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),target.yaw||0); if(o.restQ) qT.multiply(o.restQ);
   await anim(dur,k=>{ const e=ease.inout(k); m.position.lerpVectors(s,t,e); m.position.y+=Math.sin(k*Math.PI)*.9; m.scale.setScalar(lerp(s0,scale,e)); m.quaternion.copy(q0).slerp(qT,e); });
   m.quaternion.copy(qT); o.qEnd=qT; uprightTop(o); SFX.land(.55); await anim(160,k=>{ m.position.y=t.y+Math.sin(k*Math.PI)*.12; }); o.flying=false; }
 // you scoop your dice back up toward you (they leave the frame, no fading)
@@ -776,14 +776,6 @@ frameFns.add(()=>{ if(!F||!F.you||!F.labelsOn) return; F.you.forEach(o=>{ const 
   const v=effVal(o.face,ctx()); o.label.textContent=o.hidden?'?':v; o.label.textContent=o.hidden?'?':v<0?'\u2212'+(-v):v; o.label.className='vp'+(o.hidden?' hid':v<0?' neg':v===0?' zero':v>=4?' hi':'')+(o.sel?' sel':'');
   const p=toScreen(o.mesh.position.clone().add(new THREE.Vector3(0,-o.size/2,o.size*.62+.12))); o.label.style.left=p.x+'px'; o.label.style.top=p.y+'px'; o.label.style.opacity=1; }); });
 
-// the nameplate floats over the opponent's head
-const _hv=new THREE.Vector3();
-frameFns.add(()=>{ const pl=document.getElementById('plate'); if(!pl) return; const w=pl.offsetWidth, hh=pl.offsetHeight;
-  let x=VW/2, y=60; if(foe&&foe.userData&&foe.userData.head){ (foe.userData.plateHead||foe.userData.head).getWorldPosition(_hv); _hv.y+=.9*(foe.scale.y||1); const p=toScreen(_hv); x=p.x; y=p.y; }
-  const hud=document.querySelector('#ui .hud'), top=(hud?hud.getBoundingClientRect().bottom:40)+6;
-  let L=Math.round(x+70), T=Math.round(y-hh*.6); if(L+w>VW-8) L=Math.round(x-70-w);
-  L=Math.max(8,Math.min(VW-w-8,L)); T=Math.max(top,T); const yt=document.querySelector('.yourtab'); if(yt){ const b=yt.getBoundingClientRect().top-80; if(T+hh>b) T=Math.max(top,b-hh); }
-  L=Math.round(L/PX)*PX; T=Math.round(T/PX)*PX; pl.style.transform=`translate(${L}px,${T}px)`; });
 /* pointer */
 const ray=new THREE.Raycaster(), ndc=new THREE.Vector2();
 function pickDie(ev){ if(!F||!F.you) return null; const r=canvas.getBoundingClientRect(); ndc.set(((ev.clientX-r.left)/r.width)*2-1,-((ev.clientY-r.top)/r.height)*2+1); ray.setFromCamera(ndc,CAM);
@@ -1114,7 +1106,7 @@ async function startRound(pre){
     else await throwDice(list,th.faces,'them');
     if(foe) foe.userData.lookX=list.reduce((a,o)=>a+o.mesh.position.x,0)/list.length;
     await sleep(240); if(F!==myF) return;
-    for(const i of th.kept){ const o=F.them[i]; o.banked=true; const v=effVal(o.face); shown+=v; SFX.bank(0); floatAt(dieScreen(o),v===0?'0':'+'+v,v===0?'zero':'pts'); moveTo(o,railSlot(F.railN.them++,'them'),.78,380); await sleep(110); }
+    for(const i of th.kept){ const o=F.them[i]; o.banked=true; const v=effVal(o.face); shown+=v; SFX.bank(0); floatAt(dieScreen(o),v===0?'0':'+'+v,v===0?'zero':'pts'); moveTo(o,railSlot(F.railN.them++,'them'),BANK_SCALE,380); await sleep(110); }
     $('#sitting').innerHTML=`<span>Sitting on</span><b>${shown}</b>`;
     await sleep(320);
   }
@@ -1171,7 +1163,7 @@ async function bank(){
     if(o.hidden) setFaces(o,o.face,false);
     SFX.bank(i); floatAt(dieScreen(o),vals[i]<0?'\u2212'+(-vals[i]):vals[i]===0?'0':'+'+vals[i],vals[i]<=0?'zero':'pts');
     if(o.face==='C'||o.face==='G') crownFx(o);
-    moveTo(o,railSlot(F.railN.you++,'you'),.78,400); await sleep(120); }
+    moveTo(o,railSlot(F.railN.you++,'you'),BANK_SCALE,400); await sleep(120); }
   G.stats.banked+=sel.length; G.stats.crowns+=sel.filter(o=>o.face==='C'||o.face==='G').length;
   const before=F.pScore; F.pScore+=vals.reduce((a,b)=>a+b,0); { const T=tgt(), T0=F._shownT??F.target; if(T!==T0){ F._shownT=T; setVs(T); floatEl($('#vs'),(T>T0?'+':'\u2212')+Math.abs(T-T0),T>T0?'heal':'dmg'); } }
   await anim(320,k=>setP(Math.round(lerp(before,F.pScore,k))));
