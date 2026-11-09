@@ -1,0 +1,44 @@
+name: Pages
+# Publishes the single-file web build to GitHub Pages on every push to main.
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Build and publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm run bundle
+      - name: Put the page where Pages expects it
+        run: |
+          mkdir site
+          cp dist/low-roller.html site/index.html
+      - name: Stop if the bundle left anything out
+        run: |
+          if grep -qE 'Content-Security-Policy|src="js/|src="vendor/|href="styles.css"' site/index.html; then
+            echo "::error::site/index.html still points at files that were not inlined"
+            exit 1
+          fi
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4
