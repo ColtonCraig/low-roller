@@ -1131,12 +1131,12 @@ async function startRound(pre){
   await playerThrow();
 }
 async function playerThrow(){
-  busy=true; F.throwNo++;
+  const myF=F; busy=true; F.throwNo++;
   const list=tray(); list.forEach(o=>setSel(o,false));
   const finals=seeded(()=>list.map(o=>rollInst(o.inst)));
   const nh=Math.min(list.length-1,F.opp.sig==='trick'?(F.phase2?3:2):(F.opp.q.includes('haze')&&F.throwNo===1?1:0)), hid=seeded(()=>shuffle([...list.keys()])).slice(0,Math.max(0,nh));
   list.forEach((o,i)=>{ if(o.inst.type==='twin'&&!hid.includes(i)){ let b=null; list.forEach((x,j)=>{ if(j!==i&&x.inst.type!=='twin'&&!hid.includes(j)){ if(b===null||effVal(finals[j],ctx())<effVal(b,ctx())) b=finals[j]; } }); if(b!==null) finals[i]=b; } });
-  await throwDice(list,finals,'you',hid);
+  await throwDice(list,finals,'you',hid); if(F!==myF) return;
   F.labelsOn=true;
   list.forEach((o,i)=>{ if(finals[i]==='C'&&!hid.includes(i)) sparksAt(dieScreen(o)); });
   if(foe) foe.userData.lookX=0;
