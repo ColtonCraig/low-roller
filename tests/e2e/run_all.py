@@ -4,7 +4,7 @@
 import subprocess, sys, os, time
 here = os.path.dirname(os.path.abspath(__file__))
 sizes = 'deck,fhd' if os.environ.get('QUICK') else ''
-steps = [('layout audit', ['audit.py', sizes]), ('dice check', ['dicecheck.py', sizes]), ('save/reload', ['save_reload.py'])]
+steps = [('layout audit', ['audit.py', sizes]), ('dice check', ['dicecheck.py', sizes]), ('save/reload', ['save_reload.py']), ('music scenes', ['music_scenes.py'])]
 failed = []
 for name, args in steps:
     t = time.time(); print(f'--- {name}', flush=True)

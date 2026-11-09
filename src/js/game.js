@@ -84,13 +84,37 @@ let musicTimer=null, nextBeat=0, beatN=0;
 const CH=[[50,53,57,60],[43,47,50,53],[48,52,55,59],[45,49,52,55]];
 const mf=m=>440*Math.pow(2,(m-69)/12);
 function startMusic(){ if(musicTimer) return; nextBeat=AC.currentTime+.1; musicTimer=setInterval(schedule,80); }
-function schedule(){ const spb=60/82; while(nextBeat<AC.currentTime+.4){ const bar=Math.floor(beatN/4)%4, b=beatN%4, ch=CH[bar], t=nextBeat;
-  const walk=[ch[0],ch[1],ch[2],CH[(bar+1)%4][0]+(Math.random()<.5?1:-1)];
-  const o=AC.createOscillator(), g=AC.createGain(), lp=AC.createBiquadFilter(); o.type='triangle'; o.frequency.value=mf(walk[b]-12); lp.type='lowpass'; lp.frequency.value=380;
-  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.2,t+.012); g.gain.exponentialRampToValueAtTime(.001,t+spb*.92); o.connect(lp); lp.connect(g); g.connect(musicBus); o.start(t); o.stop(t+spb);
-  if(b===1||b===3) nz(t,.24,.05,5000,.7,musicBus);
-  nz(t+spb*.66,.06,.02,7000,.8,musicBus);
-  if(b===0||(b===2&&Math.random()<.6)) ch.forEach((m,i)=>{ osc('sine',mf(m+12),t+.012*i,spb*1.7,.022,null,musicBus,.02); osc('triangle',mf(m+24),t+.012*i,spb*.9,.006,null,musicBus,.01); });
+// the room's music follows where you are: same band, different night. Scenes change on the first beat of a bar.
+const BAR_CH=[[53,57,60,64],[50,53,57,60],[43,46,50,53],[48,52,55,58]], BOSS_CH=[[38,41,45,50],[39,43,46,51],[38,41,45,50],[33,37,40,46]];
+const MUS={room:{bpm:70,ch:CH},fight:{bpm:82,ch:CH},bar:{bpm:96,ch:BAR_CH},boss:{bpm:116,ch:BOSS_CH},boss2:{bpm:136,ch:BOSS_CH}};
+let musScene='room';
+function musicScene(){ if(!G) return 'room'; if(G.at==='bar') return 'bar'; if(F&&G.at==='fight'&&G.hp>0) return F.kind==='B'?(F.phase2?'boss2':'boss'):'fight'; return 'room'; }
+function bassNote(t,m,len,type,cut,vol){ const o=AC.createOscillator(), g=AC.createGain(), lp=AC.createBiquadFilter(); o.type=type; o.frequency.value=mf(m-12); lp.type='lowpass'; lp.frequency.value=cut;
+  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+.012); g.gain.exponentialRampToValueAtTime(.001,t+len*.92); o.connect(lp); lp.connect(g); g.connect(musicBus); o.start(t); o.stop(t+len); }
+function schedule(){ while(nextBeat<AC.currentTime+.4){ if(beatN%4===0) musScene=musicScene();
+  const M=MUS[musScene], spb=60/M.bpm, bar=Math.floor(beatN/4)%4, b=beatN%4, ch=M.ch[bar], next=M.ch[(bar+1)%4], t=nextBeat;
+  if(musScene==='fight'){
+    bassNote(t,[ch[0],ch[1],ch[2],next[0]+(Math.random()<.5?1:-1)][b],spb,'triangle',380,.2);
+    if(b===1||b===3) nz(t,.24,.05,5000,.7,musicBus);
+    nz(t+spb*.66,.06,.02,7000,.8,musicBus);
+    if(b===0||(b===2&&Math.random()<.6)) ch.forEach((m,i)=>{ osc('sine',mf(m+12),t+.012*i,spb*1.7,.022,null,musicBus,.02); osc('triangle',mf(m+24),t+.012*i,spb*.9,.006,null,musicBus,.01); });
+  } else if(musScene==='room'){ // between fights: just the bass and a held chord, nobody's drumming
+    if(b===0||b===2) bassNote(t,b===0?ch[0]:ch[2],spb*2,'triangle',320,.14);
+    if(b===0) ch.forEach((m,i)=>osc('sine',mf(m+12),t+.03*i,spb*3.4,.016,null,musicBus,.08));
+  } else if(musScene==='bar'){ // the bar: a warm stride piano in a major key, root and fifth under offbeat chords
+    if(b===0||b===2) bassNote(t,b===0?ch[0]:ch[2],spb*.95,'triangle',520,.17);
+    if(b===1||b===3) ch.slice(1).forEach((m,i)=>{ osc('triangle',mf(m+12),t+.008*i,spb*.55,.022,null,musicBus,.006); osc('sine',mf(m+24),t+.008*i,spb*.35,.008,null,musicBus,.006); });
+    if(Math.random()<.45) osc('sine',mf(ch[Math.floor(Math.random()*4)]+24),t+spb*.66,spb*.5,.022,null,musicBus,.008);
+    nz(t+spb*.66,.04,.014,8000,.9,musicBus);
+  } else { // the boss: hard chromatic bass, a kick you feel, chords that won't settle
+    const hot=musScene==='boss2';
+    bassNote(t,[ch[0],ch[0]+1,ch[0]+3,next[0]-1][b],spb*.9,'sawtooth',hot?720:540,.22);
+    if(b===0||b===2) osc('sine',120,t,.16,.26,44,musicBus,.003);
+    if(b===1||b===3) nz(t,.16,.1,1900,.8,musicBus);
+    nz(t+spb*.5,.04,.035,7500,.9,musicBus);
+    if(b===0||b===3) ch.forEach((m,i)=>osc('sawtooth',mf(m+12),b===3?t+spb*.5:t,spb*.4,.02,null,musicBus,.005));
+    if(hot) for(let i=0;i<4;i++) osc('sine',mf(ch[3]+24+(i%2)),t+i*spb/4,spb*.2,.012,null,musicBus,.004);
+  }
   if(Math.random()<.6) nz(t+Math.random()*spb,.01,.03,R_(2500,6000),3,musicBus);
   nextBeat+=spb; beatN++; } }
 
