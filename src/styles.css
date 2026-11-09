@@ -128,8 +128,8 @@ button.tabnum.owe{border:0;background:none;padding:0;cursor:pointer;font:inherit
 @keyframes tokenIn{0%{transform:translateY(-40px) rotate(-200deg) scale(1.5);opacity:0}60%{opacity:1}}
 .token .notch{position:absolute;right:-4px;bottom:-4px;min-width:16px;height:16px;border-radius:8px;background:var(--odds);color:#2a1a00;font-family:var(--f-ui);font-size:11px;line-height:16px;text-align:center}
 
-/* ================= the opponent's nameplate (JS positions it) ================= */
-.nameplate{position:fixed;left:0;top:0;z-index:4;width:228px;box-sizing:border-box;padding:10px 12px 11px;transform:translate(-999px,-999px);will-change:transform}
+/* ================= the opponent's nameplate: always top right, clear of the table ================= */
+.nameplate{position:fixed;right:12px;top:72px;z-index:4;width:228px;box-sizing:border-box;padding:10px 12px 11px}
 .np-top{display:flex;align-items:center;gap:8px}
 .np-kind{font-family:var(--f-ui);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:var(--ox);padding:3px 7px 2px;border-radius:6px}
 .foe-name{font-family:var(--f-ui);font-size:20px;line-height:1;color:var(--cream);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -421,6 +421,9 @@ button.tabnum.owe{border:0;background:none;padding:0;cursor:pointer;font:inherit
   background:#1e1512f5;border-radius:12px;box-shadow:inset 0 0 0 1px #d9b45a55,0 10px 24px #000b;z-index:20;animation:tipIn .2s var(--spring);pointer-events:none}
 @keyframes tipIn{from{opacity:0;transform:translate(-50%,6px) scale(.95)}}
 .rack [data-tip]:hover::after,.hud [data-tip]:hover::after{bottom:auto;top:calc(100% + 10px)}
+/* the nameplate sits against the right edge, so its tips open leftwards */
+.nameplate [data-tip]:hover::after{left:auto;right:0;bottom:auto;top:calc(100% + 10px);transform:none;animation-name:tipInL}
+@keyframes tipInL{from{opacity:0;transform:translateY(6px) scale(.95)}}
 .pop{position:fixed;z-index:62;width:250px;box-sizing:border-box;padding:14px 14px 14px;border-radius:12px;animation:popIn .35s var(--spring)}
 @keyframes popIn{from{opacity:0;transform:translateY(-8px) scale(.92)}}
 .pop .phead{display:flex;align-items:center;gap:10px}
