@@ -323,23 +323,23 @@ test('Raise doubles both ways; intents: Leaning in +1, Sweating halves, Raises d
 test('Bosses always reach their second half; toss price climbs $3', () => {
   assert.equal(L.gateDmg({ boss: true }, 100, 100, false, 80), 50); assert.equal(L.gateDmg({ boss: true }, 100, 100, true, 80), 80);
   assert.equal(L.gateDmg({}, 100, 100, false, 80), 80); assert.equal(L.gateDmg({ boss: true }, 60, 100, false, 5), 5);
-  assert.equal(L.tossPrice({}), 6); assert.equal(L.tossPrice({ tossed: 2 }), 12); assert.equal(L.shakesFor(['spoon']), 2);
+  assert.equal(L.tossPrice({}), 6); assert.equal(L.tossPrice({ tossed: 2 }), 12); assert.equal(L.shakesFor(['spoon'], {}), 2);
 });
-test('Deeds: Still +1 slot and +$2 prices; Brass caps a loss at 12; Deep Pockets draws 7 and hits 2 harder; Black Book +2 Play levels; Bad Rep +3 odds', () => {
+test('Deeds: Still +1 slot and +$2 prices; Brass caps a loss at 12; Deep Pockets draws 7 and hits 2 harder; Black Book makes Plays x1.5; Bad Rep +3 odds', () => {
   const G = { deeds: [], hp: 50, maxHp: 50, rep: 0 };
   L.takeDeed(G, 'still'); assert.equal(L.charmSlots(G), 6); assert.equal(L.barPrice(G, 5), 7);
   L.takeDeed(G, 'brass'); assert.equal(G.maxHp, 40);
   assert.equal(L.settle(20, 2, L.newRound(), [], O([], 100, 3), env({ deeds: G.deeds })).dmg, 12);
   assert.equal(L.handSize({ deeds: ['pockets'] }), 7);
   assert.equal(L.settle(5, 3, L.newRound(), [], O([], 100, 1), env({ deeds: ['pockets'] })).dmg, 4);
-  const B = { deeds: [] }; L.takeDeed(B, 'blackbook'); assert.equal(L.playLv(B.plays, 'trips'), 3);
+  const T = L.newRound(); L.noteBank(T, [2, 2, 2], ['d6', 'd6', 'd6'], []); assert.equal(L.oddsOf(T, [], env({ plays: {}, deeds: ['blackbook'] })).odds, 1.5);
   const C = { deeds: [], rep: 0 }; L.takeDeed(C, 'badrep'); assert.equal(C.rep, 3);
-  assert.equal(L.shakesFor([], { deeds: ['loadedcup'] }), 2);
+  assert.ok(L.shakesFor([], { deeds: ['loadedcup'] }) > 50); assert.equal(L.shakesFor(['spoon'], {}), 2);
 });
 test('Limits: Lead Die never crowns; Last Orders doubles restocks; Double Down at the top', () => {
   assert.ok(!L.DT.lead.faces.includes('C')); assert.equal(L.LIMITS.length, 12);
   assert.equal(L.restockPrice({ restocks: 1, limit: 9 }), 8); assert.equal(L.restockPrice({ restocks: 1, limit: 8 }), 4);
-  assert.ok(L.limitMods(11).double && !L.limitMods(10).double); assert.ok(L.limitMods(5).lead && L.limitMods(7).hideE);
+  assert.ok(L.limitMods(11).double && !L.limitMods(10).double); assert.ok(L.limitMods(7).lead && L.limitMods(6).hideE && !L.limitMods(6).lead);
   assert.deepEqual(L.LIMIT_V1.length, 8);
 });
 test('Floor plan: 9 rows, owner on top, alley/bar rows, lines never cross, every seat reachable', () => {
@@ -348,6 +348,24 @@ test('Floor plan: 9 rows, owner on top, alley/bar rows, lines never cross, every
     assert.ok([...M[2], ...M[3]].some(o => o.n === 'S') && [...M[5], ...M[6]].some(o => o.n === 'S'));
     for (let r = 0; r < 7; r++) { const a = M[r][0].to.includes(1), b = M[r][1].to.includes(0), c = M[r][1].to.includes(2), d = M[r][2].to.includes(1); assert.ok(!(a && b) && !(c && d));
       M[r + 1].forEach(n => assert.ok(M[r].some(o => o.to.includes(n.x)))); } }
+});
+test('Round 2: Shakes take 1 off their score, Getting tired +2, On tilt x2, Plays add margin, Guard soaks and carries', () => {
+  assert.equal(L.targetOf(8, L.newRound(), [], [], { shook: 2 }), 6); assert.equal(L.targetOf(8, L.newRound(), [], [], { intent: 'tired' }), 10);
+  assert.equal(L.oddsOf(L.newRound(), [], env({ intent: 'tilted' })).odds, 2);
+  const R = L.newRound(); L.noteBank(R, [1, 1], ['d6', 'd6'], []);
+  assert.equal(L.settle(4, 7, R, [], O([], 100, 1), env({ plays: {} })).margin, 4);
+  assert.equal(L.settle(4, 7, R, [], O([], 100, 1), env({ plays: { pair: 2 } })).margin, 6);
+  assert.deepEqual(L.soak(5, 3), { dmg: 0, guard: 2, soaked: 3 }); assert.deepEqual(L.soak(2, 7), { dmg: 5, guard: 0, soaked: 2 });
+  assert.equal(L.settle(2, 5, L.newRound(), ['haymaker'], O([], 100, 1), env({ guard: 5 })).margin, 5);
+  assert.equal(L.overkillPay(60, 20), 4); assert.equal(L.overkillPay(500, 20), 10); assert.equal(L.overkillPay(10, 20), 0);
+});
+test('Plays level every 4th time you make one; Marked counts its face twice; The Mimic copies the charm to its right', () => {
+  const G = {}; const R = L.newRound(); L.noteBank(R, [1, 1], ['d6', 'd6'], []);
+  for (let k = 0; k < 3; k++) L.notePlays(G, R, {}); assert.equal(L.playLv(G.plays, 'pair'), 1); assert.deepEqual(L.notePlays(G, R, {}), ['pair']); assert.equal(L.playLv(G.plays, 'pair'), 2);
+  const M = L.newRound(); L.noteBank(M, ['C'], ['d6'], [], ['marked']); assert.equal(M.crowns, 2);
+  const K = L.newRound(); L.noteBank(K, ['C', 'C'], ['d6', 'd6'], []);
+  assert.equal(+L.oddsOf(K, ['mimic', 'kingpin'], env()).odds.toFixed(3), +(Math.pow(1.25, 2) ** 2).toFixed(3));
+  assert.equal(L.oddsOf(K, ['kingpin', 'mimic'], env()).odds, Math.pow(1.25, 2));
 });
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
