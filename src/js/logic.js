@@ -61,8 +61,8 @@ const CHARMS={
   tally:   {name:'Tally Card',    ico:'#', tier:'u', price:8,  desc:'You get +1 odds per 2 fights you’ve won while holding this.'},
   rabbit:  {name:"Rabbit's Foot", ico:'R', tier:'u', price:9,  desc:'The first round you lose at each table doesn’t hurt you.'},
   closer:  {name:'The Closer',    ico:'C', tier:'u', price:12, desc:'Win a round by 5 or more: you get ×2 odds.'},
-  kingpin: {name:'Kingpin',       ico:'K', tier:'r', price:18, rare:true, desc:'You get ×1.25 odds per crown you bank. Stacks.'},
-  lowball: {name:'Low Ball',      ico:'0', tier:'r', price:16, rare:true, desc:'Finish a round on 3 or less: you get ×2 odds.'},
+  kingpin: {name:'Kingpin',       ico:'K', tier:'r', price:18, rare:true, desc:'You get ×1.35 odds per crown you bank. Stacks.'},
+  lowball: {name:'Low Ball',      ico:'0', tier:'r', price:16, rare:true, desc:'Finish a round on 3 or less: you get ×3 odds.'},
   opener:  {name:'Opening Act',   ico:'O', tier:'c', price:6, desc:'Your first round at each table: you get ×2 odds.'},
   packed:  {name:'Packed House',  ico:'P', tier:'c', price:6, desc:'You get +1 odds per 2 dice in your bag.'},
   stack:   {name:'Short Stack',   ico:'S', tier:'u', price:9, desc:'You get +2 odds per die your bag is short of 9.'},
@@ -85,7 +85,7 @@ const CHARMS={
   deuces:  {name:'Deuces Wild',   ico:'2', tier:'u', price:9, desc:'Your 2s score 1.'},
   flask:   {name:'Hip Flask',     ico:'F', tier:'c', price:5, desc:'You sit down at every table with 6 Guard.'},
   bulldog: {name:'The Bulldog',   ico:'D', tier:'u', price:8, desc:'You get +1 Guard for every 1 you bank.'},
-  haymaker:{name:'Haymaker',      ico:'H', tier:'r', price:15, rare:true, desc:'Win a round: you win it by 1 more per 2 Guard you have.'},
+  haymaker:{name:'Haymaker',      ico:'H', tier:'r', price:15, rare:true, desc:'You sit down at every table with 4 Guard. Win a round: you win it by 1 more per Guard you have.'},
   mimic:   {name:'The Mimic',     ico:'M', tier:'r', price:15, rare:true, desc:'Copies the odds the charm to its right gives you. Order your rack.'},
   thumb:   {name:'Loaded Thumb',  ico:'T', tier:'u', price:9, desc:'Twice per table: click Nudge, then a die in your tray, to turn it down by 1. Crowns don’t move.'},
   echo:    {name:'The Echo',      ico:'E', tier:'u', price:9, desc:'Crowns you bank on your first throw of a round count as two crowns each.'},
@@ -100,7 +100,7 @@ const CHARMS={
   finisher:{name:'The Finisher',  ico:'F', tier:'u', price:9, desc:'Opponent at half nerve or less: you get ×2.5 odds.'},
   moonshine:{name:'Moonshine',    ico:'M', tier:'r', price:16, rare:true, desc:'Ferments: gains ×0.05 odds every round you win. Never resets.'},
   crownroom:{name:'The Crown Room',ico:'♛', tier:'r', price:16, rare:true, desc:'Bank 3 or more crowns in a round: you get ×3 odds.'},
-  straight:{name:'Straight Shooter',ico:'S', tier:'r', price:15, rare:true, desc:'Bank a 1, a 2 and a 3 in the same round: you get ×4 odds.'},
+  straight:{name:'Straight Shooter',ico:'S', tier:'r', price:15, rare:true, desc:'Bank a 1, a 2 and a 3 in the same round: you get ×5 odds.'},
   ringer:  {name:'The Ringer',    ico:'R', tier:'r', price:17, rare:true, desc:'Your crowns score −1 instead of 0, but your 1s score 3.'},
   shoeshine:{name:'Shoeshine',   ico:'✦', tier:'u', price:8, desc:'Your finished dice give +2 more odds when you bank them.'},
   curator: {name:'The Curator',  ico:'❖', tier:'u', price:8, desc:'You get +2 odds per die in your bag with a finish.'},
@@ -256,7 +256,7 @@ const LIMITS=[
  {n:'Dime',         d:'Bosses bring an extra quirk.'},
  {n:'Quarter',      d:'Everything at the bar costs $1 more.'},
  {n:'Half Dollar',  d:'You walk in with 5 less nerve.'},
- {n:'Silver Dollar',d:'In Act III, their odds are 1 higher.'},
+ {n:'Silver Dollar',d:'The Act III owners hit 1 harder.'},
  {n:'Card Sharp',   d:'Sharks throw one die face-down. You only see it after your first bank.'},
  {n:'Lead Slug',    d:'One of your House Dice is a cursed Lead Die: 1 2 3 4 5 5, never a crown. It can’t be tossed.'},
  {n:'Gold Eagle',   d:'Sharks bring an extra quirk too. No breather on the stairs.'},
@@ -337,7 +337,7 @@ function oppHP(def,kind,act,floor,lap,easy){ const w=def.hp/tierRef(act,kind), b
 function makeOpp(def,kind,act,floor,lap,easy,lv,hpMul){ let bag=def.bag.slice(); for(let k=0;k<lap;k++){const i=bag.findIndex(b=>b==='d6'||b==='d8'); if(i>=0) bag[i]=k%2?'pebble':'loaded';}
   const LM=limitMods(lv), q=(def.q||[]).slice(); if((LM.extraQ&&kind==='B')||(LM.extraQE&&kind==='E')){ const ex=EXTRA_Q.filter(x=>!q.includes(x)); if(ex.length) q.push(pick(ex)); }
   q.push(...rulesFor(kind,act,lap||0,q));
-  return {...def, hp:Math.round(oppHP(def,kind,act,floor,lap,easy)*LM.hp*(hpMul||1)), odds:(lap?ACT_ODDS[2]+3*lap+act-2:ACT_ODDS[act])+(kind==='B'&&q.indexOf('ironjaw')<0?1:0)+(kind==='E'?1:0)+(kind==='F'&&floor>=3?1:0)+(act>=2||lap?LM.odds:0), bag, q}; }
+  return {...def, hp:Math.round(oppHP(def,kind,act,floor,lap,easy)*LM.hp*(hpMul||1)), odds:(lap?ACT_ODDS[2]+3*lap+act-2:ACT_ODDS[act])+(kind==='B'&&q.indexOf('ironjaw')<0?1:0)+(kind==='E'?1:0)+(kind==='F'&&floor>=3?1:0)+((act>=2||lap)&&kind==='B'?LM.odds:0), bag, q}; }
 // ---- a round's running record; everything that pays is computed from this ----
 function newRound(){ return {crowns:0,gilt:0,ember:0,roller:0,ones:0,threes:0,glass:0,gold:0,bomb:0,snake:false,singles:true,throws:0,evens:0,trips:false,lastBank:0,bubbly:0,viper:0,cnt:{}}; }
 function bankVals(faces,ctx,charms,final,fins){ let v=faces.map((f,i)=>finVal(effVal(f,ctx),fins&&fins[i]));
@@ -490,9 +490,9 @@ function oddsOf(R,charms,env){ const P=[]; let add=0, mul=1; const has=c=>charms
   if(env.plays) playsHit(R,env).forEach(k=>{ const lv=playLv(env.plays,k), nm=PLAYS[k].name+(lv>1?' Lv '+lv:''); if(env.deeds&&env.deeds.includes('blackbook')) M(nm,1.5); else A(nm,PLAYS[k].per*lv); });
   if(env.q&&env.q.includes('loud')){ add-=2; P.push(['Loudmouth','\u22122']); }
   if(R.roller) M('High Roller',Math.pow(2,R.roller));
-  if(has('kingpin')&&R.crowns) M('Kingpin',Math.pow(1.25,R.crowns));
+  if(has('kingpin')&&R.crowns) M('Kingpin',Math.pow(1.35,R.crowns));
   if(has('closer')&&(env.margin||0)>=5) M('The Closer',2);
-  if(has('lowball')&&env.done&&env.score<=3) M('Low Ball',2);
+  if(has('lowball')&&env.done&&env.score<=3) M('Low Ball',3);
   if(has('opener')&&env.round===1) M('Opening Act',2);
   if(has('allin')&&env.done&&R.throws===1) M('All In',3);
   if(has('doubledown')&&(env.wins||0)>=1) M('Double Down',3);
@@ -506,7 +506,7 @@ function oddsOf(R,charms,env){ const P=[]; let add=0, mul=1; const has=c=>charms
   if(has('finisher')&&env.oppHalf) M('The Finisher',2.5);
   if(has('moonshine')&&grow.moon) M('Moonshine',1+.05*grow.moon);
   if(has('crownroom')&&R.crowns>=3) M('The Crown Room',3);
-  if(has('straight')&&cnt[1]&&cnt[2]&&cnt[3]) M('Straight Shooter',4);
+  if(has('straight')&&cnt[1]&&cnt[2]&&cnt[3]) M('Straight Shooter',5);
   if(has('bigshot')) M('Big Shot',Math.pow(1.2,charms.length));
   if(env.intent==='tilted') M('On tilt',2);
   { const mi=charms.indexOf('mimic'), rt=mi>=0&&charms[mi+1]; if(rt&&CHARMS[rt]){ const pt=P.find(x=>x[0]===CHARMS[rt].name&&typeof x[2]==='number'); if(pt){ if(pt[1][0]==='×') M('The Mimic',pt[2]); else A('The Mimic',pt[2]); } } }
@@ -519,7 +519,7 @@ const fmtOdds=x=>(Math.round(x*10)/10).toString();
 // final reckoning of a round
 function settle(p,oRaw,R,charms,opp,env){ const q=opp.q, has=c=>charms.includes(c);
   const o=targetOf(oRaw,R,charms,q,env);
-  if(p<o){ const fin=!env.preview, pot=playsPot(R,{...env,score:p,done:fin})+(has('haymaker')?Math.floor((env.guard||0)/2):0); const margin=Math.max(1,o-p-(has('bouncer')?1:0))+(has('cut')?2:0)+pot; const O=oddsOf(R,charms,{...env,margin:o-p-(has('bouncer')?1:0),score:p,done:fin});
+  if(p<o){ const fin=!env.preview, pot=playsPot(R,{...env,score:p,done:fin})+(has('haymaker')?(env.guard||0):0); const margin=Math.max(1,o-p-(has('bouncer')?1:0))+(has('cut')?2:0)+pot; const O=oddsOf(R,charms,{...env,margin:o-p-(has('bouncer')?1:0),score:p,done:fin});
     let dmg=Math.max(1,Math.round(margin*O.odds*stakesOf(env))), armor=false, capped=false;
     if(q.includes('ironjaw')){ const cap=Math.ceil((opp.hp||1)/3); if(dmg>cap){ dmg=cap; capped=true; } }
     if(q.includes('armor')&&!env.wonOnce){ dmg=0; armor=true; }

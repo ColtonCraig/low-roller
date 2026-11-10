@@ -203,7 +203,7 @@ test('Long Shot x2.5 on a win by 1 or 2; Finisher x2.5 at half nerve', () => {
 });
 test('Crown Room needs 3 crowns; Straight Shooter needs 1, 2 and 3', () => {
   assert.equal(L.oddsOf(bank(L.newRound(), ['C', 'C', 'C']), ['crownroom'], env({})).odds, 3);
-  assert.equal(L.oddsOf(bank(bank(L.newRound(), [1, 3]), [2]), ['straight'], env({})).odds, 4);
+  assert.equal(L.oddsOf(bank(bank(L.newRound(), [1, 3]), [2]), ['straight'], env({})).odds, 5);
   assert.equal(L.oddsOf(bank(L.newRound(), [1, 3]), ['straight'], env({})).odds, 1);
 });
 test('Piggy Bank grows +2 on wins, breaks to 0 on a real loss; Moonshine never resets', () => {
@@ -228,7 +228,7 @@ test('Off the Books charms don\'t take a slot', () => {
 });
 test('Picking dice without banking never leaks into the round (shallow copies)', () => {
   const R = L.newRound(); L.noteBank(R, [1], ['d6'], []); const R2 = { ...R }; L.noteBank(R2, [2, 3], ['d6', 'd6'], []);
-  assert.equal(L.oddsOf(R, ['straight'], env({})).odds, 1); assert.equal(L.oddsOf(R2, ['straight'], env({})).odds, 4);
+  assert.equal(L.oddsOf(R, ['straight'], env({})).odds, 1); assert.equal(L.oddsOf(R2, ['straight'], env({})).odds, 5);
 });
 // ---- counters ----
 const O = (q, hp = 100, odds = 1) => ({ q, hp, odds });
@@ -356,7 +356,7 @@ test('Round 2: Shakes take 1 off their score, Getting tired +2, On tilt x2, Play
   assert.equal(L.settle(4, 7, R, [], O([], 100, 1), env({ plays: {} })).margin, 4);
   assert.equal(L.settle(4, 7, R, [], O([], 100, 1), env({ plays: { pair: 2 } })).margin, 6);
   assert.deepEqual(L.soak(5, 3), { dmg: 0, guard: 2, soaked: 3 }); assert.deepEqual(L.soak(2, 7), { dmg: 5, guard: 0, soaked: 2 });
-  assert.equal(L.settle(2, 5, L.newRound(), ['haymaker'], O([], 100, 1), env({ guard: 5 })).margin, 5);
+  assert.equal(L.settle(2, 5, L.newRound(), ['haymaker'], O([], 100, 1), env({ guard: 5 })).margin, 8);
   assert.equal(L.overkillPay(60, 20), 4); assert.equal(L.overkillPay(500, 20), 10); assert.equal(L.overkillPay(10, 20), 0);
 });
 test('Plays level every 4th time you make one; Marked counts its face twice; The Mimic copies the charm to its right', () => {
@@ -364,8 +364,8 @@ test('Plays level every 4th time you make one; Marked counts its face twice; The
   for (let k = 0; k < 3; k++) L.notePlays(G, R, {}); assert.equal(L.playLv(G.plays, 'pair'), 1); assert.deepEqual(L.notePlays(G, R, {}), ['pair']); assert.equal(L.playLv(G.plays, 'pair'), 2);
   const M = L.newRound(); L.noteBank(M, ['C'], ['d6'], [], ['marked']); assert.equal(M.crowns, 2);
   const K = L.newRound(); L.noteBank(K, ['C', 'C'], ['d6', 'd6'], []);
-  assert.equal(+L.oddsOf(K, ['mimic', 'kingpin'], env()).odds.toFixed(3), +(Math.pow(1.25, 2) ** 2).toFixed(3));
-  assert.equal(L.oddsOf(K, ['kingpin', 'mimic'], env()).odds, Math.pow(1.25, 2));
+  assert.equal(+L.oddsOf(K, ['mimic', 'kingpin'], env()).odds.toFixed(3), +(Math.pow(1.35, 2) ** 2).toFixed(3));
+  assert.equal(L.oddsOf(K, ['kingpin', 'mimic'], env()).odds, Math.pow(1.35, 2));
 });
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

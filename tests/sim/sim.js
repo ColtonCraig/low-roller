@@ -61,7 +61,7 @@ function pickFoe(G,kind,act,floor){ const Af=ACTS[act].foes; if(kind==='B') retu
   let pool=floor<=3?Af.t1:Af.t2; if(floor<2&&act===0&&G.lap===0) pool=pool.filter(p=>!(p.q||[]).some(q=>!L.QUIRKS[q].help)); return fresh(pool); }
 if(A.rule){ const r=A.rule==='none'?[]:[A.rule]; L.BOSS_RULES.forEach(p=>p.splice(0,p.length,...r)); L.SHARK_RULES.splice(0,L.SHARK_RULES.length,...r); }
 function fight(G,kind,act,floor,smart,stats,hpK,hot){ const def=pickFoe(G,kind,act,floor);
-  const o=L.makeOpp(def,kind,act,floor,G.lap,kind==='F'&&act===0&&floor<2&&G.lap===0,LV,(L.hasDeed(G,'badrep')?1.15:1)*(hpK||1)*(hot?1.4:1)); if(hot) o.odds+=1; let oh=o.hp; const F={noinfo:LM.hideE&&kind==='E',p2:false,wins:0,loss:0,rabbit:false,heavy:false,rounds:0,thumb:2,bump:has(G,'bump'),wall:has(G,'flask')?6:0,next:A.nointent?'steady':L.rollIntent(kind)};
+  const o=L.makeOpp(def,kind,act,floor,G.lap,kind==='F'&&act===0&&floor<2&&G.lap===0,LV,(L.hasDeed(G,'badrep')?1.15:1)*(hpK||1)*(hot?1.4:1)); if(hot) o.odds+=1; let oh=o.hp; const F={noinfo:LM.hideE&&kind==='E',p2:false,wins:0,loss:0,rabbit:false,heavy:false,rounds:0,thumb:2,bump:has(G,'bump'),wall:(has(G,'flask')?6:0)+(has(G,'haymaker')?4:0),next:A.nointent?'steady':L.rollIntent(kind)};
   while(G.hp>0&&oh>0&&F.rounds<80){ F.rounds++; const intent=F.next; F.next=A.nointent?'steady':L.rollIntent(kind); const tt=L.intentT(o,intent);
     let T; { const s1=L.aiRound(o.bag,o.t); let sim=s1; if(o.q.includes('pair')){ const s2=L.aiRound(o.bag,tt); if(s2.total<s1.total) sim=s2; } T=sim.total;
       if(F.bump&&T<=5){ const b=L.bumpLowest(sim,o.bag); if(b){ T+=b.delta; F.bump=false; } } }
