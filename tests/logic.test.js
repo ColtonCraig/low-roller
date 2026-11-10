@@ -206,11 +206,11 @@ test('Crown Room needs 3 crowns; Straight Shooter needs 1, 2 and 3', () => {
   assert.equal(L.oddsOf(bank(bank(L.newRound(), [1, 3]), [2]), ['straight'], env({})).odds, 4);
   assert.equal(L.oddsOf(bank(L.newRound(), [1, 3]), ['straight'], env({})).odds, 1);
 });
-test('Piggy Bank grows on wins, halves on a real loss; Moonshine never resets', () => {
+test('Piggy Bank grows +2 on wins, breaks to 0 on a real loss; Moonshine never resets', () => {
   const G = { charms: ['piggy', 'moonshine'], gold: 0 };
-  L.afterRound(G, 'you'); L.afterRound(G, 'you'); assert.equal(G.grow.piggy, 6);
-  L.afterRound(G, 'them', true); assert.equal(G.grow.piggy, 6);
-  L.afterRound(G, 'them'); assert.equal(G.grow.piggy, 3); assert.equal(G.grow.moon, 2);
+  L.afterRound(G, 'you'); L.afterRound(G, 'you'); assert.equal(G.grow.piggy, 4);
+  L.afterRound(G, 'them', true); assert.equal(G.grow.piggy, 4);
+  L.afterRound(G, 'them'); assert.equal(G.grow.piggy, 0); assert.equal(G.grow.moon, 2);
   assert.equal(+L.oddsOf(L.newRound(), ['moonshine'], env({ grow: G.grow })).odds.toFixed(2), 1.1);
 });
 test('Consolation pays $2 a lost round; Savings Bond pays $1 per $10, max $5', () => {
@@ -298,6 +298,32 @@ test('New pockets start as described', () => {
   assert.deepEqual(L.pocketStart('collector').fins, ['polished', 'lucky']);
   assert.equal(L.pocketStart('bootlegger').drinks.length, 2);
   assert.deepEqual(L.pocketStart('mechanic').fix, ['felt']); assert.equal(L.pocketStart('ghost').hp, 40);
+});
+test('Plays pay by level: Pair of Ones +1/level, Three of a Kind +2, Ladder +2, Crown Court +3, Clean Hands +2', () => {
+  const R = L.newRound(); L.noteBank(R, [1, 1], ['d6', 'd6'], []);
+  assert.equal(L.oddsOf(R, [], env({ plays: {} })).odds, 2);
+  assert.equal(L.oddsOf(R, [], env({ plays: { pair: 2 } })).odds, 4);
+  const T = L.newRound(); L.noteBank(T, [2, 2, 2], ['d6', 'd6', 'd6'], []); assert.equal(L.oddsOf(T, [], env({ plays: {} })).odds, 3);
+  const D = L.newRound(); L.noteBank(D, [1], ['d6'], []); L.noteBank(D, [2], ['d6'], []); L.noteBank(D, [3], ['d6'], []); assert.equal(L.oddsOf(D, [], env({ plays: {} })).odds, 3);
+  const C = L.newRound(); L.noteBank(C, ['C', 'C', 'C'], ['d6', 'd6', 'd6'], []); assert.ok(L.playsHit(C, {}).includes('court'));
+  assert.ok(L.playsHit(L.newRound(), { done: true, score: 3 }).includes('clean')); assert.ok(!L.playsHit(L.newRound(), { done: true, score: 4 }).includes('clean'));
+});
+test('The Echo doubles the first crown; Double Take doubles 1s', () => {
+  const R = L.newRound(); L.noteBank(R, ['C'], ['d6'], ['echo']); L.noteBank(R, ['C'], ['d6'], ['echo']); assert.equal(R.crowns, 3);
+  const S = L.newRound(); L.noteBank(S, [1], ['d6'], ['doubletake']); assert.equal(S.ones, 2); assert.ok(S.snake);
+});
+test('Raise doubles both ways; intents: Leaning in +1, Sweating halves, Raises doubles; Fold costs 2x their odds', () => {
+  assert.equal(L.settle(3, 5, L.newRound(), [], O([], 100, 1), env({ raise: 1 })).dmg, 4);
+  assert.equal(L.settle(7, 5, L.newRound(), [], O([], 100, 3), env({ raise: 1 })).dmg, 12);
+  assert.equal(L.settle(7, 5, L.newRound(), [], O([], 100, 3), env({ intent: 'lean' })).dmg, 8);
+  assert.equal(L.settle(7, 5, L.newRound(), [], O([], 100, 3), env({ intent: 'sweat' })).dmg, 4);
+  assert.equal(L.settle(7, 5, L.newRound(), [], O([], 100, 3), env({ intent: 'raise', raise: 1 })).dmg, 24);
+  assert.equal(L.foldDmg(O([], 100, 3)), 6); assert.equal(L.foldDmg(O([], 100, 1)), 2);
+});
+test('Bosses always reach their second half; toss price climbs $3', () => {
+  assert.equal(L.gateDmg({ boss: true }, 100, 100, false, 80), 50); assert.equal(L.gateDmg({ boss: true }, 100, 100, true, 80), 80);
+  assert.equal(L.gateDmg({}, 100, 100, false, 80), 80); assert.equal(L.gateDmg({ boss: true }, 60, 100, false, 5), 5);
+  assert.equal(L.tossPrice({}), 6); assert.equal(L.tossPrice({ tossed: 2 }), 12); assert.equal(L.shakesFor(['spoon']), 2);
 });
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

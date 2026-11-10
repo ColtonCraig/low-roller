@@ -50,7 +50,7 @@ const CHARMS={
   liver:   {name:'Iron Liver',    ico:'+', tier:'c', price:6, desc:'You get +12 max nerve.'},
   cigar:   {name:'Victory Cigar', ico:'V', tier:'c', price:5, desc:'You heal 6 nerve after every fight you win.'},
   penny:   {name:'Lucky Penny',   ico:'1', tier:'r', price:17, rare:true, desc:'Your first throw each round: your 1s score 0.'},
-  spoon:   {name:'Bent Spoon',    ico:'↻', tier:'u', price:9,  desc:'Once per round: pick one of your dice and reroll it.'},
+  spoon:   {name:'Bent Spoon',    ico:'↻', tier:'u', price:8,  desc:'You get +1 Shake every round.'},
   lastcall:{name:'Last Call',     ico:'L', tier:'r', price:16, rare:true, desc:'Your final bank each round: its highest die counts 1 less, if it’s a 4 or more.'},
   jacks:   {name:'Pair of Jacks', ico:'J', tier:'u', price:9,  desc:'In each bank you make, repeat faces score 0. (3, 3, 5 counts as 3 + 0 + 5.)'},
   snake:   {name:'Snake Eyes',    ico:'∴', tier:'u', price:9,  desc:'You get +1 odds per 1 you bank.'},
@@ -81,7 +81,13 @@ const CHARMS={
   shiner:  {name:'Shiner',        ico:'○', tier:'c', price:5, desc:'Finish a round without banking a crown: you get +6 odds.'},
   evens:   {name:'Even Money',    ico:'2', tier:'c', price:5, desc:'You get +2 odds per 2, 4 or 6 you bank.'},
   deuces:  {name:'Deuces Wild',   ico:'2', tier:'u', price:9, desc:'Your 2s score 1.'},
-  piggy:   {name:'Piggy Bank',    ico:'P', tier:'u', price:8, desc:'Grows +3 odds every round you win. Loses half when you lose one (unless Rabbit’s Foot takes the hit).'},
+  thumb:   {name:'Loaded Thumb',  ico:'T', tier:'u', price:8, desc:'Twice per table: click Nudge, then a die in your tray, to turn it down by 1. Crowns don’t move.'},
+  echo:    {name:'The Echo',      ico:'E', tier:'u', price:9, desc:'The first crown you bank each round counts as two crowns.'},
+  doubletake:{name:'Double Take', ico:'D', tier:'c', price:5, desc:'Every 1 you bank counts as two 1s (for Snake Eyes and Pair of Ones).'},
+  sleight: {name:'Sleight of Hand',ico:'S', tier:'r', price:15, rare:true, desc:'Your first throw each round: every die that lands on 4 or more gets one free rethrow.'},
+  bump:    {name:'Bump the Table',ico:'B', tier:'u', price:8, desc:'Once per table, after they throw: click Bump and their lowest die gets thrown again.'},
+  bodyguard:{name:'The Bodyguard',ico:'G', tier:'u', price:9, desc:'Every round you win, he adds 3 to his wall. The next hit you take loses the wall first, then the wall’s gone.'},
+  piggy:   {name:'Piggy Bank',    ico:'P', tier:'u', price:8, desc:'Grows +2 odds every round you win. Breaks back to 0 when you lose one (unless Rabbit’s Foot takes the hit).'},
   tommy:   {name:'Tommy Gun',     ico:'⁞', tier:'u', price:8, desc:'You get +2 odds per die in your final bank each round.'},
   jackpot: {name:'Jackpot',       ico:'7', tier:'u', price:9, desc:'Bank three of a kind in one go: you get ×2 odds this round.'},
   longshot:{name:'Long Shot',     ico:'1', tier:'u', price:8, desc:'Win a round by 1 or 2: you get ×2.5 odds.'},
@@ -310,8 +316,9 @@ function bankVals(faces,ctx,charms,final,fins){ let v=faces.map((f,i)=>finVal(ef
   return v; }
 function noteBank(R,faces,types,charms,fins){ R.throws++; if(faces.length!==1) R.singles=false;
   (fins||[]).forEach(f=>{ if(!f) return; R.fin={...(R.fin||{})}; R.fin[f]=(R.fin[f]||0)+1; });
-  faces.forEach((f,i)=>{ if(f==='G'){ R.crowns++; R.gilt++; } if(f==='C'){ R.crowns++; if(types[i]==='ember') R.ember++; if(types[i]==='gamble') R.roller++; } });
-  R.ones+=faces.filter(f=>f===1).length; if(faces.filter(f=>f===1).length>=2) R.snake=true;
+  const ch=charms||[];
+  faces.forEach((f,i)=>{ if(f==='G'||f==='C'){ if(ch.includes('echo')&&!R.echoed){ R.crowns++; R.echoed=true; } } if(f==='G'){ R.crowns++; R.gilt++; } if(f==='C'){ R.crowns++; if(types[i]==='ember') R.ember++; if(types[i]==='gamble') R.roller++; } });
+  { const n1=faces.filter(f=>f===1).length*(ch.includes('doubletake')?2:1); R.ones+=n1; if(n1>=2) R.snake=true; }
   R.threes+=faces.filter(f=>f===3).length; R.glass+=types.filter(t=>t==='glass').length;
   faces.forEach((f,i)=>{ if(f==='C'&&types[i]==='gilded') R.gold++; if(f==='C'&&types[i]==='bomb') R.bomb++; });
   R.cnt={...(R.cnt||{})}; const here={}; faces.forEach((f,i)=>{ R.cnt[f]=(R.cnt[f]||0)+1; here[f]=(here[f]||0)+1;
@@ -319,8 +326,8 @@ function noteBank(R,faces,types,charms,fins){ R.throws++; if(faces.length!==1) R
   if(Object.values(here).some(n=>n>=3)) R.trips=true; R.lastBank=faces.length; }
 // After every round: growing charms and round money. Returns $ to pay out. (game endRound and the sim both call this)
 function afterRound(G,winner,free){ const has=c=>G.charms.includes(c); G.grow=G.grow||{}; let pay=0;
-  if(winner==='you'){ if(has('piggy')) G.grow.piggy=(G.grow.piggy||0)+3; if(has('moonshine')) G.grow.moon=(G.grow.moon||0)+1; }
-  if(winner==='them'&&!free){ if(has('piggy')) G.grow.piggy=Math.floor((G.grow.piggy||0)/2); if(has('consolation')) pay+=2; }
+  if(winner==='you'){ if(has('piggy')) G.grow.piggy=(G.grow.piggy||0)+2; if(has('moonshine')) G.grow.moon=(G.grow.moon||0)+1; }
+  if(winner==='them'&&!free){ if(has('piggy')) G.grow.piggy=0; if(has('consolation')) pay+=2; }
   return pay; }
 // ---- Fixtures: permanent upgrades. One is on offer at the bar each room until you buy it.
 const FIXTURES={
@@ -352,6 +359,38 @@ const DRINKS={
   sidecar: {name:'Sidecar',    price:3, desc:'$6, right now.'},
 };
 const DRINK_KEYS=Object.keys(DRINKS), DRINK_MAX=2;
+// ---- Plays: patterns you bank in a round. Every Play starts at level 1; a Hot Tip from the bar adds a level.
+const PLAYS={ pair:{name:'Pair of Ones',desc:'Bank two 1s in one go.',per:1},
+  trips:{name:'Three of a Kind',desc:'Bank three of the same face in one go.',per:2},
+  ladder:{name:'The Ladder',desc:'Bank a 1, a 2 and a 3 in the same round.',per:2},
+  court:{name:'Crown Court',desc:'Bank 3 or more crowns in a round.',per:3},
+  clean:{name:'Clean Hands',desc:'Finish a round on 3 or less.',per:2} };
+const PLAY_KEYS=Object.keys(PLAYS), TIP_PRICE=5;
+const playLv=(plays,k)=>((plays||{})[k]||0)+1;
+function playsHit(R,env){ const c=R.cnt||{}, out=[]; if(R.snake) out.push('pair'); if(R.trips) out.push('trips'); if(c[1]&&c[2]&&c[3]) out.push('ladder'); if((R.crowns||0)>=3) out.push('court'); if(env&&env.done&&env.score!=null&&env.score<=3) out.push('clean'); return out; }
+// ---- Shakes: rethrow any of your tray dice without banking. One a round, more with Bent Spoon.
+const shakesFor=charms=>1+(charms.includes('spoon')?1:0);
+// ---- Raise / Fold: after your first throw, before your first bank.
+const foldDmg=(opp,intent)=>Math.max(2,Math.ceil(2*theirOdds(opp,{intent})));
+// ---- Intents: what the opponent is up to this round. Shown a round ahead.
+const INTENTS={ steady:{name:'Steady',desc:'Nothing special.'},
+  lean:{name:'Leaning in',desc:'Their Hits +1 this round.'},
+  sweat:{name:'Sweating',desc:'Their Hits are halved this round (rounded up).'},
+  raise:{name:'Raises',desc:'Stakes ×2 this round: whoever wins hits twice as hard.'},
+  tight:{name:'Playing it close',desc:'They only keep 1s and crowns this round.'},
+  loose:{name:'Getting sloppy',desc:'They keep anything 2 or under this round.'} };
+const INTENT_W={F:{steady:6,tight:2,loose:2,sweat:1,lean:1},E:{steady:3,lean:2,raise:1,tight:1,sweat:1},B:{steady:2,lean:2,raise:1,tight:1,sweat:1}};
+function rollIntent(kind){ const w=INTENT_W[kind]||INTENT_W.F; let t=Math.random()*Object.values(w).reduce((a,b)=>a+b,0); for(const k in w){ t-=w[k]; if(t<0) return k; } return 'steady'; }
+const intentT=(opp,intent)=>intent==='tight'?1:intent==='loose'?2:opp.t;
+function theirOdds(opp,env){ const q=opp.q||[]; let o=(env&&env.drink&&env.drink.bitters)?1:opp.odds+(q.includes('bloodlust')?Math.floor(Math.max(0,((env&&env.round)||1)-1)/2):0);
+  const it=env&&env.intent; if(it==='lean') o+=1; if(it==='sweat') o=Math.ceil(o/2); return o; }
+const stakesOf=env=>((env&&env.raise)?2:1)*((env&&env.intent==='raise')?2:1);
+// Bump the Table: their lowest banked die gets thrown again. Returns which die and how their total moves.
+function bumpLowest(sim,bag){ let best=null; sim.throws.forEach(th=>th.kept.forEach(i=>{ const f=th.faces[th.left.indexOf(i)], v=effVal(f); if(!best||v<best.v) best={i,f,v}; })); if(!best) return null; const nf=rollFace(bag[best.i]); return {i:best.i,old:best.f,face:nf,delta:effVal(nf)-best.v}; }
+// ---- Bosses always reach their second half: no single round takes them past the halfway mark.
+function gateDmg(opp,hp,max,phase2,dmg){ if(!opp.boss||phase2) return dmg; const half=Math.floor(max/2); return hp>half&&hp-dmg<half?hp-half:dmg; }
+// ---- Toss a die: starts at $6 and costs $3 more each time this run.
+const tossPrice=G=>6+3*(G.tossed||0);
 // ---- Chits: earned by beating a shark in 2 rounds or less, or by walking past a table. Spent on their own when they apply.
 const CHITS={
   cash:   {name:'Cash Chit',     desc:'$5, right now.'},
@@ -411,6 +450,7 @@ function oddsOf(R,charms,env){ const P=[]; let add=0, mul=1; const has=c=>charms
   if(has('stub')) A('Ticket Stub',2*(grow.chits||0));
   if(env.fixOdds) A('Lucky Felt',env.fixOdds);
   const dk=env.drink||{}; if(dk.gin) A('Gin',3*dk.gin);
+  if(env.plays) playsHit(R,env).forEach(k=>{ const lv=playLv(env.plays,k); A(PLAYS[k].name+(lv>1?' Lv '+lv:''),PLAYS[k].per*lv); });
   if(env.q&&env.q.includes('loud')){ add-=2; P.push(['Loudmouth','\u22122']); }
   if(R.roller) M('High Roller',Math.pow(2,R.roller));
   if(has('kingpin')&&R.crowns) M('Kingpin',Math.pow(1.25,R.crowns));
@@ -441,17 +481,17 @@ const fmtOdds=x=>(Math.round(x*10)/10).toString();
 function settle(p,oRaw,R,charms,opp,env){ const q=opp.q, has=c=>charms.includes(c);
   const o=theirScore(oRaw,R,charms,q)+(env.drink&&env.drink.soda?2*env.drink.soda:0);
   if(p<o){ const margin=Math.max(1,o-p-(has('bouncer')?1:0))+(has('cut')?2:0); const O=oddsOf(R,charms,{...env,margin:o-p-(has('bouncer')?1:0),score:p,done:true});
-    let dmg=Math.max(1,Math.round(margin*O.odds)), armor=false, capped=false;
+    let dmg=Math.max(1,Math.round(margin*O.odds*stakesOf(env))), armor=false, capped=false;
     if(q.includes('ironjaw')){ const cap=Math.ceil((opp.hp||1)/3); if(dmg>cap){ dmg=cap; capped=true; } }
     if(q.includes('armor')&&!env.wonOnce){ dmg=0; armor=true; }
     const recoil=q.includes('thorns')&&dmg>0?Math.min(5,Math.max(1,Math.ceil(dmg*.1))):0;
     return {winner:'you',gap:o-p,margin,odds:O.odds,parts:O.parts,dmg,armor,capped,recoil,oFinal:o,raid:O.raid}; }
   if(p===o+1&&has('nearmiss')) return {winner:'push',dmg:0,oFinal:o,near:true};
   const house=p===o&&opp.sig==='house', sharp=p===o&&!house&&q.includes('sharp');
-  if(p>o||house||sharp){ const gap=house?2:sharp?1:p-o, tOdds=(env.drink&&env.drink.bitters)?1:opp.odds+(q.includes('bloodlust')?Math.floor(Math.max(0,(env.round||1)-1)/2):0); let dmg=Math.ceil(gap*tOdds);
+  if(p>o||house||sharp){ const gap=house?2:sharp?1:p-o, tOdds=theirOdds(opp,env); let dmg=Math.ceil(gap*tOdds);
     if(q.includes('hot')&&env.lossStreak>0) dmg+=env.lossStreak;
     if(q.includes('grudge')&&env.oppHalf) dmg+=2;
-    if(has('thick')) dmg-=3; dmg=Math.max(1,dmg); if(has('highstakes')) dmg+=1;
+    if(has('thick')) dmg-=3; dmg=Math.max(1,dmg); if(has('highstakes')) dmg+=1; dmg*=stakesOf(env);
     return {winner:'them',gap,dmg,odds:tOdds,oFinal:o,house,sharp}; }
   return {winner:'push',dmg:0,oFinal:o}; }
 // bar services that change a die for good
@@ -474,4 +514,4 @@ function shopDie(act,not,taste){ const t=rollTier(act,RARITY_DICE,taste), pool=S
 function shopDice(act,n,taste){ const out=[]; for(let i=0;i<n;i++) out.push(shopDie(act,out,taste)); return out; }
 /*LOGIC-END*/
 
-if(typeof module!=='undefined'&&module.exports) module.exports={DRINKS,DRINK_KEYS,DRINK_MAX,FINISHES,FIN_KEYS,luckyHit,finVal,FIXTURES,FIX_KEYS,fixOffer,hasFix,charmSlots,barPrice,restockPrice,CHITS,CHIT_KEYS,QUICK_WIN,CRATES,crateSize,offbookP,RULE_Q,BOSS_RULES,SHARK_RULES,jinxPick,regenOf,rulesFor,ENDLESS_GROW,OFFBOOK_P,OFFBOOK_FEE,offbook,slotsUsed,afterRound,afterFight,rollTier,shopDie,shopDice,RARITY,RARITY_DICE,ACT_HP,DT,SHOP_DICE,CHARMS,QUIRKS,ACTS,FLOORS,HAND,ACT_ODDS,rnd,pick,shuffle,facesOf,rollInst,rollFace,effVal,aiRound,makeOpp,newRound,bankVals,noteBank,oddsOf,settle,genFloors,fileDie,gildDie,canFile,canGild,LIMITS,limitMods,POCKETS,pocketStart,theirScore,breaksAt,bombDmg,isRaid,bossOf,EXTRA_Q};
+if(typeof module!=='undefined'&&module.exports) module.exports={bumpLowest,PLAYS,PLAY_KEYS,TIP_PRICE,playLv,playsHit,shakesFor,foldDmg,INTENTS,INTENT_W,rollIntent,intentT,theirOdds,stakesOf,gateDmg,tossPrice,DRINKS,DRINK_KEYS,DRINK_MAX,FINISHES,FIN_KEYS,luckyHit,finVal,FIXTURES,FIX_KEYS,fixOffer,hasFix,charmSlots,barPrice,restockPrice,CHITS,CHIT_KEYS,QUICK_WIN,CRATES,crateSize,offbookP,RULE_Q,BOSS_RULES,SHARK_RULES,jinxPick,regenOf,rulesFor,ENDLESS_GROW,OFFBOOK_P,OFFBOOK_FEE,offbook,slotsUsed,afterRound,afterFight,rollTier,shopDie,shopDice,RARITY,RARITY_DICE,ACT_HP,DT,SHOP_DICE,CHARMS,QUIRKS,ACTS,FLOORS,HAND,ACT_ODDS,rnd,pick,shuffle,facesOf,rollInst,rollFace,effVal,aiRound,makeOpp,newRound,bankVals,noteBank,oddsOf,settle,genFloors,fileDie,gildDie,canFile,canGild,LIMITS,limitMods,POCKETS,pocketStart,theirScore,breaksAt,bombDmg,isRaid,bossOf,EXTRA_Q};

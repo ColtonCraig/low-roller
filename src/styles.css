@@ -580,3 +580,14 @@ button.tabnum.owe{border:0;background:none;padding:0;cursor:pointer;font:inherit
 .bfoot{display:flex;gap:14px;align-items:center;margin-top:16px} .bfoot .tabbox{flex:1;margin:0} .bfoot .btn{flex:none}
 .entry .warn{margin-top:6px;font-size:12.5px;font-weight:800;color:var(--ox-hi);background:#5a101a55;border-radius:8px;padding:4px 8px;box-shadow:inset 0 0 0 1px #ff5a6a44}
 .card:hover{animation-play-state:paused}
+/* in-round choices: Shake, Nudge, Bump, Raise, Fold */
+.acts .minis{display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-end;margin-bottom:6px}
+.acts .minis .btn.small{padding:5px 10px 4px;font-size:13px}
+.acts .btn.raise{color:var(--odds);box-shadow:inset 0 0 0 1.5px #f0c04088}
+.acts .btn.fold{color:var(--ox-hi);box-shadow:inset 0 0 0 1.5px #ff5a6a66}
+.stamp.intent{background:#2a2010;color:var(--odds)} .stamp.intent.i-steady{color:var(--cream-2);background:#0003}
+.stamp.intent.i-lean,.stamp.intent.i-raise{background:#4a1018;color:#ffb0b8}
+.stamp.intent.i-sweat{background:#103a2a;color:#9ff0c8}
+.stamp.next{opacity:.75;font-style:italic}
+.float.play{font-size:20px;white-space:nowrap}
+.card.hottip{box-shadow:inset 0 0 0 1.5px #ff9a3a88,0 4px 0 #0007} .card.hottip .k{color:#ffb070}
