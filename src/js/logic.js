@@ -189,7 +189,7 @@ const ACTS=[
   e2:[{n:'The Doubles',s:'Back for your wallet.',     hp:24, bag:['loaded','loaded','pebble','pebble','d6','glass'], t:1, q:['pair','steal'], look:{coat:0x1e3a36,hat:'bowler',eye:0x9ff5d3,scale:1.15}}],
   boss:{n:'The Countess', s:'Holds court upstairs', hp:42, bag:['loaded','loaded','loaded','pebble','d6','glass'], t:1, q:[], boss:true, sig:'gift', look:{coat:0x2a0a1a,hat:'cloche',hatc:0x12040c,eye:0xd8a8ff,scale:1.3,tie:0xc9a14a}}}},
  {name:'The Back Room', boss:'The House', short:'The House', bossD:'Nobody’s seen his face. Ties go to the house.', est:'NO EXIT',
-  theme:{felt:'#3a4c4e',trim:'#a8a288',wall:'#2e302c',pat:'#3a3c36',style:'brick',lamp:0xd8ffe4,neon:'NO EXIT',neonC:'#ff2a2a',neonT:'#ffb0a0'},
+  theme:{felt:'#466260',trim:'#a8a288',wall:'#2e302c',pat:'#3a3c36',style:'brick',lamp:0xd8ffe4,neon:'NO EXIT',neonC:'#ff2a2a',neonT:'#ffb0a0'},
   half:{add:['haze'],t:1,big:'The house always wins',small:'Haze, and he plays tight',note:'Every tie goes to him and costs you 2. At half nerve he adds Haze and plays tight.'},
   foes:{
   t1:[

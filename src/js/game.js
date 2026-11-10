@@ -293,6 +293,7 @@ function buildRoom(){
   NEON_CV=makeCanvas(256,64,()=>{}); const nc=NEON_CV;
   NEON_TEX=texFromCanvas(nc); neon=new THREE.Mesh(new THREE.PlaneGeometry(5.2,1.3),new THREE.MeshBasicMaterial({map:NEON_TEX,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
   neon.position.set(0,6.1,-8.4); SCN.add(neon);
+  { const rl=new THREE.PointLight(0xfff0d8,.7,4.2,1.6); rl.position.set(-3.6,1.6,3.2); SCN.add(rl); const rt=new THREE.PointLight(0xfff0d8,.55,4,1.6); rt.position.set(3.2,1.6,-2.4); SCN.add(rt); }
   const neonL=new THREE.PointLight(0xff3a6a,1.1,9,1.5); NEONL=neonL; neonL.position.set(0,5.6,-7.4); SCN.add(neonL);
   frameFns.add((dt,t)=>{ const f=(Math.sin(t*37)>.97||(t%9<.12))?.35:1; neon.material.opacity=f; neonL.intensity=1.1*f; });
   const sm=texFromCanvas(makeCanvas(32,32,(c)=>{ const g=c.createRadialGradient(16,16,0,16,16,16); g.addColorStop(0,'rgba(220,210,200,.9)'); g.addColorStop(1,'rgba(220,210,200,0)'); c.fillStyle=g; c.fillRect(0,0,32,32); }));
@@ -504,7 +505,7 @@ function buildFoe(look){
           tw.userData={sh,cup:c2,mouth:c2.children.find(c=>c.isObject3D&&!c.isMesh)};
         } else { const a=box(.32,1.3,.32,coat); a.position.set(q*.86,1.1,.12); a.rotation.x=-.5; tw.add(a); } }); } }
   // a soft key light rides with them, so their clothes and props read against the dark room
-  const key=new THREE.PointLight(0xffd8a8,1.15,6.5,1.5); key.position.set(.6,3.6,2.4); root.add(key); const fill=new THREE.PointLight(L.eye||0xffffff,.25,3,2); fill.position.set(0,3.1,1.1); root.add(fill);
+  const key=new THREE.PointLight(0xffd8a8,1.5,6.5,1.5); key.position.set(.6,3.7,2.4); root.add(key); const fill=new THREE.PointLight(L.eye||0xffffff,.25,3,2); fill.position.set(0,3.1,1.1); root.add(fill);
   { const rim=new THREE.PointLight(0xa8c4ff,1.1,5.5,1.6); rim.position.set(0,3.9,-1.7); root.add(rim); const rim2=new THREE.PointLight(L.eye||0xffd8a8,.55,4,1.8); rim2.position.set(-1.6,3.2,-1.2); root.add(rim2); }
   // a warm glow on the wall behind them, so even a black coat reads against a dark room (stronger for owners)
   { if(!HALO_TEX){ const cv=makeCanvas(64,64,x=>{ const gr=x.createRadialGradient(32,32,2,32,32,32); gr.addColorStop(0,'rgba(255,220,170,1)'); gr.addColorStop(.45,'rgba(255,170,110,.45)'); gr.addColorStop(1,'rgba(255,140,90,0)'); x.fillStyle=gr; x.fillRect(0,0,64,64); }); HALO_TEX=texFromCanvas(cv,false); }
@@ -876,8 +877,9 @@ const LIM=()=>limitMods(G&&G.limit);
 const BOSS=()=>bossOf(G.act,(G.bossIx||[])[G.act]||0);
 function store(k,v){ try{ if(v===undefined) return JSON.parse(localStorage.getItem(k)||'null'); localStorage.setItem(k,JSON.stringify(v)); }catch(e){ return null; } }
 // the limit ladder grew from 8 rungs to 12: move saved progress to the same rung on the new ladder, once
-(function(){ try{ if(localStorage.getItem('lr-limv')) return; const t=store('lr-limit'); if(t) store('lr-limit',LIMIT_V1[Math.min(7,t)]); const pk=store('lr-pick'); if(pk&&pk.lim) store('lr-pick',{...pk,lim:LIMIT_V1[Math.min(7,pk.lim)]});
-  const sv=JSON.parse(localStorage.getItem('lr-save')||'null'); if(sv&&sv.limit){ sv.limit=LIMIT_V1[Math.min(7,sv.limit)]; localStorage.setItem('lr-save',JSON.stringify(sv)); } localStorage.setItem('lr-limv','2'); }catch(e){} })();
+(function(){ try{ const v=localStorage.getItem('lr-limv'); if(v==='3') return; const map=x=>{ x=x||0; if(!v) x=LIMIT_V1[Math.min(7,x)]; return LIMIT_V2[Math.min(11,x)]; };
+  const t=store('lr-limit'); if(t) store('lr-limit',map(t)); const pk=store('lr-pick'); if(pk&&pk.lim) store('lr-pick',{...pk,lim:map(pk.lim)});
+  const sv=JSON.parse(localStorage.getItem('lr-save')||'null'); if(sv&&sv.limit){ sv.limit=map(sv.limit); localStorage.setItem('lr-save',JSON.stringify(sv)); } localStorage.setItem('lr-limv','3'); }catch(e){} })();
 const limitTop=()=>Math.min(LIMITS.length-1,store('lr-limit')||0);
 const bossTotal=()=>store('lr-bossn')||0;
 function floorLabel(){ return (G.mode==='endless'?`Lap ${G.lap+1} · `:'')+`Act ${ROMAN[G.act]} · ${G.floor+1}/${FLOORS.length}`; }
@@ -952,6 +954,10 @@ function buildCharmIcons(){ if(!GL_OK||!R) return; try{
   const card=(g,x,y,z,rz,ry,pip)=>{ add(g,Bx(.5,.72,.04),CREAM,x,y,z,0,ry,rz); add(g,Bx(.14,.2,.02),pip,x+Math.cos(rz+Math.PI/2)*0+0,y,z+.03,0,ry,rz); };
   const die=(g,x,y,z,ry)=>{ add(g,Bx(.44,.44,.44),CREAM,x,y,z,0,ry,0); add(g,Bx(.15,.03,.15),RED,x,y+.225,z,0,ry,0); };
   const B={
+    flask(g){ add(g,Bx(.5,.66,.16),SILVER,0,.42,0); add(g,Cy(.08,.08,.18,6),SILVER,0,.84,0); add(g,Cy(.1,.1,.06,6),BLACK,0,.95,0); add(g,Bx(.36,.3,.02),M(0x5a3a22),0,.42,.09); },
+    bulldog(g){ add(g,Sp(.34,8),M(0xc8a878),0,.46,0,0,0,0,1.2,.9,1); add(g,Sp(.16,6),M(0xb89868),0,.4,.3); add(g,Bx(.22,.06,.04),BLACK,0,.36,.44); for(const x of [-.24,.24]) add(g,Sp(.1,5),M(0x8a6a48),x,.76,0); add(g,Bx(.5,.08,.5),RED,0,.14,0); },
+    haymaker(g){ add(g,Sp(.3,8),RED,0,.52,0,0,0,0,1.2,1,1); add(g,Bx(.34,.16,.34),M(0xf4ead2),-.02,.22,0); add(g,Co(.06,.2,5),E(0xfff0a0,.8),.44,.66,0,0,0,-1); add(g,Co(.06,.2,5),E(0xfff0a0,.8),.42,.36,0,0,0,-2); },
+    mimic(g){ add(g,Bx(.5,.72,.04),CREAM,-.16,.5,0,0,0,.2); add(g,Bx(.5,.72,.04),M(0xc9c2d8,{transparent:true,opacity:.7}),.16,.5,.06,0,0,-.2); add(g,Sp(.08,6),BLACK,-.2,.6,.04); add(g,Sp(.08,6),BLACK,.12,.6,.1); add(g,Bx(.18,.04,.02),RED,-.16,.4,.04,0,0,.2); },
     thumb(g){ add(g,Cy(.16,.18,.5,8),M(0xe8b890),0,.42,0,0,0,.35); add(g,Sp(.17,8),M(0xe8b890),-.1,.66,0); add(g,Bx(.14,.06,.1),M(0xf4d8c8),-.15,.74,.08,0,0,.35); die(g,.28,.24,.05,.4); },
     echo(g){ add(g,Cy(.24,.24,.14,10,true),GOLD,-.16,.42,0); for(let k=0;k<3;k++) add(g,Co(.06,.16,5),GOLD,-.16+(k-1)*.15,.56,0); add(g,Cy(.24,.24,.14,10,true),M(0xf0bd4a,{transparent:true,opacity:.45,emissive:0x3a2400}),.2,.5,-.12); for(let k=0;k<3;k++) add(g,Co(.06,.16,5),M(0xf0bd4a,{transparent:true,opacity:.45}),.2+(k-1)*.15,.64,-.12); },
     doubletake(g){ add(g,To(.18,.05,12),SILVER,-.2,.5,0); add(g,To(.18,.05,12),SILVER,.2,.5,0); add(g,Bx(.14,.04,.04),SILVER,0,.52,0); add(g,Sp(.12,6),M(0x9fe8ff,{transparent:true,opacity:.6}),-.2,.5,0); add(g,Sp(.12,6),M(0x9fe8ff,{transparent:true,opacity:.6}),.2,.5,0); },
@@ -1108,7 +1114,7 @@ const NODE={
 const STYLE={1:'Tight. Only keeps 1s and crowns.',2:'Loose. Keeps anything 2 or under.'}, STYLE_S={1:'Tight',2:'Loose'};
 function ensureMap(){ if(!G.map){ G.map=genMap(); G.trail=G.trail||[]; G.preview={}; } G.trail=G.trail||[]; }
 function preview(){ ensureMap(); G.preview=G.preview||{}; const pv=G.preview[G.floor];
-  if(!pv||pv.some(p=>p.x==null)) G.preview[G.floor]=mapReach(G.map,G.floor,G.trail).map(x=>{ const n=G.map[G.floor].find(o=>o.x===x).n; return {n,x,opp:'FEB'.includes(n)?chooseFoe(n):null}; });
+  if(!pv||pv.some(p=>p.x==null)) G.preview[G.floor]=mapReach(G.map,G.floor,G.trail).map(x=>{ const n=G.map[G.floor].find(o=>o.x===x).n; const nd=G.map[G.floor].find(o=>o.x===x), op='FEB'.includes(n)?chooseFoe(n):null; if(op&&nd.hot){ op.hp=Math.round(op.hp*1.4); op.odds+=1; op.hot=true; } return {n,x,hot:!!nd.hot,opp:op}; });
   return G.preview[G.floor]; }
 // the whole act as a floor plan: climb from the bottom row to the owner at the top, one row at a time along the lines
 const MAPI={F:'<svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="6.6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-dasharray="3.2 2.0"/><circle cx="10" cy="10" r="2.4" fill="currentColor"/></svg>',
@@ -1123,19 +1129,19 @@ function mapHTML(){ ensureMap(); const M=G.map, rows=M.length, rh=49, lx=x=>34+x
   M.forEach((row,r)=>row.forEach(o=>(o.to||[]).forEach(t=>{ const nx=M[r+1]&&M[r+1].find(n=>n.x===t); if(!nx) return; const done=G.trail[r]===o.x&&(G.trail[r+1]===nx.x||(r+1===G.floor&&false)); const open=r+1===G.floor&&G.trail[r]===o.x;
     ln+=`<line x1="${lx(o.x)}" y1="${ly(r)}" x2="${lx(nx.x)}" y2="${ly(r+1)}" class="${done?'done':open?'open':''}"/>`; })));
   M.forEach((row,r)=>row.forEach(o=>{ const here=G.trail[r]===o.x&&r<G.floor, can=r===G.floor&&reach.includes(o.x), gone=r<G.floor&&!here;
-    nd+=`<button class="mn n-${o.n==='?'?'q':o.n} ${here?'here':''} ${can?'can':''} ${gone?'gone':''} ${r>G.floor?'ahead':''}" data-x="${o.x}" data-r="${r}" style="left:${lx(o.x)}px;top:${ly(r)}px" data-tip="${MAPN[o.n]}${r===rows-1?'':' \u00b7 floor '+(r+1)}" ${can?'':'tabindex="-1"'}>${MAPI[o.n]}</button>`; }));
+    nd+=`<button class="mn n-${o.n==='?'?'q':o.n} ${o.hot?'hot':''} ${here?'here':''} ${can?'can':''} ${gone?'gone':''} ${r>G.floor?'ahead':''}" data-x="${o.x}" data-r="${r}" style="left:${lx(o.x)}px;top:${ly(r)}px"  data-tip="${o.hot?'High-stakes room':MAPN[o.n]}${r===rows-1?'':' \u00b7 floor '+(r+1)}" ${can?'':'tabindex="-1"'}>${MAPI[o.n]}</button>`; }));
   return `<div class="plan" style="width:${lx(2)+36}px;height:${ly(0)+24}px"><svg class="planlines" width="${lx(2)+36}" height="${ly(0)+24}">${ln}</svg>${nd}</div>
     <div class="legend">${['F','E','?','S','R'].map(k=>`<span><i class="mn n-${k==='?'?'q':k}">${MAPI[k]}</i>${MAPN[k]}</span>`).join('')}</div>`; }
 function entry(p,i){
-  const boss=p.n==='B', nd=boss?{t:'Boss',pay:G.act===2&&G.mode==='run'?'the whole joint':'$20 + rare'}:NODE[p.n];
-  const el=h(`<button class="entry ${boss?'boss':''} ${p.opp?'':'simple'}" style="animation-delay:${.08+i*.09}s"></button>`);
+  const boss=p.n==='B', nd=boss?{t:'Boss',pay:G.act===2&&G.mode==='run'?'the whole joint':'$20 + rare'}:p.hot?{t:'High stakes',pay:'$15 + rare'}:NODE[p.n];
+  const el=h(`<button class="entry ${boss?'boss':''} ${p.hot?'hotroom':''} ${p.opp?'':'simple'}" style="animation-delay:${.08+i*.09}s"></button>`);
   if(p.opp){ const o=p.opp;
     el.innerHTML=`<div class="e-head"><span class="kind ${p.n}">${nd.t}</span><span class="pay">${nd.pay}</span></div>
       <div class="who">${o.n}</div><div class="whos">${o.s}</div>
       <div class="estats"><span class="stat n"><i>Nerve</i><b>${o.hp}</b></span><span class="stat h" data-tip="When they win a round, they hit you for the gap times this."><i>Hits</i><b>\u00d7${fmtOdds(o.odds)}</b></span><span class="stat" data-tip="${STYLE[o.t]}"><i>Plays</i><b>${STYLE_S[o.t]}</b></span></div>
       <div class="tags">${o.q.map(q=>`<span class="stamp" data-q="${q}" data-tip="${QUIRKS[q].desc}">${QUIRKS[q].name}</span>`).join('')}</div>
       <div class="dicerow"></div>
-      ${(()=>{ const bad=Math.ceil(o.odds*(o.sig==='trick'?8:6)); return bad>=G.hp*.3?`<div class="warn" data-tip="A typical lost round here: about 6 behind \u00d7 their Hits${o.sig==='trick'?', more with your dice face down':''}.">Hits hard: one bad round can cost you ~${bad} nerve</div>`:''; })()}
+      ${(()=>{ const bad=Math.ceil(o.odds*(o.sig==='trick'?8:6)); return bad>=G.hp*.3||o.sig==='trick'?`<div class="warn" data-tip="A typical lost round here: about 6 behind \u00d7 their Hits${o.sig==='trick'?', more with your dice face down':''}.">Hits hard: one bad round can cost you ~${bad} nerve</div>`:''; })()}
       <div class="sig">${boss?`<b>Signature</b>${BOSS().sigT}`:''}</div>
       <span class="take">${boss?'Face them':'Take this seat'}</span>`;
     const dr=el.querySelector('.dicerow'); bagCounts(o.bag).forEach(([t,n])=>{ const k=h(`<span class="dk" data-tip="${DT[t].name}: ${DT[t].desc}"></span>`); k.appendChild(iconCanvas(t,null,26)); if(n>1) k.appendChild(h(`<span>\u00d7${n}</span>`)); dr.appendChild(k); });
@@ -1160,7 +1166,7 @@ function renderMap(fresh){
   const plan=$('#plan'); plan.querySelectorAll('.mn.can').forEach(b=>{ const e=()=>$(`#stops .entry[data-x="${b.dataset.x}"]`);
     b.onmouseenter=()=>{ const x=e(); if(x) x.classList.add('hl'); }; b.onmouseleave=()=>{ const x=e(); if(x) x.classList.remove('hl'); }; b.onclick=()=>{ const x=e(); if(x) x.click(); }; });
   $('#stops').querySelectorAll('.entry').forEach(en=>{ const b=()=>plan.querySelector(`.mn.can[data-x="${en.dataset.x}"]`); en.addEventListener('mouseenter',()=>{ const x=b(); if(x) x.classList.add('hl'); }); en.addEventListener('mouseleave',()=>{ const x=b(); if(x) x.classList.remove('hl'); }); });
-  setTimeout(()=>{ if(G&&$('#stops')) tip('map'); },fresh?2300:400);
+  setTimeout(()=>{ if(G&&$('#stops')) tip('map').then(()=>{ if(G&&opts.some(p=>p.hot)) tip('hot'); }); },fresh?2300:400);
   if(fresh){ const t=$('.mtitle'); if(t) t.classList.add('lightup'); SFX.fanfare&&G.floor===0&&G.act>0&&SFX.fanfare(); }
 }
 // Continue: back to exactly where the save left off. Old saves have no `at` and land on the map.
@@ -1202,7 +1208,7 @@ async function startFight(kind,pre,snap){
   if(!snap&&performance.now()-_fightAt<1500) return; _fightAt=performance.now();
   clearDeco(); ALLDICE.forEach(o=>disposeDie(o));
   const opp=snap?snap.opp:(pre||chooseFoe(kind)); if(G) G.lastFoe=opp.n;
-  F={kind,opp,oppHp:opp.hp,oppMax:opp.hp,round:0,you:[],them:[],phase2:false,labelsOn:false,thumb:2,wall:0};
+  F={kind,opp,oppHp:opp.hp,oppMax:opp.hp,round:0,you:[],them:[],phase2:false,labelsOn:false,thumb:2,wall:G.charms.includes('flask')?6:0};
   if(snap) FIGHT_KEYS.forEach(k=>{ if(snap[k]!==undefined) F[k]=snap[k]; }); else saveFight();
   screen(`${hud()}
     <div class="nameplate paper pe" id="plate">
@@ -1215,7 +1221,7 @@ async function startFight(kind,pre,snap){
       <div class="msg" id="msg"></div>
       <div class="slipcol"><div class="oddsline" id="oddsline"></div>
       <div class="yourtab paper pe">
-        <div class="duel"><div class="figure" id="pscore">0<small>You</small></div><span class="vs">vs</span><div class="figure them" id="vs">–<small>Them</small></div></div>
+        <div class="duel"><div class="figure" id="pscore">0<small>You</small></div><span class="vs">vs</span><div class="figure them" id="vs">–<small>Them</small></div><div class="guard" id="guard" data-tip="Guard soaks hits before your nerve, and it stays between rounds at this table."></div></div>
         <button class="eq" id="eq" aria-label="How hits work">
           <span class="cell gap" id="eqgap"><b>–</b><small>Ahead by</small></span><span class="op">\u00d7</span>
           <span class="cell odds" id="odds"><b>1</b><small>Your odds</small></span><span class="op">=</span>
@@ -1224,7 +1230,7 @@ async function startFight(kind,pre,snap){
         <div class="acts" id="acts"></div>
       </div></div>
     </div>`);
-  wireChips(ui); F.target=null; updOpp(); updOdds(); $('#eq').onclick=()=>{ SFX.ui(); oddsHelp(); };
+  wireChips(ui); F.target=null; updOpp(); updOdds(); updGuard(); $('#eq').onclick=()=>{ SFX.ui(); oddsHelp(); };
   busy=true;
   if(GL_OK){ buildFoe({...opp.look,...(LOOKX[opp.n]||{})}); if(kind==='B'&&!snap){ for(const v of [.3,1,.2,1]){ lampDim=v; await sleep(90); } } await foeWalkIn(); }
   if(snap){ if(!F||F.opp!==opp) return; if(snap.end) return resumeEnd(snap.end); return startRound(snap.sim?snap:null); }
@@ -1239,7 +1245,7 @@ function setP(v){ const e=$('#pscore'); if(e) e.innerHTML=`${v<0?'\u2212'+(-v):v
 function setVs(v){ const e=$('#vs'); if(e) e.innerHTML=`${v}<small>Them</small>`; }
 function updOpp(){ const b=$('#obar'); if(!b) return; b.style.width=Math.max(0,100*F.oppHp/F.oppMax)+'%'; $('#otxt').textContent=`${Math.max(0,F.oppHp)}`; }
 function finsOf(list){ return list.map(o=>{ const f=o.inst.fin; if(f!=='lucky') return f||null; return has('rabbitp')||luckyHit(F.pre?F.pre.seed:0,o.inst.uid)?'lucky':null; }); }
-function ctx(){ const q=F.opp.q; return {cold:(q.includes('cold')||hasDeed(G,'loadedcup'))&&F.throwNo<=1,penny:has('penny')&&F.throwNo<=1,deuces:has('deuces'),ringer:has('ringer'),crownless:q.includes('crownless'),snakebit:q.includes('snakebit')&&F.throwNo<=1}; }
+function ctx(){ const q=F.opp.q; return {cold:(q.includes('cold')||F.intent==='crowns')&&F.throwNo<=1,penny:has('penny')&&F.throwNo<=1,deuces:has('deuces'),ringer:has('ringer'),crownless:q.includes('crownless'),snakebit:q.includes('snakebit')&&F.throwNo<=1}; }
 const tray=()=>F.you.filter(o=>!o.banked);
 function minBank(){ return F.opp.q.includes('fuse')&&F.throwNo===1?Math.min(2,tray().length):1; }
 
@@ -1248,7 +1254,7 @@ async function startRound(pre){
   setP(0); setVs('–'); acts(''); updOdds(); $('#sitting').innerHTML='<span>Shaking the cup</span>';
   msg(`Round ${F.round}. <b>${F.opp.n}</b> throws first.`);
   if(!pre){ const intent=F.next||rollIntent(F.kind), next=rollIntent(F.kind), tt=intentT(F.opp,intent); pre={intent,next,sim:aiRound(F.opp.bag,tt),simB:F.opp.q.includes('pair')?aiRound(F.opp.bag,tt):null,seed:(Math.random()*4294967296)>>>0,jinx:jinxPick(G.charms,F.opp.q)}; }
-  F.intent=pre.intent||'steady'; F.next=pre.next||'steady'; F.raise=false; F.folded=false; F.shakes=shakesFor(G.charms,G);
+  F.intent=pre.intent||'steady'; F.next=pre.next||'steady'; F.raise=false; F.folded=false; F.shakes=shakesFor(G.charms,G); F.shook=0; F.freeShake=has('spoon');
   { const qz=$('#quirks'); if(qz){ qz.innerHTML=quirkChips(); wireChips(qz); } } if(F.intent!=='steady') tip('intent');
   F.jinx=pre.jinx||null; F.drink={}; refreshRack(); if(F.jinx) toast(`<b class="r">Jinx.</b> ${CHARMS[F.jinx].name} sits this round out.`);
   F.pre={sim:pre.sim,simB:pre.simB||null,seed:pre.seed>>>0,intent:F.intent,next:F.next}; F.rng=mkRng(F.pre.seed); saveFight(F.pre);
@@ -1284,10 +1290,10 @@ async function startRound(pre){
   if(F.opp.q.includes('pair')){ sim=await secondTwin(sim,shown,F.pre.simB); if(F!==myF) return; }
   F.oScore=sim.total; F._shownT=null;
   const adj=tAdj();
-  F.target=Math.max(0,F.oScore+adj);
+  F.target=Math.max(0,F.oScore+adj); { const t=tgt(newRound()); if(t!==F.target&&F.intent==='tired') F.target=t; }
   $('#sitting').innerHTML=`<span>Sitting on</span><b>${F.target}</b>${adj?`<em>(${F.oScore} ${adj>0?'+':'\u2212'} ${Math.abs(adj)})</em>`:''}`;
   F.tHid=null;
-  if(LIM().hideE&&F.kind==='E'&&!F.opp.q.includes('pair')){ const th=sim.throws[sim.throws.length-1], i=th&&th.kept[th.kept.length-1], o=i!=null&&F.them[i]; if(o){ F.tHid={i}; setFaces(o,o.face,true); const v=effVal(o.face); $('#sitting').innerHTML=`<span>Sitting on</span><b>${F.target-v} + ?</b><em>(Card Sharp)</em>`; } }
+  if(LIM().hideE&&F.kind==='E'&&!F.opp.q.includes('pair')){ const th=sim.throws[sim.throws.length-1], i=th&&th.kept[th.kept.length-1], o=i!=null&&F.them[i]; if(o){ F.tHid={i}; setFaces(o,o.face,true); const v=effVal(o.face); $('#sitting').innerHTML=`<span>Sitting on</span><b>${F.target-v}+?</b>`; } }
   setVs(F.tHid?'?':F.target); updOdds();
   msg(F.tHid?`One of their dice is face-down. You'll see it after your first bank.`:`Get under <b>${F.target}</b>. Click the dice you want to keep, then bank them.`);
   if(foe) foe.userData.lookX=0;
@@ -1302,6 +1308,7 @@ async function startRound(pre){
   await sleep(150);
   await playerThrow();
 }
+function updGuard(){ const g=$('#guard'); if(!g||!F) return; g.textContent=F.wall?`Guard ${F.wall}`:''; g.classList.toggle('on',!!F.wall); }
 function tAdj(){ return (has('bouncer')?1:0)-(F.opp.q.includes('edge')?1:0)+(F.opp.q.includes('sloppy')?1:0); }
 async function playerThrow(){
   const myF=F; busy=true; F.throwNo++;
@@ -1324,13 +1331,13 @@ function refreshActs(){
   if(!F) return; const sel=tray().filter(o=>o.sel), need=minBank();
   const proj=bankVals(sel.map(o=>o.face),ctx(),live(),sel.length===tray().length,sel.map(o=>o.inst.fin)).reduce((a,b)=>a+b,0); updOdds(false,sel);
   const pre1=F.throwNo===1&&F.R.throws===0&&!F.folded, B=[], fd=foldDmg(F.opp,F.intent);
-  if(F.shakes>0) B.push(`<button class="btn ghost small" id="shake" ${sel.length?'':'disabled'} data-tip="Rethrow the dice you picked without banking them. ${F.shakes} left this round.">Shake \u00b7 ${F.shakes}</button>`);
+  if(F.shakes>0){ const cup=hasDeed(G,'loadedcup'), free=F.freeShake; B.push(`<button class="btn ghost small" id="shake" ${sel.length?'':'disabled'} data-tip="Rethrow the dice you picked without banking them. ${free?'This one is free (Bent Spoon).':'Costs you: their score counts 1 lower this round.'}${cup?' Loaded Cup: also costs 1 nerve.':` ${F.shakes} left this round.`}">Shake${cup?'':` \u00b7 ${F.shakes}`}${free?'':' \u00b7 \u22121'}</button>`); }
   if(has('thumb')&&F.thumb>0) B.push(`<button class="btn ghost small" id="nudge" ${sel.length===1&&typeof sel[0].face==='number'&&sel[0].face>=2&&!sel[0].hidden?'':'disabled'} data-tip="Turn the one die you picked down by 1. ${F.thumb} left at this table.">Nudge \u00b7 ${F.thumb}</button>`);
   if(has('bump')&&!F.bumped&&F.R.throws===0&&!F.opp.q.includes('pair')) B.push(`<button class="btn ghost small" id="bump" data-tip="Once per table: their lowest die gets thrown again.">Bump</button>`);
   if(pre1&&!F.raise) B.push(`<button class="btn ghost small raise" id="raise" data-tip="Before your first bank: double the stakes. Whoever wins this round hits twice as hard.">Raise</button>`,`<button class="btn ghost small fold" id="fold" data-tip="Before your first bank: give up the round and take ${fd} instead of whatever you'd lose.">Fold \u00b7 ${fd}</button>`);
   acts(`${B.length?`<div class="minis">${B.join('')}</div>`:''}<button class="btn go" id="bank" ${sel.length>=need?'':'disabled'}>${sel.length?`Bank ${sel.length}${sel.some(o=>o.hidden)?'':` \u00b7 +${proj}`}`:need>1?'Pick two':'Pick dice'}</button>`);
   $('#bank').onclick=bank;
-  const sh=$('#shake'); if(sh) sh.onclick=async()=>{ if(busy) return; const s=tray().filter(x=>x.sel); if(!s.length) return; F.shakes--; busy=true; acts(''); s.forEach(o=>setSel(o,false)); SFX.rattle(350);
+  const sh=$('#shake'); if(sh) sh.onclick=async()=>{ if(busy) return; const s=tray().filter(x=>x.sel); if(!s.length) return; F.shakes--; if(F.freeShake) F.freeShake=false; else { F.shook=(F.shook||0)+1; const T=tgt(); setVs(T); F._shownT=T; floatEl($('#vs'),'\u22121','dmg'); const sb=$('#sitting b'); if(sb&&!F.tHid) sb.textContent=T; } if(hasDeed(G,'loadedcup')&&G.hp>1){ G.hp--; G.stats.taken++; updTop(); floatEl($('#hpbar'),'\u22121','dmg'); } busy=true; acts(''); s.forEach(o=>setSel(o,false)); SFX.rattle(350);
     const fin=seeded(()=>s.map(o=>rollInst(o.inst))); await throwDice(s,fin,'you',s.map((o,i)=>o.hidden?i:-1).filter(i=>i>=0),{slots:s.map(o=>o.home.clone())}); s.forEach(o=>{ if(o.face==='C') sparksAt(dieScreen(o)); }); busy=false; refreshActs(); tip('shake'); };
   const nu=$('#nudge'); if(nu) nu.onclick=()=>{ if(busy) return; const o=tray().find(x=>x.sel); if(!o||typeof o.face!=='number'||o.face<2) return; F.thumb--; setFaces(o,o.face-1,false); uprightTop(o); setSel(o,false); SFX.tok(); floatAt(dieScreen(o),'\u22121','zero'); trigFx('Loaded Thumb','\u22121',0); refreshActs(); };
   const bu=$('#bump'); if(bu) bu.onclick=async()=>{ if(busy) return; F.bumped=true; const b=seeded(()=>bumpLowest(F.pre.sim,F.opp.bag)); if(!b){ refreshActs(); return; } busy=true; acts(''); const o=F.them[b.i];
@@ -1347,8 +1354,9 @@ async function bank(){
   if(F.tHid){ const o=F.them[F.tHid.i]; F.tHid=null; if(o){ setFaces(o,o.face,false); uprightTop(o); sparksAt(dieScreen(o)); } const adj=tAdj(); $('#sitting').innerHTML=`<span>Sitting on</span><b>${F.target}</b>${adj?`<em>(${F.oScore} ${adj>0?'+':'\u2212'} ${Math.abs(adj)})</em>`:''}`; setVs(F.target); SFX.paper(); }
   const faces=sel.map(o=>o.face), oddsBefore=curOdds().odds, partsBefore=curOdds().parts;
   const fins=finsOf(sel), vals=bankVals(faces,ctx(),live(),sel.length===tray().length,sel.map(o=>o.inst.fin));
-  const ph0=playsHit(F.R,{}); noteBank(F.R,faces,sel.map(o=>o.inst.type),live(),fins);
-  playsHit(F.R,{}).filter(k=>!ph0.includes(k)).forEach((k,i)=>setTimeout(()=>{ const lv=playLv(G.plays,k); floatEl($('#odds'),`${PLAYS[k].name} +${PLAYS[k].per*lv}`,'odds play'); SFX.ding(4+i); tip('plays'); },350+i*300));
+  const ph0=playsHit(F.R,{}), ones0=F.R.ones||0; noteBank(F.R,faces,sel.map(o=>o.inst.type),live(),fins);
+  if(has('bulldog')&&(F.R.ones||0)>ones0){ F.wall=(F.wall||0)+(F.R.ones-ones0); updGuard(); trigFx('The Bulldog','+'+(F.R.ones-ones0),0); }
+  playsHit(F.R,{}).filter(k=>!ph0.includes(k)).forEach((k,i)=>setTimeout(()=>{ const lv=playLv(G.plays,k); floatEl($('#odds'),`${PLAYS[k].name}: +${lv} margin, +${PLAYS[k].per*lv} odds`,'odds play'); SFX.ding(4+i); tip('plays'); },350+i*300));
   { const gl=sel.filter(o=>o.inst.fin==='goldleaf'&&(o.face===1||o.face==='C'||o.face==='G')).length; if(gl) setTimeout(()=>addGold(gl,$('#cash')),300); if(fins.includes('lucky')) setTimeout(()=>toast('<b class="g">Lucky.</b> +4 odds.'),200); }
   for(let i=0;i<sel.length;i++){ const o=sel[i]; o.banked=true; setSel(o,false); if(o.label) o.label.style.opacity=0;
     if(o.hidden) setFaces(o,o.face,false);
@@ -1374,18 +1382,19 @@ function crownFx(o){ const p=dieScreen(o); sparksAt(p, o.face==='G'?'#ff5c6f':nu
   if(has('hothand')) heal(1,$('#hpbar'));
   if(has('goldcrown')) addGold(1,$('#cash')); }
 // what you'd be paid right now, if the round ended on your current score
-const tgt=(R)=>F.target==null?null:theirScore(F.oScore,R||F.R||newRound(),live(),F.opp.q);
-function oddsEnv(done){ return {deeds:G.deeds||[],intent:F.intent,raise:F.raise?1:0,plays:G.plays||{},drink:F.drink||{},finished:G.bag.filter(d=>d.fin).length,fixOdds:hasFix(G,'felt')?1:0,bag:G.bag.length,round:F.round,q:F.opp.q,raid:isRaid(F.opp,F.round,F.phase2),gold:G.gold,rep:G.rep,tally:G.tally,wins:F.wins||0,margin:F.target!=null?tgt()-F.pScore-(has('bouncer')?1:0):0,score:F.pScore,done,grow:G.grow||{},oppHalf:F.oppHp<=F.oppMax/2,wonOnce:!!F.wonOnce}; }
+const tgt=(R)=>F.target==null?null:targetOf(F.oScore,R||F.R||newRound(),live(),F.opp.q,{drink:F.drink,intent:F.intent,shook:F.shook||0});
+function oddsEnv(done){ return {shook:F.shook||0,guard:F.wall||0,deeds:G.deeds||[],intent:F.intent,raise:F.raise?1:0,plays:G.plays||{},drink:F.drink||{},finished:G.bag.filter(d=>d.fin).length,fixOdds:hasFix(G,'felt')?1:0,bag:G.bag.length,round:F.round,q:F.opp.q,raid:isRaid(F.opp,F.round,F.phase2),gold:G.gold,rep:G.rep,tally:G.tally,wins:F.wins||0,margin:F.target!=null?tgt()-F.pScore-(has('bouncer')?1:0):0,score:F.pScore,done,grow:G.grow||{},oppHalf:F.oppHp<=F.oppMax/2,wonOnce:!!F.wonOnce}; }
 function curOdds(done,R){ return oddsOf(R||F.R||newRound(),live(),oddsEnv(done)); }
 function updOdds(bump,sel){ if(!F) return; let R2=null, add=0; if(sel&&sel.length&&!sel.some(o=>o.hidden)){ R2={...(F.R||newRound())}; noteBank(R2,sel.map(o=>o.face),sel.map(o=>o.inst.type),live(),finsOf(sel)); add=bankVals(sel.map(o=>o.face),ctx(),live(),sel.length===tray().length,sel.map(o=>o.inst.fin)).reduce((a,b)=>a+b,0); }
   const full=!!(sel&&sel.length&&sel.length===tray().length); F._prevR=R2; const O=curOdds(full,R2), eq=$('#eq'); if(!eq) return;
   const set=(id,v,l)=>{ const e=$('#'+id); e.innerHTML=`<b>${v}</b><small>${l}</small>`; };
   const known=F.target!=null&&F.target!=='–'&&!F.tHid;
-  const r=known?settle(F.pScore+add,F.oScore,R2||F.R||newRound(),live(),F.opp,{...oddsEnv(true),lossStreak:F.streak||0,oppHalf:F.oppHp<=F.oppMax/2}):null;
+  const r=known?settle(F.pScore+add,F.oScore,R2||F.R||newRound(),live(),F.opp,{...oddsEnv(true),preview:!full,lossStreak:F.streak||0,oppHalf:F.oppHp<=F.oppMax/2}):null, st=stakesOf(oddsEnv(true));
+  eq.classList.toggle('raised',st>1);
   eq.classList.toggle('bad',!!r&&r.winner==='them'); eq.classList.toggle('even',!!r&&r.winner==='push');
   if(!known){ set('eqgap','?','Ahead by'); set('odds',fmtOdds(O.odds),'Your odds'); set('pays','?','They lose'); }
-  else if(r.winner==='you'){ set('eqgap',r.margin,has('cut')?'Ahead +2 cut':'Ahead by'); set('odds',fmtOdds(r.odds),r.raid?'Raid odds':'Your odds'); set('pays',r.dmg,r.armor?'Vest stops it':r.capped?'Iron Jaw cap':'They lose'); }
-  else if(r.winner==='them'){ const free=has('rabbit')&&!F.rabbitUsed; set('eqgap',r.gap,r.house?'House tie':r.sharp?'Sharp tie':'Behind by'); set('odds',fmtOdds(r.odds),'Their odds'); set('pays',free?0:r.dmg,free?'Rabbit\u2019s Foot':'You lose'); }
+  else if(r.winner==='you'){ set('eqgap',r.margin,has('cut')?'Ahead +2 cut':'Ahead by'); set('odds',fmtOdds(r.odds),r.raid?'Raid odds':'Your odds'); set('pays',r.dmg,r.armor?'Vest stops it':r.capped?'Iron Jaw cap':st>1?`They lose \u00d7${st}`:r.pot?`They lose (+${r.pot} margin)`:'They lose'); }
+  else if(r.winner==='them'){ const free=has('rabbit')&&!F.rabbitUsed; set('eqgap',r.gap,r.house?'House tie':r.sharp?'Sharp tie':'Behind by'); set('odds',fmtOdds(r.odds),'Their odds'); set('pays',free?0:r.dmg,free?'Rabbit\u2019s Foot':st>1?`You lose \u00d7${st}`:'You lose'); }
   else { set('eqgap',r.near?1:0,r.near?'Near miss':'Tied'); set('odds',fmtOdds(O.odds),'Your odds'); set('pays',0,'Push'); }
   if(bump){ const oe=$('#odds'); oe.classList.remove('bump'); void oe.offsetWidth; oe.classList.add('bump'); } }
 // "how does this work?" — your odds, piece by piece, with the real numbers
@@ -1406,18 +1415,18 @@ function trigFx(label,val,i){ const k=CHARM_BY_NAME[label], tk=k&&$(`#rack .toke
   if(tk){ tk.classList.remove('trig'); void tk.offsetWidth; tk.classList.add('trig'); floatEl(tk,val,val[0]==='\u00d7'||val[0]==='\u00f7'?'mult small':'odds small'); }
   SFX.ding(i); }
 SFX.ding=(i=0)=>{ if(!AC||!sfxOn) return; const st=[0,2,4,7,9,12,14,16,19,21,24,26,28,31][Math.min(13,i)], f=523*Math.pow(2,st/12), t=AC.currentTime; osc('triangle',f,t,.32,.06,null,sfxBus,.003); osc('sine',f*2,t,.22,.025,null,sfxBus,.003); thock(420+st*14,.14,0,.04,.3); };
-async function payOut(r){ const big=r.dmg>=40||r.odds>=5;
-  const el=h(`<div class="payout"><div class="pv">${r.margin}</div><div class="pm">under by ${r.gap}${has('cut')?' +2 cut':''}</div></div>`); document.body.appendChild(el);
+async function payOut(r){ const big=r.dmg>=40||r.odds>=5; document.body.classList.add('paying'); setTimeout(()=>document.body.classList.remove('paying'),2600+(r.parts||[]).length*260);
+  const el=h(`<div class="payout"><div class="pv">${r.margin}</div><div class="pm">under by ${r.gap}${has('cut')?' +2 cut':''}${r.pot?` +${r.pot} margin`:''}</div></div>`); document.body.appendChild(el);
   const pv=el.querySelector('.pv'), pm=el.querySelector('.pm'); SFX.win(); await sleep(420);
-  if(r.odds!==1){ const parts=r.parts||[], seq=[...parts.filter(p=>p[1][0]==='+'||p[1][0]==='\u2212'),...parts.filter(p=>!(p[1][0]==='+'||p[1][0]==='\u2212'))];
+  if(r.odds!==1){ const parts=r.parts||[], ord=p=>{ const k=CHARM_BY_NAME[p[0]]; return k?G.charms.indexOf(k):-1; }, isAdd=p=>p[1][0]==='+'||p[1][0]==='\u2212', seq=[...parts.filter(isAdd).sort((a,b)=>ord(a)-ord(b)),...parts.filter(p=>!isAdd(p)).sort((a,b)=>ord(a)-ord(b))];
     pv.innerHTML=`${r.margin} <span class="x">\u00d7 <b class="ov">1</b></span>`; const ov=pv.querySelector('.ov'); let o=1;
     const per=Math.max(90,Math.min(260,2200/Math.max(1,seq.length)));
-    for(let i=0;i<seq.length;i++){ const [l,v]=seq[i], n=parseFloat(v.slice(1));
+    for(let i=0;i<seq.length;i++){ const [l,v,raw]=seq[i], n=typeof raw==='number'?Math.abs(raw):parseFloat(v.slice(1));
       if(v[0]==='+') o+=n; else if(v[0]==='\u2212') o-=n; else if(v[0]==='\u00d7'&&!isNaN(n)) o*=n; else if(v[0]==='\u00f7') o/=n;
       ov.textContent=fmtOdds(Math.max(1,o)); pm.innerHTML=`<b>${l}</b> ${v}`; ov.classList.remove('bump'); void ov.offsetWidth; ov.classList.add('bump'); trigFx(l,v,i); await sleep(per); }
     ov.textContent=fmtOdds(r.odds); pm.textContent=`\u00d7 ${fmtOdds(r.odds)} odds`; SFX.odds(); await sleep(380);
     const steps=Math.min(14,Math.max(4,Math.round(Math.log2(r.dmg+1)*2))); for(let i=1;i<=steps;i++){ pv.textContent=Math.round(r.dmg*i/steps); SFX.tick(i); await sleep(40); } }
-  pv.textContent=r.dmg; el.classList.add('hit'); pm.textContent=r.capped?'Iron Jaw cap':'hit'; SFX.ching(big); setTimeout(SFX.hit,120);
+  pv.textContent=r.dmg; el.classList.add('hit'); pm.textContent=r.capped?'Iron Jaw cap':stakesOf(oddsEnv(true))>1?`hit \u00d7${stakesOf(oddsEnv(true))} stakes`:r.pot?`hit \u00b7 +${r.pot} margin`:'hit'; SFX.ching(big); setTimeout(SFX.hit,120);
   msg(`<span class="big win">Hit for ${r.dmg}</span><span class="math">${r.margin}${r.odds!==1?` \u00d7 ${fmtOdds(r.odds)} odds`:''} \u00b7 you ${F.pScore} vs ${r.oFinal}</span>`);
   setTimeout(()=>el.remove(),900); }
 // reloaded after the last bank: the result is already decided, so skip straight to settling it
@@ -1439,16 +1448,19 @@ async function endRound(){
   if(r.winner==='you') F.wonOnce=true;
   if(r.winner==='you'&&has('bookie')) addGold(Math.min(8,r.margin),$('#cash'));
   if(r.winner==='them'&&has('rabbit')&&!F.rabbitUsed){ F.rabbitUsed=true; r.dmg=0; r.free=true; toast('<b>Rabbit\u2019s Foot</b> takes the hit.'); }
-  if(r.winner==='them'&&F.wall&&r.dmg>0){ const sk=Math.min(F.wall,r.dmg); r.dmg-=sk; F.wall=0; trigFx('The Bodyguard','\u2212'+sk,0); toast(`<b>The Bodyguard</b> soaks ${sk}.`); refreshRack(); }
-  if(r.winner==='you'&&has('bodyguard')){ F.wall=(F.wall||0)+3; refreshRack(); }
+  if(r.winner==='them'&&F.wall&&r.dmg>0){ const sk=soak(F.wall,r.dmg); r.dmg=sk.dmg; F.wall=sk.guard; toast(`<b>Guard</b> soaks ${sk.soaked}.${F.wall?` ${F.wall} left.`:''}`); updGuard(); refreshRack(); }
+  if(r.winner==='you'&&has('bodyguard')){ F.wall=(F.wall||0)+3; trigFx('The Bodyguard','+3',0); updGuard(); refreshRack(); }
+  if(!r.fold){ const up=notePlays(G,F.R,{...oddsEnv(true),score:F.pScore}); up.forEach((k,i)=>setTimeout(()=>toast(`<b>${PLAYS[k].name}</b> is level ${playLv(G.plays,k)} now. Word gets around.`),1400+i*700)); if(up.length) tip('plays'); }
   if(r.winner==='them'&&!r.free){ F.streak=(F.streak||0)+1; F.wins=0; if(F.opp.q.includes('heavy')) F.heavy=true; }
   else if(r.winner==='you'){ F.streak=0; F.wins=(F.wins||0)+1; }
   G.stats.rounds++;
   { const pay=(F.R&&F.R.payday||0)+afterRound(G,r.winner,!!r.free); if(pay) addGold(pay,$('#cash')); if(r.winner==='them'&&has('piggy')&&!r.free) refreshRack(); }
   if(r.winner==='you'){ G.stats.won++; G.stats.dealt+=r.dmg; if(r.dmg>G.stats.best){ G.stats.best=r.dmg; G.stats.bestWho=F.opp.n; }
     await payOut(r);
-    { const gd=gateDmg(F.opp,F.oppHp,F.oppMax,F.phase2,r.dmg); if(gd<r.dmg){ F.gated=true; setTimeout(()=>toast(`<b class="r">${F.opp.n}</b> isn\u2019t going down in one round.`),300); } F.oppHp-=gd; }
-    updOpp(); floatEl($('#obar'),'−'+r.dmg,'dmg'+(r.dmg>=F.oppMax*.5?' big':'')); shake(Math.min(.4,.1+.3*r.dmg/F.oppMax)); foeRecoil();
+    const gd=gateDmg(F.opp,F.oppHp,F.oppMax,F.phase2,r.dmg), hpB=F.oppHp; if(gd<r.dmg){ F.gated=true; setTimeout(()=>toast(`<b class="r">${F.opp.n}</b> isn\u2019t going down in one round.`),300); }
+    else if(r.dmg>=hpB){ const ok=overkillPay(r.dmg,hpB); if(ok) setTimeout(()=>{ addGold(ok,$('#cash')); toast(`<b class="g">Overkill.</b> +$${ok} for showing off.`); },700); }
+    F.oppHp-=gd; G.stats.dealt+=gd-r.dmg;
+    updOpp(); floatEl($('#obar'),'−'+gd,'dmg'+(gd>=F.oppMax*.5?' big':'')); shake(Math.min(.4,.1+.3*r.dmg/F.oppMax)); foeRecoil();
     if(has('tip')) addGold(2,$('#cash'));
     if(r.recoil&&G.hp>1){ const k=Math.min(r.recoil,G.hp-1); G.hp-=k; G.stats.taken+=k; updTop(); setTimeout(()=>floatEl($('#hpbar'),'\u2212'+k,'dmg'),400); toast(`<b class="r">Brass Knuckles.</b> ${k} came back at you.`); }
   } else if(r.winner==='them'){ G.stats.lost++; G.stats.taken+=r.dmg;
@@ -1457,7 +1469,6 @@ async function endRound(){
     if(!r.free&&F.opp.q.includes('steal')&&G.gold>0) addGold(-Math.min(3,G.gold),$('#cash'));
     if(F.opp.sig==='feed'&&r.dmg>0&&F.oppHp<F.oppMax){ const hl=Math.min(F.oppMax-F.oppHp,r.dmg); F.oppHp+=hl; setTimeout(()=>{ if(!F) return; updOpp(); floatEl($('#obar'),'+'+hl,'heal'); toast(`<b class="r">Mama Rosa</b> eats well. +${hl} nerve.`); },500); }
   } else { G.stats.push++; F.wins=0; msg(`<span class="big push">Push</span>Both on ${F.pScore}. Nobody bleeds.`); SFX.push(); }
-  updOdds();
   if(has('blood')&&G.hp>1){ G.hp-=1; G.stats.taken+=1; updTop(); floatEl($('#hpbar'),'\u22121','dmg'); }
   { const rg=regenOf(F.opp); if(rg&&F.oppHp>0&&F.oppHp<F.oppMax){ const hl=Math.min(rg,F.oppMax-F.oppHp); F.oppHp+=hl; updOpp(); floatEl($('#obar'),'+'+hl,'heal'); } }
   if(F.opp.q.includes('nervous')&&F.oppHp>0){ await sleep(500); F.oppHp-=1; G.stats.dealt+=1; updOpp(); floatEl($('#obar'),'−1','dmg'); toast('<b>Nervous Wreck.</b> Their hands are shaking.'); }
@@ -1483,7 +1494,7 @@ async function gatherTheirs(list){ await Promise.all(list.map((o,i)=>{ const m=o
   return sleep(Math.max(0,4.2-Math.abs(s.x))*70).then(()=>anim(620,k=>{ m.position.x=lerp(s.x,t.x,ease.in(k)); m.position.y=k<.9?s.y+.7*Math.min(1,k/.4):lerp(s.y+.7,t.y,(k-.9)/.1); m.rotation.z-=.08*k; })).then(()=>disposeDie(o)); })); }
 async function fightWon(){ const F0kind=F.kind;
   G.won++; if(F.kind==='B'){ (G.stats.bosses=G.stats.bosses||[]).push(F.opp.n); G.rep++; store('lr-bossn',bossTotal()+1); } if(has('tally')) G.tally++; if(G.mode==='endless') saveBest(G.won); if(has('cigar')) heal(6,$('#hpbar')); { const i=afterFight(G); if(i) addGold(i,$('#cash')); }
-  G._quick=F.round<=QUICK_WIN;
+  G._quick=F.round<=QUICK_WIN; G._hot=!!F.opp.hot;
   { const last=F.kind==='B'&&G.mode==='run'&&G.act===2&&!(LIM().double&&!G.dbl); G.fight=null; G.rw=last?null:{kind:F.kind}; G.at=last?'victory':'reward'; saveRun(); }
   SFX.fanfare(); banner(F.kind==='B'?`${F.opp.short||ACTS[G.act].short} folds`:'Cleaned out',F.opp.n);
   if(foe) await foeWalkOut(); else await sleep(800);
@@ -1537,11 +1548,12 @@ function renderReward(kind){
   F=null; clearLabels(); clearDebris();
   let W=G.rw&&G.rw.choices?G.rw:null;
   if(W) kind=W.kind; else {
-  const quick=kind==='F'&&G._quick; let gold=kind==='B'?20:kind==='E'?10:Math.max(1,5+(quick?3:0)+LIM().pay); if(G.nb&&G.nb.double){ gold*=2; G.nb.double=false; } G.gold+=gold; G.stats.earned+=gold;
+  const quick=kind==='F'&&G._quick, hotW=kind==='E'&&G._hot; G._hot=false; let gold=kind==='B'?20:hotW?15:kind==='E'?10:Math.max(1,5+(quick?3:0)+LIM().pay); if(G.nb&&G.nb.double){ gold*=2; G.nb.double=false; } G.gold+=gold; G.stats.earned+=gold;
   if(kind==='E'&&G._quick) setTimeout(()=>{ if(!G) return; gainChit(pick(CHIT_KEYS)); saveRun(); },700);
   if(G.tab>0){ const pay=Math.min(G.gold,G.tab); G.gold-=pay; G.tab-=pay; setTimeout(()=>toast(`The bartender takes <b>$${pay}</b> off your tab.${G.tab?` You still owe $${G.tab}.`:' You\u2019re square.'}`),900); }
   const choices=[];
   if(kind==='B'){ const r=pick(rarePool()); choices.push(r.k==='die'?{k:'die',t:r.t}:{k:'charm',c:r.c}); shuffle(charmPool('u')).slice(0,2).forEach(c=>choices.push({k:'charm',c})); }
+  else if(kind==='E'&&hotW){ const rp=shuffle(charmPool('r')); if(rp.length) choices.push({k:'charm',c:rp[0]}); shuffle(charmPool('u')).slice(0,2).forEach(c=>choices.push({k:'charm',c})); }
   else if(kind==='E') shuffle(charmPool('u')).slice(0,3).forEach(c=>choices.push({k:'charm',c}));
   else { choices.push({k:'die',t:shopDie(G.act)}); shuffle(charmPool('c')).slice(0,2).forEach(c=>choices.push({k:'charm',c})); }
   while(choices.length<3) choices.push({k:'heal'});
@@ -1609,7 +1621,7 @@ function renderShop(){
   const up=LIM().price, bp=p=>barPrice(G,p+up), taste=hasFix(G,'taste'), nb=G.nb||(G.nb={});
   const stockFor=first=>{ const ch=stockCharms((hasFix(G,'shelf')?4:3)-(LIM().lastOrders?1:0),taste);
       if(first&&nb.rare){ const rp=charmPool('r').filter(c=>!ch.includes(c)); if(rp.length) ch[ch.length-1]=pick(rp); nb.rare=false; }
-      return [...shopDice(G.act,2,taste).map(t=>({k:'die',t,price:bp(DT[t].price)})),(dk=>({k:'drink',d:dk,price:bp(DRINKS[dk].price)}))(pick(DRINK_KEYS)),...(hasDeed(G,'blackbook')?[]:[{k:'tip',p:pick(PLAY_KEYS),price:bp(TIP_PRICE)}]),...ch.map((c,i)=>{ const under=first&&i===0&&nb.offbook, off=under||Math.random()<offbookP(G); return {k:'charm',c,off,price:bp(CHARMS[c].price+(off&&!under?OFFBOOK_FEE:0)),rare:CHARMS[c].tier==='r'}; })]; };
+      return [...shopDice(G.act,2,taste).map(t=>({k:'die',t,price:bp(DT[t].price)})),(dk=>({k:'drink',d:dk,price:bp(DRINKS[dk].price)}))(pick(DRINK_KEYS)),...ch.map((c,i)=>{ const under=first&&i===0&&nb.offbook, off=under||Math.random()<offbookP(G); return {k:'charm',c,off,price:bp(CHARMS[c].price+(off&&!under?OFFBOOK_FEE:0)),rare:CHARMS[c].tier==='r'}; })]; };
   const fixed=()=>[{k:'back',price:bp(4)},{k:'heal',price:bp(6)},{k:'remove',price:bp(tossPrice(G))},{k:'file',price:bp(G.filePrice)},{k:'gild',price:bp(G.gildPrice)}];
   const extras=()=>{ const cr=shuffle(Object.keys(CRATES)).slice(0,2).map(c=>({k:'crate',c,price:bp(CRATES[c].price)})); if(nb.crate){ cr.unshift({k:'crate',c:'charm',price:0,free:true}); nb.crate=false; }
       const f=fixOffer(G); return f?[...cr,{k:'fix',f,price:bp(FIXTURES[f].price)}]:cr; };
@@ -1717,19 +1729,24 @@ function refreshTabs(){ const b=$('#bagbtn .tc'); if(b&&G) b.textContent=G.bag.l
 let popEl=null;
 function closePop(){ if(popEl){ popEl.remove(); popEl=null; } hideTip(); }
 function charmPop(t){ if(popEl&&popEl._for===t){ closePop(); return; } closePop(); hideTip(); SFX.paper(); const c=t.dataset.c, d=CHARMS[c], v=Math.floor(d.price/2);
-  popEl=h(`<div class="pop paper pe qpop">${tipHTML(t)}<div class="row" style="margin-top:12px;justify-content:flex-start"><button class="btn small" id="psell">Sell for $${v}</button><button class="btn ghost small" id="pclose">Keep it</button></div></div>`);
+  popEl=h(`<div class="pop paper pe qpop">${tipHTML(t)}<div class="row" style="margin-top:12px;justify-content:flex-start"><button class="btn ghost small" id="pleft" aria-label="Move left">\u25c0</button><button class="btn ghost small" id="pright" aria-label="Move right">\u25b6</button><button class="btn small" id="psell">Sell for $${v}</button><button class="btn ghost small" id="pclose">Keep it</button></div><div class="pd" style="margin-top:6px;font-size:12px;opacity:.8">Order matters: your payout runs left to right, and The Mimic copies the charm to its right.</div></div>`);
   document.body.appendChild(popEl); popEl._for=t; placePop(popEl,t);
   popEl.querySelector('#pclose').onclick=closePop;
+  const mv=dir=>{ const i=G.charms.indexOf(c), j=i+dir; if(i<0||j<0||j>=G.charms.length||offbook(G,G.charms[j])!==offbook(G,c)) return; [G.charms[i],G.charms[j]]=[G.charms[j],G.charms[i]]; SFX.tok(); closePop(); refreshRack(); saveRun(); if(F) updOdds(); const nt=$(`#rack .token[data-c="${c}"]`); if(nt) charmPop(nt); };
+  popEl.querySelector('#pleft').onclick=()=>mv(-1); popEl.querySelector('#pright').onclick=()=>mv(1);
   popEl.querySelector('#psell').onclick=()=>{ loseCharm(c); G.gold+=v; G.stats.earned+=v; SFX.stamp(); SFX.coin(); updTop(); toast(`Sold <b>${d.name}</b> for $${v}.`); closePop(); if(window.__paint) window.__paint(); if(!F) saveRun(); }; }
 document.addEventListener('pointerdown',e=>{ if(popEl&&!popEl.contains(e.target)&&!e.target.closest('.token,#owe,[data-q]')) closePop(); });
 document.addEventListener('click',e=>{ const o=e.target.closest('#owe'); if(!o||!G||!G.tab) return; e.stopPropagation(); anchorPop(o,`<div class="pn">Your tab: $${G.tab}</div><div class="pd">You owe the bartender. It comes out of your next winnings automatically, before you see them. He won\u2019t front more than $${TAB_LIMIT} total.</div>`); });
 
 /* ================= REST ================= */
 function choiceEntry(t,d,ok,label,i){ return h(`<button class="entry simple" ${ok?'':'disabled style="opacity:.4;cursor:default"'} style="animation-delay:${.1+i*.1}s"><div class="txt"><div class="ename">${t}</div><div class="edesc">${kw(d)}</div></div>${ok?`<span class="take">${label}</span>`:''}</button>`); }
+const bestPlay=()=>{ const h=G.playHits||{}; return PLAY_KEYS.slice().sort((a,b)=>(h[b]||0)-(h[a]||0))[0]; };
 function renderRest(){
   F=null; clearLabels(); G.at='rest'; saveRun();
   const opts=[{t:'Catch your breath',d:`Restore ${Math.ceil(G.maxHp*LIM().rest)} nerve.`,ok:G.hp<G.maxHp,go:()=>{ heal(Math.ceil(G.maxHp*LIM().rest)); toast('The cold air helps.'); }},
     {t:'Have a die loaded',d:'He drills a House Die and weights it. It becomes a Loaded Die: never shows a 5.',ok:G.bag.some(d=>d.type==='d6'&&!d.f),go:()=>{ G.bag.find(x=>x.type==='d6'&&!x.f).type='loaded'; toast('A House Die is now <b>loaded</b>.'); }},
+    {t:'Run the numbers',d:(()=>{ const k=bestPlay(); return `Practice your ${PLAYS[k].name}: it goes up a level for good (now Lv ${playLv(G.plays,k)}).`; })(),ok:true,go:()=>{ const k=bestPlay(); G.plays=G.plays||{}; G.plays[k]=(G.plays[k]||0)+1; toast(`<b>${PLAYS[k].name}</b> is level ${playLv(G.plays,k)} now.`); }},
+    {t:'Get a die marked',d:'He nicks a die so the table counts it twice: one die without a finish becomes Marked. It costs you 5 max nerve.',ok:G.bag.some(d=>!d.fin)&&G.maxHp>20,go:()=>{ const d=G.bag.find(x=>!x.fin&&x.type==='d6')||G.bag.find(x=>!x.fin); d.fin='marked'; G.maxHp-=5; G.hp=Math.min(G.hp,G.maxHp); toast(`Your <b>${DT[d.type].name}</b> is <b>Marked</b>. ${FINISHES.marked.desc}`); }},
     {t:'Sand down an Octo',d:'He files an eight-sider down into an honest House Die.',ok:G.bag.some(d=>d.type==='d8'),go:()=>{ { const x=G.bag.find(x=>x.type==='d8'); x.type='d6'; delete x.f; } toast('The Octo is a <b>House Die</b> now.'); }}];
   screen(`${hud()}<div class="modal paper pe">
     <div class="mhead"><div class="sc">Floor ${ROMAN[G.floor]}</div><div class="mtitle">The Back Alley</div></div>
@@ -1855,11 +1872,13 @@ const TIPS={
   quirk:['Read their tags','Their tags are on their nameplate, top right. Hover one (or click it) to read it. “Hits ×” is how hard their wins land on you.'],
   counter:['House rules','Bosses and the sharks upstairs draw a house rule at random every night. Maybe your × odds don’t count, maybe one of your charms sits out each round. Same face, different trick, so read their tags every time.'],
   boss:['The owner','Bosses have a signature move, printed on their door before you sit down, and it gets worse once they’re at half nerve. No boss goes down in one round: the first big hit stops at half, and then the gloves come off.'],
-  shake:['Shakes','A Shake rethrows the dice you picked without banking them. You get one every round (Bent Spoon gives another). Use it on the ugly ones before you commit.'],
+  shake:['Shakes','A Shake rethrows the dice you picked without banking them. You get one every round (Bent Spoon gives another, free). It costs you: their score counts 1 lower for the round. Worth it on a 5 or a 6; think twice on a 3.'],
   raise:['Raised','Stakes are doubled this round: whatever the winner hits for, it lands twice. Raise when they finished high and your throw looks good. Fold when it looks hopeless: you eat a small fixed hit instead of a big one.'],
-  intent:['Read the table','The tag next to their Hits is what they’re up to this round, and the one after it is next round. Leaning in hits harder, Sweating hits softer, Raises doubles the stakes. Plan your drinks and your Raises around it.'],
+  intent:['Read the table','The tag next to their Hits is what they’re up to this round, and the one after it is next round. Leaning in hits harder and Counting crowns makes your first-throw crowns score 1. Sweating, Getting tired and On tilt are your openings: that’s when to Raise.'],
   deed:['Deeds','A deed is yours for the rest of the night: strong, with a catch. Your deeds sit next to your cash; hover one to read it again.'],
-  plays:['Plays','Some banks are Plays: two 1s at once, three of a kind, a 1-2-3 ladder, three crowns, or finishing on 3 or less. Each one adds odds the round you make it. Hot Tips at the bar level a Play up for the rest of the night.'],
+  plays:['Plays','Some banks are Plays: two 1s at once, three of a kind, a 1-2-3 ladder, three crowns, or finishing on 3 or less. Each one you make widens your win by its level and adds odds. Every 4th time you make a Play, it levels up for the rest of the night.'],
+  guard:['Guard','Guard soaks hits before your nerve does, and unlike a drink it stays between rounds at this table. Hip Flask, The Bulldog and The Bodyguard build it; Haymaker turns it into bigger wins.'],
+  hot:['High-stakes room','The burning door is the room’s high-stakes game: a shark with 40% more nerve who hits 1 harder. Beat them for a rare charm and extra cash.'],
   theirs:['They throw first','Watch their total. Whatever they end on is the number you have to get under.'],
   yours:['Your throw','Click the dice you want to keep, then press Bank. Lowest total wins. A crown scores 0, so it’s almost always worth keeping.'],
   again:['Throw again','Whatever you didn’t bank gets thrown again. Each throw you bank at least one, until every die is on your rail.'],
@@ -1903,8 +1922,8 @@ function menuPage(tab){
       <div class="stats">${srow('Floor',`${ROMAN[G.act]} \u00b7 ${G.floor+1}/${FLOORS.length}${G.mode==='endless'?` \u00b7 lap ${G.lap+1}`:''}`)}${srow('Tables won',G.won)}${srow('Rounds won',`${st.won} of ${st.rounds}`)}${srow('Rounds lost',st.lost)}${srow('Pushes',st.push)}
       ${srow('Nerve broken',st.dealt)}${srow('Nerve lost',st.taken)}${srow('Biggest hit',st.best)}${srow('Crowns banked',st.crowns)}${srow('Dice banked',st.banked)}${srow('Cash earned',`$${st.earned}`)}${srow('Cash spent',`$${st.spent}`)}${srow('Time at the tables',fmtTime(Date.now()-st.t0))}
       ${best()?srow('Longest night ever',`${best()} tables`):''}</div>
-      <div class="secthead" style="margin-top:12px">Your Plays<small>Bank one to add its odds that round. Hot Tips level them up.</small></div>
-      <div class="stats">${PLAY_KEYS.map(k=>{ const lv=playLv(G.plays,k); return srow(`${PLAYS[k].name} <small style="opacity:.7">${PLAYS[k].desc}</small>`,`Lv ${lv} \u00b7 +${PLAYS[k].per*lv} odds`); }).join('')}</div>
+      <div class="secthead" style="margin-top:12px">Your Plays<small>Each one you make adds its level to your margin and its odds. Every 4th time you make one, it levels up.</small></div>
+      <div class="stats">${PLAY_KEYS.map(k=>{ const lv=playLv(G.plays,k); return srow(`${PLAYS[k].name} <small style="opacity:.7">${PLAYS[k].desc} Made ${(G.playHits||{})[k]||0}\u00d7.</small>`,`Lv ${lv} \u00b7 +${lv} margin, +${PLAYS[k].per*lv} odds`); }).join('')}</div>
       ${(G.deeds||[]).length?`<div class="secthead" style="margin-top:12px">Your Deeds</div><div class="stats">${G.deeds.map(k=>srow(DEEDS[k].name,DEEDS[k].desc)).join('')}</div>`:''}`; }
   if(tab==='bag'){ if(!G) return '<div class="empty">No run in progress.</div>'; return `<div class="secthead">Your Dice<small>${G.bag.length} in the bag. Six come out each round.</small></div><div id="mb1"></div><div class="mrule"></div><div class="secthead">Your Charms<small>Always working. You carry ${slotsUsed(G)} of ${charmSlots(G)}${G.charms.length>slotsUsed(G)?`, plus ${G.charms.length-slotsUsed(G)} off the books`:''}.</small></div><div id="mb2"></div>${(G.fix||[]).length?`<div class="mrule"></div><div class="secthead">Fixtures<small>Yours for the night.</small></div><div class="list">${G.fix.map(f=>`<div class="item"><div><div class="iname">${FIXTURES[f].name}</div><div class="idesc">${kw(FIXTURES[f].desc)}</div></div></div>`).join('')}</div>`:''}${chitsHTML()?`<div class="mrule"></div><div class="secthead">Chits waiting<small>They spend themselves.</small></div><div class="chitrow">${chitsHTML()}</div>`:''}`; }
   if(tab==='book') return bookHTML();
@@ -1919,21 +1938,22 @@ function menuPage(tab){
     <div class="set"><span class="lab">Screen shake</span><div class="opts" data-k="shake"><button class="opt ${SET.shake?'on':''}" data-v="1">On</button><button class="opt ${!SET.shake?'on':''}" data-v="0">Off</button></div></div>`;
   return `<div class="secthead">House Rules</div><ol class="hr">
     <li data-i="1"><span>Each round you draw six dice from your bag. Your opponent throws first and sets the number to beat.</span></li>
-    <li data-i="2"><span>Throw your dice. Bank at least one, then throw the rest again. Keep going until every die is banked. Once a round you can <b>Shake</b>: rethrow the dice you picked without banking them.</span></li>
+    <li data-i="2"><span>Throw your dice. Bank at least one, then throw the rest again. Keep going until every die is banked. Once a round you can <b>Shake</b>: rethrow the dice you picked without banking them, but their score counts 1 lower for it.</span></li>
     <li data-i="3"><span>After your first throw, before you bank: <b>Raise</b> to double the stakes, or <b>Fold</b> to take a small fixed hit and skip the round.</span></li>
     <li data-i="4"><span>Banked dice add up. Lowest total wins the round. A <span class="kw crown">\u265B</span> crown counts for nothing.</span></li>
     <li data-i="5"><span>Win and you hit for the gap <b>\u00d7 your odds</b>. Your odds start at 1. Charms, finishes and drinks add to them (+) or multiply them (\u00d7). Every boss you beat adds +1 for good.</span></li>
     <li data-i="6"><span>Lose and they hit you for the gap \u00d7 <i>their</i> odds, which climb every act.</span></li>
     <li data-i="7"><span>Their nameplate shows what they’re up to this round and next (Leaning in, Sweating, Raises…). Bosses can’t lose more than half their nerve in one round.</span></li>
-    <li data-i="8"><span><b>Plays</b>: two 1s at once, three of a kind, a 1-2-3, three crowns, or finishing on 3 or less each add odds. Hot Tips at the bar level them up.</span></li>
-    <li data-i="9"><span>Read their tags. Bosses and the sharks upstairs draw a random house rule each night that works against your build.</span></li>
-    <li data-i="10"><span>Charms are always working; you hold five. A silver Off the Books charm doesn’t take a slot.</span></li>
-    <li data-i="11"><span>Dice only matter when they come out of the bag. A die can wear one finish (Polished, Lucky, Chrome, Gold Leaf or Featherweight).</span></li>
-    <li data-i="12"><span>Each room is a floor plan: climb from the bottom to the owner, one row at a time along the lines. Bars and back alleys are stops on it, so plan your route. After every table the bartender offers a <b>Last call</b>: a drink or a stiff one.</span></li>
-    <li data-i="13"><span>The bar: buy dice, charms, drinks and Hot Tips, restock the shelf, crack open crates, and buy one fixture a room for good. Tossing a die costs $3 more each time.</span></li>
-    <li data-i="14"><span>Drinks ride in your coat, two at most. Drink one on your turn; it lasts the round.</span></li>
-    <li data-i="15"><span>Chits are favors: beat a shark in two rounds or walk past a table to earn one. Beat an owner and you can take a <b>deed</b>: a strong racket with a catch, for the rest of the night.</span></li>
-    <li data-i="16"><span>Each act is a new league, and Stay all night never stops climbing. Your build has to grow faster than they do.</span></li></ol>
+    <li data-i="8"><span><b>Guard</b> soaks hits before your nerve and stays between rounds at a table. Hit for more than they had left and the overkill pays $1 per 10.</span></li>
+    <li data-i="9"><span><b>Plays</b>: two 1s at once, three of a kind, a 1-2-3, three crowns, or finishing on 3 or less. Each adds its level to your winning margin, plus odds. Every 4th time you make one, it levels up.</span></li>
+    <li data-i="10"><span>Read their tags. Bosses and the sharks upstairs draw a random house rule each night that works against your build.</span></li>
+    <li data-i="11"><span>Charms are always working; you hold five. A silver Off the Books charm doesn’t take a slot.</span></li>
+    <li data-i="12"><span>Dice only matter when they come out of the bag. A die can wear one finish (Polished, Lucky, Chrome, Gold Leaf or Featherweight).</span></li>
+    <li data-i="13"><span>Each room is a floor plan: climb from the bottom to the owner, one row at a time along the lines. Bars and back alleys are stops on it, so plan your route. After every table the bartender offers a <b>Last call</b>: a drink or a stiff one.</span></li>
+    <li data-i="14"><span>The bar: buy dice, charms and drinks, restock the shelf, crack open crates, and buy one fixture a room for good. Tossing a die costs $3 more each time.</span></li>
+    <li data-i="15"><span>Drinks ride in your coat, two at most. Drink one on your turn; it lasts the round.</span></li>
+    <li data-i="16"><span>Chits are favors: beat a shark in two rounds or walk past a table to earn one. Beat an owner and you can take a <b>deed</b>: a strong racket with a catch, for the rest of the night.</span></li>
+    <li data-i="17"><span>Each act is a new league, and Stay all night never stops climbing. Your build has to grow faster than they do.</span></li></ol>
     <div class="prose it" style="margin-top:12px;font-size:13px">Esc opens this booklet. Enter banks.</div>`;
 }
 function openMenu(tab){ ac(); if(menuEl){ setMenuTab(tab||menuTab); return; } PAUSED=true; SFX.paper();

@@ -200,7 +200,7 @@ function event(G,act){ const e=L.rnd(14);
   if(e===6){ if(Math.random()<.5) G.gold+=8; else G.gold=Math.max(0,G.gold-8); }
   if(e===7){ if(G.gold<15) G.gold+=14; else { G.maxHp+=6; G.hp+=6; } }
   if(e===8) G.gold+=10; }
-function rest(G){ if(G.hp<G.maxHp*.75) G.hp=Math.min(G.maxHp,G.hp+Math.ceil(G.maxHp*LM.rest)); else { const d8=G.bag.find(x=>x.type==='d8'); const d6=G.bag.find(x=>x.type==='d6'&&!x.f); if(d8) d8.type='d6'; else if(d6) d6.type='loaded'; else G.hp=Math.min(G.maxHp,G.hp+Math.ceil(G.maxHp*LM.rest)); } }
+function rest(G){ if(G.hp<G.maxHp*.75) G.hp=Math.min(G.maxHp,G.hp+Math.ceil(G.maxHp*LM.rest)); else if(G.hp>=G.maxHp*.9&&G.maxHp>30&&G.bag.some(d=>!d.fin)&&Math.random()<.5){ const d=G.bag.find(x=>!x.fin&&x.type==='d6')||G.bag.find(x=>!x.fin); d.fin='marked'; G.maxHp-=5; G.hp=Math.min(G.hp,G.maxHp); } else if(G.playHits&&Math.random()<.5){ const h=G.playHits, k=L.PLAY_KEYS.slice().sort((a,b)=>(h[b]||0)-(h[a]||0))[0]; G.plays=G.plays||{}; G.plays[k]=(G.plays[k]||0)+1; } else { const d8=G.bag.find(x=>x.type==='d8'); const d6=G.bag.find(x=>x.type==='d6'&&!x.f); if(d8) d8.type='d6'; else if(d6) d6.type='loaded'; else G.hp=Math.min(G.maxHp,G.hp+Math.ceil(G.maxHp*LM.rest)); } }
 function choose(G,opts,act,floor,smart){
   if(SKILL==='good'){ if(opts.includes('B')) return 'B'; if(opts.includes('R')&&G.hp<G.maxHp*.6) return 'R'; if(opts.includes('S')&&G.gold>=16) return 'S'; if(opts.includes('E')&&G.hp>G.maxHp*.7) return 'E'; if(opts.includes('F')) return 'F'; return opts.includes('S')?'S':opts.includes('R')?'R':opts[0]; }
   if(!smart){ const o=opts.filter(x=>x==='F'||x==='S'||x==='B'); return o.length?L.pick(o):L.pick(opts); }
