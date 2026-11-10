@@ -877,7 +877,7 @@ const LIM=()=>limitMods(G&&G.limit);
 const BOSS=()=>bossOf(G.act,(G.bossIx||[])[G.act]||0);
 function store(k,v){ try{ if(v===undefined) return JSON.parse(localStorage.getItem(k)||'null'); localStorage.setItem(k,JSON.stringify(v)); }catch(e){ return null; } }
 // the limit ladder grew from 8 rungs to 12: move saved progress to the same rung on the new ladder, once
-(function(){ try{ const v=localStorage.getItem('lr-limv'); if(v==='3') return; const map=x=>{ x=x||0; if(!v) x=LIMIT_V1[Math.min(7,x)]; return LIMIT_V2[Math.min(11,x)]; };
+(function(){ try{ const v=localStorage.getItem('lr-limv'); if(v==='3') return; const map=x=>{ x=x||0; return v?LIMIT_V2[Math.min(11,x)]:LIMIT_V1[Math.min(7,x)]; };
   const t=store('lr-limit'); if(t) store('lr-limit',map(t)); const pk=store('lr-pick'); if(pk&&pk.lim) store('lr-pick',{...pk,lim:map(pk.lim)});
   const sv=JSON.parse(localStorage.getItem('lr-save')||'null'); if(sv&&sv.limit){ sv.limit=map(sv.limit); localStorage.setItem('lr-save',JSON.stringify(sv)); } localStorage.setItem('lr-limv','3'); }catch(e){} })();
 const limitTop=()=>Math.min(LIMITS.length-1,store('lr-limit')||0);
