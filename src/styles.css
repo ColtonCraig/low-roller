@@ -641,3 +641,25 @@ body.paying #pays b,body.paying #pays small{visibility:hidden}
   .svc.rows .card .art,.svc.rows .card .art .cicon{width:28px;height:28px}
   .mapm .mtitle{font-size:28px} .modal.mapm .mhead .sc{display:none}
 }
+/* the nameplate sits under the whole top bar, so it never covers the coat */
+.nameplate{top:100px}
+@media (max-width:1180px){
+  .hud{gap:6px}
+  .token{width:36px;height:36px} .token .cicon{width:40px;height:40px} .token .pchip{width:36px;height:36px}
+  .rack{gap:4px;padding:5px 6px} .coat{margin-left:0;padding:5px 7px}
+  .inkbar{width:min(96px,18vw)}
+}
+/* map picking: tap to select (card and spot light up together), tap again to go */
+.entry.sel{box-shadow:inset 0 0 0 3px var(--brass-hi),0 0 22px #f0c04055,0 6px 0 #0008;transform:translateY(-4px)}
+.entry.unsel{opacity:.55;filter:saturate(.6)}
+.entry.sel .take{background:var(--brass-hi);color:#2a1a00}
+.mn.can.sel{transform:scale(1.35);animation:none;background:#4a3410;box-shadow:inset 0 0 0 3px #fff2c0,0 0 0 6px #f0c04055,0 3px 0 #0008;z-index:2}
+.planlines line.pick{stroke:#fff2c0;stroke-width:4;stroke-dasharray:none;animation:none}
+@media (max-height:780px){
+  .cards.deeds .card .art{display:none} .cards.deeds .card{padding:8px 8px 10px}
+  .modal .cards.picks .card .art{height:50px} .modal .cards.picks .card .art .cicon,.modal .cards.picks .card .art img.dieimg{width:50px!important;height:50px!important}
+  .modal .cards.picks .card{gap:4px}
+  .modal .mhead{margin-bottom:6px} .modal .mtitle{font-size:30px}
+}
+@media (max-width:1180px){ .nameplate{width:200px;padding:8px 10px 9px} .nameplate .stamp{font-size:11px} }
+body.paying #odds b,body.paying #eqgap b{visibility:hidden}

@@ -14,7 +14,7 @@ async def main():
         b, pg, errs = await open_game(p, 1280, 800)
         await pg.click('#go'); await pg.wait_for_timeout(400)
         await pg.evaluate("SET.tips=false; SET.auto=false; SET.deal='full'; SET.speed=2.4; 0")
-        await pg.click('#stops .entry'); assert await turn(pg), 'never reached your turn'
+        await pg.click('#stops .entry'); await pg.wait_for_timeout(150); await pg.evaluate("(()=>{ const e=document.querySelector('#stops .entry.sel'); if(e) e.click(); })()"); assert await turn(pg), 'never reached your turn'
         # keep both sides alive so the round always ends on 'Next round', the checkpoint this test reloads from
         await pg.evaluate("F.oppHp=9999; G.hp=9999; tray().forEach(o=>toggleSel(o)); document.querySelector('#bank').click(); 0")
         await pg.wait_for_selector('#again', timeout=120000)

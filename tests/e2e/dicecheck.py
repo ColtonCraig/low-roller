@@ -43,7 +43,7 @@ async def run(p,name):
     await pg.evaluate("document.querySelectorAll('.overlay').forEach(o=>o.remove()); F=null; newRun('run'); "+setup+"; renderMap(); 0"); await pg.wait_for_timeout(500)
     if opp=='twins': await pg.evaluate("startFight('E',makeOpp([...ACTS[1].foes.e1,...ACTS[1].foes.e2].find(f=>f.n==='The Doubles'),'E',1,3,0,false,0)); 0")
     elif opp=='boss': await pg.evaluate("startFight('B',makeOpp(ACTS[2].foes.boss,'B',2,8,0,false,0)); 0")
-    else: await pg.click('#stops .entry')
+    else: await pg.click('#stops .entry'); await pg.wait_for_timeout(150); await pg.evaluate("(()=>{ const e=document.querySelector('#stops .entry.sel'); if(e) e.click(); })()")
     if opp=='heavy':
       await toTurn(pg); await pg.evaluate("F.heavy=true; F.oppHp=9999; G.hp=9999; tray().forEach(o=>toggleSel(o)); const b=document.querySelector('#bank'); b&&b.click(); 0")
       await pg.wait_for_selector('#again',timeout=120000); await pg.wait_for_timeout(500)

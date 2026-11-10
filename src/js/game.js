@@ -509,7 +509,7 @@ function buildFoe(look){
   { const rim=new THREE.PointLight(0xa8c4ff,1.1,5.5,1.6); rim.position.set(0,3.9,-1.7); root.add(rim); const rim2=new THREE.PointLight(L.eye||0xffd8a8,.55,4,1.8); rim2.position.set(-1.6,3.2,-1.2); root.add(rim2); }
   // a warm glow on the wall behind them, so even a black coat reads against a dark room (stronger for owners)
   { if(!HALO_TEX){ const cv=makeCanvas(64,64,x=>{ const gr=x.createRadialGradient(32,32,2,32,32,32); gr.addColorStop(0,'rgba(255,220,170,1)'); gr.addColorStop(.45,'rgba(255,170,110,.45)'); gr.addColorStop(1,'rgba(255,140,90,0)'); x.fillStyle=gr; x.fillRect(0,0,64,64); }); HALO_TEX=texFromCanvas(cv,false); }
-    const hm=new THREE.Mesh(new THREE.PlaneGeometry(5.2,4.6),new THREE.MeshBasicMaterial({map:HALO_TEX,transparent:true,opacity:F&&F.kind==='B'?.42:.24,blending:THREE.AdditiveBlending,depthWrite:false})); hm.position.set(0,3.3,-1.9); root.add(hm); }
+    const hm=new THREE.Mesh(new THREE.PlaneGeometry(5.2,4.6),new THREE.MeshBasicMaterial({map:HALO_TEX,transparent:true,opacity:F&&F.kind==='B'?.42:.24,blending:THREE.AdditiveBlending,depthWrite:false})); hm.position.set(0,3.3,-1.9); hm.userData.noFit=true; root.add(hm); }
   if(L.twins===1) root.children.forEach(c=>c.position.x+=.775); // a pair sits side by side, centered
   const S=1+((L.scale||1)-1)*.55; g.scale.setScalar(S);
   g.userData={twins:twinG,root,torso,head,eyes,eyeM,eyeColor:new THREE.Color(L.eye),hat,armL,armR,cup,mouth,cigarTip,S,
@@ -787,17 +787,17 @@ function fitCam(smooth=true){ if(!CAM||!CAMF||!camLook) return;
   if(!F||!yt||!yt.getBoundingClientRect().height){ apply(1); CAMF.zoom=1; if(smooth) glideFrom(from,fromD); return; }
   const mg=document.querySelector('#ui .msg'), u=foe&&foe.userData;
   // the opponent's bounding box as seated (all 8 corners: the back of a big hat sits higher on screen than its middle)
-  let hatPts=[], hatMin=Math.max(30,VH*.04); if(u){ const bx=new THREE.Box3().setFromObject(foe), dy=u.seatY-foe.position.y+.1;
+  let hatPts=[], hatMin=Math.max(30,VH*.04); if(u){ const bx=new THREE.Box3(); foe.updateMatrixWorld(true); foe.traverse(c=>{ if(c.isMesh&&!c.userData.noFit) bx.expandByObject(c); }); const dy=u.seatY-foe.position.y+.1;
     for(const x of [bx.min.x,bx.max.x]) for(const z of [bx.min.z,bx.max.z]) hatPts.push(new THREE.Vector3(x,bx.max.y+dy,z-foe.position.z+u.homeZ));
-    if(u.twins.length){ const h=document.querySelector('#ui .hud'); if(h) hatMin=h.getBoundingClientRect().bottom+2; } }
+    { const h=document.querySelector('#ui .hud'); if(h) hatMin=Math.max(hatMin,[...h.querySelectorAll('.plate,.rack,.coat')].reduce((m,e)=>Math.max(m,e.getBoundingClientRect().bottom),0)+(u.twins.length?2:-26)); } }
   let zoom=1;
   for(let i=0;i<90;i++){ apply(zoom);
     let floor=yt.getBoundingClientRect().top; const m=mg&&mg.getBoundingClientRect(); if(m&&m.height&&m.right>VW*.25&&m.left<VW*.75) floor=Math.min(floor,m.top);
     const lab=toScreen(new THREE.Vector3(0,0,TRAY_Z+.68)).y+16;
     let cornerFloor=VH; for(const e of [mg]){ const b=e&&e.getBoundingClientRect(); if(b&&b.height) cornerFloor=Math.min(cornerFloor,b.top); }
     const corner=toScreen(new THREE.Vector3(-4.1,0,MY_BANK_Z+.45)).y<=cornerFloor-4;
-    const wide=visHalfW(TRAY_Z)>=5.05, hat=hatPts.every(v=>toScreen(v).y>=hatMin);
-    if((lab>floor-8||!wide||!hat||!corner)&&zoom<1.8) zoom*=1.02; else break; }
+    const wide=visHalfW(TRAY_Z)>=5.05, hat=hatPts.every(v=>toScreen(v).y>=hatMin), pl=document.querySelector('#plate'), plR=pl&&pl.getBoundingClientRect(), railEnd=toScreen(railSlot(5,'them')), railOk=!plR||!plR.height||railEnd.x<plR.left-6||railEnd.y>plR.bottom+4;
+    if((lab>floor-8||!wide||!hat||!corner||!railOk)&&zoom<1.8) zoom*=1.02; else break; }
   CAMF.zoom=zoom; if(smooth) glideFrom(from,fromD); }
 // a throw with three settling bounces; landings make the thocks
 async function throwDice(list,finals,side,hiddenIdx=-1,opts={}){ const hidSet=Array.isArray(hiddenIdx)?hiddenIdx:[hiddenIdx];
@@ -1127,7 +1127,7 @@ const MAPN={F:'Table',E:'Shark',B:'The owner',S:'The bar',R:'Back alley','?':'A 
 function mapHTML(){ ensureMap(); const M=G.map, rows=M.length, rh=49, lx=x=>34+x*74, ly=r=>22+(rows-1-r)*rh, reach=mapReach(M,G.floor,G.trail);
   let ln='', nd='';
   M.forEach((row,r)=>row.forEach(o=>(o.to||[]).forEach(t=>{ const nx=M[r+1]&&M[r+1].find(n=>n.x===t); if(!nx) return; const done=G.trail[r]===o.x&&(G.trail[r+1]===nx.x||(r+1===G.floor&&false)); const open=r+1===G.floor&&G.trail[r]===o.x;
-    ln+=`<line x1="${lx(o.x)}" y1="${ly(r)}" x2="${lx(nx.x)}" y2="${ly(r+1)}" class="${done?'done':open?'open':''}"/>`; })));
+    ln+=`<line x1="${lx(o.x)}" y1="${ly(r)}" x2="${lx(nx.x)}" y2="${ly(r+1)}" class="${done?'done':open?'open':''}" ${open?`data-to="${nx.x}"`:''}/>`; })));
   M.forEach((row,r)=>row.forEach(o=>{ const here=G.trail[r]===o.x&&r<G.floor, can=r===G.floor&&reach.includes(o.x), gone=r<G.floor&&!here;
     nd+=`<button class="mn n-${o.n==='?'?'q':o.n} ${o.hot?'hot':''} ${here?'here':''} ${can?'can':''} ${gone?'gone':''} ${r>G.floor?'ahead':''}" data-x="${o.x}" data-r="${r}" style="left:${lx(o.x)}px;top:${ly(r)}px"  data-tip="${o.hot?'High-stakes room':MAPN[o.n]}${r===rows-1?'':' \u00b7 floor '+(r+1)}" ${can?'':'tabindex="-1"'}>${MAPI[o.n]}</button>`; }));
   return `<div class="plan" style="width:${lx(2)+36}px;height:${ly(0)+24}px"><svg class="planlines" width="${lx(2)+36}" height="${ly(0)+24}">${ln}</svg>${nd}</div>
@@ -1147,12 +1147,19 @@ function entry(p,i){
     const dr=el.querySelector('.dicerow'); bagCounts(o.bag).forEach(([t,n])=>{ const k=h(`<span class="dk" data-tip="${DT[t].name}: ${DT[t].desc}"></span>`); k.appendChild(iconCanvas(t,null,26)); if(n>1) k.appendChild(h(`<span>\u00d7${n}</span>`)); dr.appendChild(k); });
     wireChips(el); }
   else el.innerHTML=`${svcIcon(nd.ico||'$',p.n==='?'?'stranger':null)}<div class="txt"><div class="ename">${nd.t}</div><div class="edesc">${nd.d}</div></div><span class="take">${p.n==='S'?'Walk up':p.n==='R'?'Step out':'Hear them out'}</span>`;
-  el.dataset.x=p.x; el.onclick=()=>act(el,()=>{ G.path[G.floor]=p.n; G.trail[G.floor]=p.x; enterNode(p.n,p.opp); });
+  el.dataset.x=p.x; el._go=()=>act(el,()=>{ G.path[G.floor]=p.n; G.trail[G.floor]=p.x; enterNode(p.n,p.opp); }); el.onclick=()=>pickStop(el);
   if(p.n==='F'&&p.opp&&G.floor>0){ const wp=h('<button class="walkpast" data-tip="Skip this table: no fight, no pay, no spoils. You pick up a chit instead.">Walk past for a chit</button>'); wp.onclick=e=>{ e.stopPropagation(); SFX.ui(); if(G.used) delete G.used[p.opp.n]; G.path[G.floor]=p.n; G.trail[G.floor]=p.x; gainChit(pick(CHIT_KEYS)); saveRun(); setTimeout(advance,600); }; el.appendChild(wp); }
   return el;
 }
 function routeLine(){ return `<div class="route">${FLOORS.map((_,i)=>{ const done=i<G.floor, now=i===G.floor, boss=i===FLOORS.length-1;
   return `<span class="rn ${done?'done':''} ${now?'now':''} ${boss?'boss':''}" data-tip="${boss?'Boss':'Floor '+(i+1)}"></span>`; }).join('')}</div>`; }
+// picking a stop: the first tap shows which card is which spot on the plan (and the line you'd walk), the second goes
+function pickStop(el){ const all=[...document.querySelectorAll('#stops .entry')];
+  if(all.length<=1||el.classList.contains('sel')) return el._go();
+  SFX.ui(); all.forEach(e=>{ e.classList.toggle('sel',e===el); e.classList.toggle('unsel',e!==el); const t=e.querySelector('.take'); if(t){ t.dataset.t0=t.dataset.t0||t.textContent; t.textContent=e===el?'Tap again to go':t.dataset.t0; } });
+  const x=el.dataset.x; document.querySelectorAll('#plan .mn.can').forEach(b=>b.classList.toggle('sel',b.dataset.x===x));
+  document.querySelectorAll('#plan line[data-to]').forEach(l=>l.classList.toggle('pick',l.dataset.to===x));
+  if(el.scrollIntoView) el.scrollIntoView({block:'nearest',behavior:REDUCED?'auto':'smooth'}); }
 function renderMap(fresh){
   F=null; clearLabels(); setActTheme(G.act); G.at='map'; G.fight=G.rw=G.shop=G.ev=null;
   const opts=preview(); saveRun();
@@ -1164,7 +1171,7 @@ function renderMap(fresh){
     <div class="mapside"><div class="secthead">${opts.length>1?'Pick one':'Next up'}</div><div class="entries" id="stops"></div></div></div></div>`);
   opts.forEach((p,i)=>$('#stops').appendChild(entry(p,i)));
   const plan=$('#plan'); plan.querySelectorAll('.mn.can').forEach(b=>{ const e=()=>$(`#stops .entry[data-x="${b.dataset.x}"]`);
-    b.onmouseenter=()=>{ const x=e(); if(x) x.classList.add('hl'); }; b.onmouseleave=()=>{ const x=e(); if(x) x.classList.remove('hl'); }; b.onclick=()=>{ const x=e(); if(x) x.click(); }; });
+    b.onmouseenter=()=>{ const x=e(); if(x) x.classList.add('hl'); }; b.onmouseleave=()=>{ const x=e(); if(x) x.classList.remove('hl'); }; b.onclick=()=>{ const x=e(); if(x) pickStop(x); }; });
   $('#stops').querySelectorAll('.entry').forEach(en=>{ const b=()=>plan.querySelector(`.mn.can[data-x="${en.dataset.x}"]`); en.addEventListener('mouseenter',()=>{ const x=b(); if(x) x.classList.add('hl'); }); en.addEventListener('mouseleave',()=>{ const x=b(); if(x) x.classList.remove('hl'); }); });
   setTimeout(()=>{ if(G&&$('#stops')) tip('map').then(()=>{ if(G&&opts.some(p=>p.hot)) tip('hot'); }); },fresh?2300:400);
   if(fresh){ const t=$('.mtitle'); if(t) t.classList.add('lightup'); SFX.fanfare&&G.floor===0&&G.act>0&&SFX.fanfare(); }
@@ -1270,9 +1277,9 @@ async function startRound(pre){
     if(dm==='quick'&&GL_OK&&foe){ const mp=await cupThrow(); await throwDice(F.them,fin,'them',-1,{from:mp,dur:700}); cupRest(); await sleep(200); }
     else if(dm==='quick') await throwDice(F.them,fin,'them');
     if(F!==myF) return;
-    for(const i of ord){ const o=F.them[i]; o.banked=true; const v=effVal(o.face); shown+=v;
+    for(const i of ord){ if(F!==myF) return; const o=F.them[i]; o.banked=true; const v=effVal(o.face); shown+=v;
       if(dm==='instant'){ setFaces(o,fin[i],false); o.mesh.visible=true; const t=railSlot(F.railN.them++,'them'); o.mesh.position.set(t.x,3,t.z); moveTo(o,t,BANK_SCALE,260); SFX.bank(0); await sleep(50); }
-      else { SFX.bank(0); floatAt(dieScreen(o),v===0?'0':'+'+v,v===0?'zero':'pts'); moveTo(o,railSlot(F.railN.them++,'them'),BANK_SCALE,320); await sleep(70); } }
+      else { SFX.bank(0); moveTo(o,railSlot(F.railN.them++,'them'),BANK_SCALE,320); await sleep(70); } }
     $('#sitting').innerHTML=`<span>Sitting on</span><b>${shown}</b>`; await sleep(dm==='instant'?380:300);
   } else
   for(const th of sim.throws){
@@ -1331,7 +1338,7 @@ function refreshActs(){
   if(!F) return; const sel=tray().filter(o=>o.sel), need=minBank();
   const proj=bankVals(sel.map(o=>o.face),ctx(),live(),sel.length===tray().length,sel.map(o=>o.inst.fin)).reduce((a,b)=>a+b,0); updOdds(false,sel);
   const pre1=F.throwNo===1&&F.R.throws===0&&!F.folded, B=[], fd=foldDmg(F.opp,F.intent);
-  if(F.shakes>0){ const cup=hasDeed(G,'loadedcup'), free=F.freeShake; B.push(`<button class="btn ghost small" id="shake" ${sel.length?'':'disabled'} data-tip="Rethrow the dice you picked without banking them. ${free?'This one is free (Bent Spoon).':'Costs you: their score counts 1 lower this round.'}${cup?' Loaded Cup: also costs 1 nerve.':` ${F.shakes} left this round.`}">Shake${cup?'':` \u00b7 ${F.shakes}`}${free?'':' \u00b7 \u22121'}</button>`); }
+  if(F.shakes>0){ const cup=hasDeed(G,'loadedcup'), free=F.freeShake; B.push(`<button class="btn ghost small" id="shake" ${sel.length?'':'disabled'} data-tip="Rethrow the dice you picked without banking them. ${free?'This one is free (Bent Spoon).':'Costs you: their score counts 1 lower this round.'}${cup?' Loaded Cup: also costs 1 nerve.':` ${F.shakes} left this round.`}">Shake${cup||F.shakes<2?'':` \u00d7${F.shakes}`}</button>`); }
   if(has('thumb')&&F.thumb>0) B.push(`<button class="btn ghost small" id="nudge" ${sel.length===1&&typeof sel[0].face==='number'&&sel[0].face>=2&&!sel[0].hidden?'':'disabled'} data-tip="Turn the one die you picked down by 1. ${F.thumb} left at this table.">Nudge \u00b7 ${F.thumb}</button>`);
   if(has('bump')&&!F.bumped&&F.R.throws===0&&!F.opp.q.includes('pair')) B.push(`<button class="btn ghost small" id="bump" data-tip="Once per table: their lowest die gets thrown again.">Bump</button>`);
   if(pre1&&!F.raise) B.push(`<button class="btn ghost small raise" id="raise" data-tip="Before your first bank: double the stakes. Whoever wins this round hits twice as hard.">Raise</button>`,`<button class="btn ghost small fold" id="fold" data-tip="Before your first bank: give up the round and take ${fd} instead of whatever you'd lose.">Fold \u00b7 ${fd}</button>`);
@@ -1356,7 +1363,7 @@ async function bank(){
   const fins=finsOf(sel), vals=bankVals(faces,ctx(),live(),sel.length===tray().length,sel.map(o=>o.inst.fin));
   const ph0=playsHit(F.R,{}), ones0=F.R.ones||0; noteBank(F.R,faces,sel.map(o=>o.inst.type),live(),fins);
   if(has('bulldog')&&(F.R.ones||0)>ones0){ F.wall=(F.wall||0)+(F.R.ones-ones0); updGuard(); trigFx('The Bulldog','+'+(F.R.ones-ones0),0); }
-  playsHit(F.R,{}).filter(k=>!ph0.includes(k)).forEach((k,i)=>setTimeout(()=>{ const lv=playLv(G.plays,k); floatEl($('#odds'),`${PLAYS[k].name}: +${lv} margin, +${PLAYS[k].per*lv} odds`,'odds play'); SFX.ding(4+i); tip('plays'); },350+i*300));
+  playsHit(F.R,{}).filter(k=>!ph0.includes(k)).forEach((k,i)=>setTimeout(()=>{ const lv=playLv(G.plays,k); floatEl($('#eq'),`${PLAYS[k].name}!`,'odds play'); SFX.ding(4+i); tip('plays'); },350+i*300));
   { const gl=sel.filter(o=>o.inst.fin==='goldleaf'&&(o.face===1||o.face==='C'||o.face==='G')).length; if(gl) setTimeout(()=>addGold(gl,$('#cash')),300); if(fins.includes('lucky')) setTimeout(()=>toast('<b class="g">Lucky.</b> +4 odds.'),200); }
   for(let i=0;i<sel.length;i++){ const o=sel[i]; o.banked=true; setSel(o,false); if(o.label) o.label.style.opacity=0;
     if(o.hidden) setFaces(o,o.face,false);
@@ -1370,7 +1377,7 @@ async function bank(){
   const oa=curOdds().odds; updOdds(oa>oddsBefore); if(oa>oddsBefore){ SFX.odds(); tip('odds'); }
   const left=tray().length;
   if(left){ const T=tgt(); msg(F.pScore>T?`Over by <b>${F.pScore-T}</b>. Every die from here still counts.`:`<b>${F.pScore}</b> against <b>${T}</b>. ${left} ${left===1?'die':'dice'} left.`); F.labelsOn=false; await sleep(260); await tip('again'); await playerThrow(); }
-  else { await sleep(420); await endRound(); }
+  else { const T=tgt(); msg(`You finished on <b>${F.pScore}</b> against <b>${T}</b>.`); await sleep(420); await endRound(); }
 }
 function crownFx(o){ const p=dieScreen(o); sparksAt(p, o.face==='G'?'#ff5c6f':null);
   const tag=t=>floatAt({x:p.x,y:p.y-34},t,'odds');
@@ -1383,7 +1390,7 @@ function crownFx(o){ const p=dieScreen(o); sparksAt(p, o.face==='G'?'#ff5c6f':nu
   if(has('goldcrown')) addGold(1,$('#cash')); }
 // what you'd be paid right now, if the round ended on your current score
 const tgt=(R)=>F.target==null?null:targetOf(F.oScore,R||F.R||newRound(),live(),F.opp.q,{drink:F.drink,intent:F.intent,shook:F.shook||0});
-function oddsEnv(done){ return {shook:F.shook||0,guard:F.wall||0,deeds:G.deeds||[],intent:F.intent,raise:F.raise?1:0,plays:G.plays||{},drink:F.drink||{},finished:G.bag.filter(d=>d.fin).length,fixOdds:hasFix(G,'felt')?1:0,bag:G.bag.length,round:F.round,q:F.opp.q,raid:isRaid(F.opp,F.round,F.phase2),gold:G.gold,rep:G.rep,tally:G.tally,wins:F.wins||0,margin:F.target!=null?tgt()-F.pScore-(has('bouncer')?1:0):0,score:F.pScore,done,grow:G.grow||{},oppHalf:F.oppHp<=F.oppMax/2,wonOnce:!!F.wonOnce}; }
+function oddsEnv(done){ return {rack:G.charms,shook:F.shook||0,guard:F.wall||0,deeds:G.deeds||[],intent:F.intent,raise:F.raise?1:0,plays:G.plays||{},drink:F.drink||{},finished:G.bag.filter(d=>d.fin).length,fixOdds:hasFix(G,'felt')?1:0,bag:G.bag.length,round:F.round,q:F.opp.q,raid:isRaid(F.opp,F.round,F.phase2),gold:G.gold,rep:G.rep,tally:G.tally,wins:F.wins||0,margin:F.target!=null?tgt()-F.pScore-(has('bouncer')?1:0):0,score:F.pScore,done,grow:G.grow||{},oppHalf:F.oppHp<=F.oppMax/2,wonOnce:!!F.wonOnce}; }
 function curOdds(done,R){ return oddsOf(R||F.R||newRound(),live(),oddsEnv(done)); }
 function updOdds(bump,sel){ if(!F) return; let R2=null, add=0; if(sel&&sel.length&&!sel.some(o=>o.hidden)){ R2={...(F.R||newRound())}; noteBank(R2,sel.map(o=>o.face),sel.map(o=>o.inst.type),live(),finsOf(sel)); add=bankVals(sel.map(o=>o.face),ctx(),live(),sel.length===tray().length,sel.map(o=>o.inst.fin)).reduce((a,b)=>a+b,0); }
   const full=!!(sel&&sel.length&&sel.length===tray().length); F._prevR=R2; const O=curOdds(full,R2), eq=$('#eq'); if(!eq) return;
@@ -1412,7 +1419,7 @@ function oddsHelp(){ if(!F) return; const O=curOdds(false,F._prevR), parts=[['Ev
 // payout: every piece of your odds fires in order, its charm jumps in the rack, the brass climbs a step
 const CHARM_BY_NAME={}; Object.keys(CHARMS).forEach(k=>CHARM_BY_NAME[CHARMS[k].name]=k);
 function trigFx(label,val,i){ const k=CHARM_BY_NAME[label], tk=k&&$(`#rack .token[data-c="${k}"]`);
-  if(tk){ tk.classList.remove('trig'); void tk.offsetWidth; tk.classList.add('trig'); floatEl(tk,val,val[0]==='\u00d7'||val[0]==='\u00f7'?'mult small':'odds small'); }
+  if(tk){ tk.classList.remove('trig'); void tk.offsetWidth; tk.classList.add('trig'); const r=tk.getBoundingClientRect(); floatAt({x:r.left+r.width/2,y:r.bottom+16},val,val[0]==='\u00d7'||val[0]==='\u00f7'?'mult small':'odds small'); }
   SFX.ding(i); }
 SFX.ding=(i=0)=>{ if(!AC||!sfxOn) return; const st=[0,2,4,7,9,12,14,16,19,21,24,26,28,31][Math.min(13,i)], f=523*Math.pow(2,st/12), t=AC.currentTime; osc('triangle',f,t,.32,.06,null,sfxBus,.003); osc('sine',f*2,t,.22,.025,null,sfxBus,.003); thock(420+st*14,.14,0,.04,.3); };
 async function payOut(r){ const big=r.dmg>=40||r.odds>=5; document.body.classList.add('paying'); setTimeout(()=>document.body.classList.remove('paying'),2600+(r.parts||[]).length*260);
@@ -1427,7 +1434,7 @@ async function payOut(r){ const big=r.dmg>=40||r.odds>=5; document.body.classLis
     ov.textContent=fmtOdds(r.odds); pm.textContent=`\u00d7 ${fmtOdds(r.odds)} odds`; SFX.odds(); await sleep(380);
     const steps=Math.min(14,Math.max(4,Math.round(Math.log2(r.dmg+1)*2))); for(let i=1;i<=steps;i++){ pv.textContent=Math.round(r.dmg*i/steps); SFX.tick(i); await sleep(40); } }
   pv.textContent=r.dmg; el.classList.add('hit'); pm.textContent=r.capped?'Iron Jaw cap':stakesOf(oddsEnv(true))>1?`hit \u00d7${stakesOf(oddsEnv(true))} stakes`:r.pot?`hit \u00b7 +${r.pot} margin`:'hit'; SFX.ching(big); setTimeout(SFX.hit,120);
-  msg(`<span class="big win">Hit for ${r.dmg}</span><span class="math">${r.margin}${r.odds!==1?` \u00d7 ${fmtOdds(r.odds)} odds`:''} \u00b7 you ${F.pScore} vs ${r.oFinal}</span>`);
+  { const st=stakesOf(oddsEnv(true)); msg(`<span class="big win">Hit for ${r.dmg}</span><span class="math">${r.margin}${r.odds!==1?` \u00d7 ${fmtOdds(r.odds)} odds`:''}${st>1?` \u00d7 ${st} stakes`:''} \u00b7 you ${F.pScore} vs ${r.oFinal}</span>`); }
   setTimeout(()=>el.remove(),900); }
 // reloaded after the last bank: the result is already decided, so skip straight to settling it
 async function resumeEnd(e){ sweepDice(); fitCam(); busy=true;
@@ -1729,7 +1736,7 @@ function refreshTabs(){ const b=$('#bagbtn .tc'); if(b&&G) b.textContent=G.bag.l
 let popEl=null;
 function closePop(){ if(popEl){ popEl.remove(); popEl=null; } hideTip(); }
 function charmPop(t){ if(popEl&&popEl._for===t){ closePop(); return; } closePop(); hideTip(); SFX.paper(); const c=t.dataset.c, d=CHARMS[c], v=Math.floor(d.price/2);
-  popEl=h(`<div class="pop paper pe qpop">${tipHTML(t)}<div class="row" style="margin-top:12px;justify-content:flex-start"><button class="btn ghost small" id="pleft" aria-label="Move left">\u25c0</button><button class="btn ghost small" id="pright" aria-label="Move right">\u25b6</button><button class="btn small" id="psell">Sell for $${v}</button><button class="btn ghost small" id="pclose">Keep it</button></div><div class="pd" style="margin-top:6px;font-size:12px;opacity:.8">Order matters: your payout runs left to right, and The Mimic copies the charm to its right.</div></div>`);
+  popEl=h(`<div class="pop paper pe qpop">${tipHTML(t)}<div class="row" style="margin-top:12px;justify-content:flex-start"><button class="btn ghost small" id="pleft" aria-label="Move left">\u25c0</button><button class="btn ghost small" id="pright" aria-label="Move right">\u25b6</button><button class="btn small" id="psell">Sell for $${v}</button><button class="btn ghost small" id="pclose">Keep it</button></div><div class="pd" style="margin-top:6px;font-size:12px;opacity:.8">Order only matters for The Mimic: it copies the charm to its right.</div></div>`);
   document.body.appendChild(popEl); popEl._for=t; placePop(popEl,t);
   popEl.querySelector('#pclose').onclick=closePop;
   const mv=dir=>{ const i=G.charms.indexOf(c), j=i+dir; if(i<0||j<0||j>=G.charms.length||offbook(G,G.charms[j])!==offbook(G,c)) return; [G.charms[i],G.charms[j]]=[G.charms[j],G.charms[i]]; SFX.tok(); closePop(); refreshRack(); saveRun(); if(F) updOdds(); const nt=$(`#rack .token[data-c="${c}"]`); if(nt) charmPop(nt); };
@@ -1868,7 +1875,7 @@ function renderVictory(){ clearLabels(); SFX.fanfare(); const lv=G.limit||0, up=
 
 /* ================= THE BARTENDER'S NOTES (first-run tutorial) ================= */
 const TIPS={
-  map:['Pick your seat','On the left is the whole room: climb from the bottom to the owner at the top, one row at a time along the lines. Glowing stops are the ones you can take now. Plan ahead: bars and back alleys are where you shop and heal. Each card is a door you can take next. A seat shows who’s sitting there: their nerve, how hard they hit, how they play, their tags and their dice. Hover anything on it to read it. Some floors have a third door. After the first floor you can also walk past a table: no fight, no pay, but you pick up a chit.'],
+  map:['The floor plan','Climb from the bottom row to the owner at the top, one row at a time along the lines. Glowing stops are the ones you can take. Tap one to see which card it is, tap again (or Take) to go. Everything else is in Menu, House Rules.'],
   quirk:['Read their tags','Their tags are on their nameplate, top right. Hover one (or click it) to read it. “Hits ×” is how hard their wins land on you.'],
   counter:['House rules','Bosses and the sharks upstairs draw a house rule at random every night. Maybe your × odds don’t count, maybe one of your charms sits out each round. Same face, different trick, so read their tags every time.'],
   boss:['The owner','Bosses have a signature move, printed on their door before you sit down, and it gets worse once they’re at half nerve. No boss goes down in one round: the first big hit stops at half, and then the gloves come off.'],
@@ -1898,8 +1905,10 @@ const TIPS={
 };
 function tipsSeen(){ try{ return JSON.parse(localStorage.getItem('lr-tips')||'{}'); }catch(e){ return {}; } }
 let tipOpen=0;
+// Balatro-light: only two notes ever pop up (how to bank, how the map works). Everything else lives in House Rules.
+const TIP_ON=['yours','map'];
 function tip(id){
-  if(!SET.tips) return Promise.resolve(); const seen=tipsSeen(); if(seen[id]) return Promise.resolve();
+  if(!SET.tips||!TIP_ON.includes(id)) return Promise.resolve(); const seen=tipsSeen(); if(seen[id]) return Promise.resolve();
   seen[id]=1; try{ localStorage.setItem('lr-tips',JSON.stringify(seen)); }catch(e){}
   return new Promise(res=>{ const [t,b]=TIPS[id]; tipOpen++; PAUSED=true; SFX.paper();
     const el=h(`<div class="overlay tipov pe" role="dialog" aria-label="${t}"><div class="napkin paper"><div class="sc">The bartender leans over</div><div class="nt">${t}</div><div class="nb">${kw(b)}</div>

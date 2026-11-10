@@ -9,7 +9,7 @@ DEV=DESKTOP
 names=sys.argv[1].split(',') if len(sys.argv)>1 and sys.argv[1] else list(DEV)
 SHOT='shots' in sys.argv
 SCREENS=[('title',None),('map',"G.charms=['tip','hothand','penny','cut']; G.gold=40; renderMap()"),
- ('reward',"F={opp:{n:'Mopey Earl'},kind:'F'}; renderReward('F')"),('shop',"G.gold=2; renderShop()"),('rest',"renderRest()"),('event',"renderEvent()"),
+ ('reward',"F={opp:{n:'Mopey Earl'},kind:'F'}; renderReward('F')"),('shop',"G.gold=2; renderShop()"),('bossrw',"G.act=0; renderReward('B')"),('map5',"G.floor=5; G.trail=[0,0,0,0,0]; G.preview={}; renderMap()"),('rest',"renderRest()"),('event',"renderEvent()"),
  ('menu',"openMenu('night')"),('bag',"setMenuTab('bag')"),('settings',"setMenuTab('settings')"),
  ('over',"document.querySelectorAll('.overlay').forEach(o=>o.remove()); closeMenu&&closeMenu(); G.stats.bosses=['Big Sal']; F={opp:{n:'Lefty'},labelsOn:false,kind:'F'}; renderOver()")]
 AUD=r"""(()=>{ const P=[]; const R=e=>e.getBoundingClientRect(); const vis=e=>{const b=R(e); const s=getComputedStyle(e); return b.width>2&&b.height>2&&s.visibility!=='hidden'&&+s.opacity>0.05};
@@ -27,7 +27,7 @@ AUD=r"""(()=>{ const P=[]; const R=e=>e.getBoundingClientRect(); const vis=e=>{c
  return P; })()"""
 async def fight(pg,setup):
   await pg.evaluate("document.querySelectorAll('.overlay').forEach(o=>o.remove()); SET.tips=false; SET.auto=false; tipOpen=0; PAUSED=false; newRun('run'); G.charms=['tip','penny']; "+setup+"; renderMap()"); await pg.wait_for_timeout(600)
-  await pg.click('#stops .entry')
+  await pg.click('#stops .entry'); await pg.wait_for_timeout(150); await pg.evaluate("(()=>{ const e=document.querySelector('#stops .entry.sel'); if(e) e.click(); })()")
   for i in range(40):
     await pg.wait_for_timeout(500)
     if await pg.query_selector('#bank') and not await pg.evaluate('busy'): break

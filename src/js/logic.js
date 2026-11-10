@@ -509,7 +509,7 @@ function oddsOf(R,charms,env){ const P=[]; let add=0, mul=1; const has=c=>charms
   if(has('straight')&&cnt[1]&&cnt[2]&&cnt[3]) M('Straight Shooter',5);
   if(has('bigshot')) M('Big Shot',Math.pow(1.2,charms.length));
   if(env.intent==='tilted') M('On tilt',2);
-  { const mi=charms.indexOf('mimic'), rt=mi>=0&&charms[mi+1]; if(rt&&CHARMS[rt]){ const pt=P.find(x=>x[0]===CHARMS[rt].name&&typeof x[2]==='number'); if(pt){ if(pt[1][0]==='×') M('The Mimic',pt[2]); else A('The Mimic',pt[2]); } } }
+  { const rk=env.rack||charms, mi=charms.includes('mimic')?rk.indexOf('mimic'):-1, rt=mi>=0&&rk[mi+1]; if(rt&&CHARMS[rt]&&charms.includes(rt)){ const pt=P.find(x=>x[0]===CHARMS[rt].name&&typeof x[2]==='number'); if(pt){ if(pt[1][0]==='×') M('The Mimic',pt[2]); else A('The Mimic',pt[2]); } } }
   if(env.raid) return {odds:1, add:0, mul:1, parts:[['Raid! Odds forced to','=1']], raid:true};
   let odds=Math.max(1,Math.max(1,1+add)*mul); const oq=env.q||[];
   if(oq.includes('flat')&&mul!==1){ odds=Math.max(1,1+add); P.push(['Flat Rate','× off']); }

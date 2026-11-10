@@ -12,7 +12,7 @@ async def main():
         await pg.evaluate("renderShop(); 0"); await pg.wait_for_timeout(300)
         got['bar'] = await pg.evaluate("musicScene()")
         await pg.evaluate("renderMap(); 0"); await pg.wait_for_timeout(300)
-        await pg.click('#stops .entry'); await pg.wait_for_timeout(800)
+        await pg.click('#stops .entry'); await pg.wait_for_timeout(150); await pg.evaluate("(()=>{ const e=document.querySelector('#stops .entry.sel'); if(e) e.click(); })()"); await pg.wait_for_timeout(800)
         got['fight'] = await pg.evaluate("musicScene()")
         await pg.evaluate("F.kind='B'; 0")
         got['boss'] = await pg.evaluate("musicScene()")

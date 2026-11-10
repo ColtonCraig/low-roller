@@ -7,6 +7,7 @@ from playwright.async_api import async_playwright  # re-exported for the test sc
 INDEX = (pathlib.Path(__file__).resolve().parents[2] / 'src' / 'index.html').as_uri()
 # Desktop window sizes we ship for (inner size of the game window).
 DESKTOP = {
+  'tablet': (1000, 703),   # Colton's phone/tablet, landscape (the artifact viewer)
   'deck':   (1280, 800),   # Steam Deck, and the minimum window height we allow
   'hd':     (1280, 720),   # minimum window size
   'laptop': (1366, 768),
