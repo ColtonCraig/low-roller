@@ -164,6 +164,12 @@ const SKINS={
   bomb:  {bg:'#e8402a',edge:'#7a1408',ink:'#fff3dc'},
   goose: {bg:'#f6f2ea',edge:'#c8bca4',ink:'#3a5a8a'},
   boxcar:{bg:'#2f7a4a',edge:'#164228',ink:'#f4ead2'},
+  royal: {bg:'#4a1a6a',edge:'#2a0a40',ink:'#f0c040'},
+  deuce: {bg:'#e8e0cc',edge:'#a89a7a',ink:'#2a6a3a'},
+  payday:{bg:'#2e6a3c',edge:'#173a20',ink:'#f2e6b8'},
+  trick: {bg:'#1a1a1e',edge:'#000000',ink:'#e84a5a'},
+  bubbly:{bg:'#f2e2a8',edge:'#b8a060',ink:'#6a4a10'},
+  viper: {bg:'#3a6a2a',edge:'#1a3a10',ink:'#e8f070'},
 };
 const PIPS={1:[[1,1]],2:[[0,0],[2,2]],3:[[0,0],[1,1],[2,2]],4:[[0,0],[2,0],[0,2],[2,2]],5:[[0,0],[2,0],[1,1],[0,2],[2,2]],6:[[0,0],[2,0],[0,1],[2,1],[0,2],[2,2]]};
 const usesPips=type=>DT[type].faces.every(f=>f==='C'||f<=6);
@@ -528,60 +534,60 @@ const LOOKX={
   'Mopey Earl':   {body:'stout',outfit:'vest',braces:0x3a2a1a,notie:true,hat:'cap',hatc:0x4a3f30,eyes:'sleepy',brow:'sad',beard:'stubble',hunch:.6,hold:'glass'},
   'Twitchy Dee':  {body:'slim',outfit:'vest',braces:0x7a1424,hair:'spiky',hairc:0x2a1a10,eyes:'wide',toothpick:true,jitter:1,bowtie:true,tie:0x2a6a8a},
   'Old Gus':      {body:'avg',outfit:'suit',pat:'tweed',hat:'bowler',hair:'sides',hairc:0xb8b0a0,stache:'walrus',glasses:'gold',hunch:.45,headShape:'long'},
-  'Two-Beer Tina':{body:'slim',outfit:'dress',pat:'sequin',hat:'headband',band:0xc9a14a,feather:0xff9ac0,hair:'bob',hairc:0x1a0e0a,neck:'beads',lips:0xff4a6a,hold:'glass'},
+  'Tipsy Tina':{body:'slim',outfit:'dress',pat:'sequin',hat:'headband',band:0xc9a14a,feather:0xff9ac0,hair:'bob',hairc:0x1a0e0a,neck:'beads',lips:0xff4a6a,hold:'glass'},
   'Lefty':        {body:'slim',outfit:'suit',pat:'pin',hat:'fedora',tilt:-.15,stache:'thin',patch:1,toothpick:true},
   'Dutch':        {body:'stout',outfit:'vest',pat:'check',braces:0x2a1a10,hat:'fedora',beard:'full',hairc:0x5a3a1a,chain:true,rings:true,nose:'big'},
   'Knuckles':     {body:'broad',outfit:'tank',shirt:0xe0d8c8,hat:'cap',nose:'broken',scar:true,knuckles:true,brow:'angry',headShape:'square'},
   'Pearl':        {body:'slim',outfit:'dress',hat:'none',hair:'bob',hairc:0xf2ecdc,neck:'pearls',gloves:0xf2ecdc,longGloves:true,hold:'holder',lips:0xff3a5a,noBlink:true},
   'The Twins':    {body:'slim',outfit:'suit',hat:'bowler',twins:1,stache:'thin'},
   'Big Sal':      {body:'stout',outfit:'suit',pat:'pin',double:true,chin:'double',stache:'walrus',rings:true,chain:true,headShape:'big',flower:0xc0303f},
-  'Silk Vincent': {body:'slim',outfit:'suit',pat:'velvet',hat:'none',hair:'slick',hairc:0x0a0a12,stache:'thin',neck:'scarf',scarf:0xf0e8e0,flower:0xf0f0f0,notie:true},
+  'Silky Vince': {body:'slim',outfit:'suit',pat:'velvet',hat:'none',hair:'slick',hairc:0x0a0a12,stache:'thin',neck:'scarf',scarf:0xf0e8e0,flower:0xf0f0f0,notie:true},
   'Madame Ora':   {body:'avg',outfit:'dress',hat:'turban',hatc:0x5a1a6a,earrings:true,neck:'beads',hold:'ball',boa:0x6a2a7a},
-  'Cigarette Dot':{body:'slim',outfit:'dress',hat:'pillbox',hatc:0xc0303f,hair:'curls',hairc:0x3a1a0a,tray:true,cig:true,lips:0xff4a5a},
-  'Professor Hale':{body:'slim',outfit:'suit',pat:'tweed',hat:'bowler',glasses:'round',beard:'goatee',bowtie:true,headShape:'egg',pencil:true},
+  'Dot':{body:'slim',outfit:'dress',hat:'pillbox',hatc:0xc0303f,hair:'curls',hairc:0x3a1a0a,tray:true,cig:true,lips:0xff4a5a},
+  'The Professor':{body:'slim',outfit:'suit',pat:'tweed',hat:'bowler',glasses:'round',beard:'goatee',bowtie:true,headShape:'egg',pencil:true},
   'Vito':         {body:'broad',outfit:'suit',pat:'pin',hat:'fedora',tilt:.12,grin:true,scar:true,toothpick:true,double:true},
   'Mr. Velvet':   {body:'avg',outfit:'suit',pat:'velvet',hat:'top',band:0x5a1a2a,monocle:true,neck:'cravat',notie:true,stache:'handlebar',flower:0xff6a9a,gloves:0xf0eadc},
   'Lady Chance':  {body:'slim',outfit:'dress',pat:'sequin',hat:'headband',band:0xf0bd4a,feather:0x1a1a1a,hair:'bob',hairc:0x0a0a0a,neck:'dice',gloves:0x1a1a1a,longGloves:true,lips:0xff3a5a},
-  'The Twins Again':{body:'slim',outfit:'suit',hat:'bowler',twins:1,stache:'thin'},
+  'The Doubles':{body:'slim',outfit:'suit',hat:'bowler',twins:1,stache:'thin'},
   'The Countess': {body:'slim',outfit:'dress',pat:'velvet',hat:'tiara',hair:'bun',hairc:0x0a0a10,cape:0x3a0a14,neck:'black',gloves:0x0a0a0a,longGloves:true,lips:0xc01030,headShape:'long'},
-  'The Accountant':{body:'slim',outfit:'vest',braces:0x2a2a2a,hat:'visor',glasses:'round',hair:'sides',hairc:0x3a3a3a,pencil:true,hold:'ledger',stache:'thin',headShape:'egg'},
+  'Specs':{body:'slim',outfit:'vest',braces:0x2a2a2a,hat:'visor',glasses:'round',hair:'sides',hairc:0x3a3a3a,pencil:true,hold:'ledger',stache:'thin',headShape:'egg'},
   'Miss Ruby':    {body:'slim',outfit:'dress',pat:'velvet',hat:'none',hair:'curls',hairc:0x7a1a1a,neck:'ruby',hold:'holder',lips:0xff2a3a,earrings:true,gloves:0x8a1a2a,longGloves:true},
-  'Tony Two-Times':{body:'avg',outfit:'suit',pat:'pin',double:true,hat:'fedora',tilt:-.1,stache:'thin',toothpick:true,chain:true,rings:true},
-  'Ledger Lou':   {body:'avg',outfit:'vest',braces:0x1a2a3a,hat:'cap',hatc:0x2a2a30,glasses:'round',pencil:true,hold:'ledger',beard:'stubble'},
+  'Tony Twice':{body:'avg',outfit:'suit',pat:'pin',double:true,hat:'fedora',tilt:-.1,stache:'thin',toothpick:true,chain:true,rings:true},
+  'Inky Lou':   {body:'avg',outfit:'vest',braces:0x1a2a3a,hat:'cap',hatc:0x2a2a30,glasses:'round',pencil:true,hold:'ledger',beard:'stubble'},
   'The Widow':    {coat:0x221c26,body:'slim',outfit:'dress',hat:'veil',neck:'black',gloves:0x0a0a0a,longGloves:true,hold:'holder',headShape:'long',noBlink:true},
   'Bruno':        {shirt:0x5a5650,coat:0x3a3630,body:'broad',outfit:'tank',shirt:0x2a2a2a,hat:'none',hair:'bald',nose:'broken',brow:'angry',chin:'double',headShape:'square',rings:true},
   'The Enforcer': {coat:0x2e2a26,body:'broad',outfit:'turtle',hat:'cap',hatc:0x1a1a1a,holster:true,scar:true,brow:'angry',knuckles:true,patch:-1,headShape:'square'},
   'The Ledger':   {coat:0x2a2a34,body:'avg',outfit:'suit',hat:'top',band:0x1a1a1a,glasses:'gold',hold:'ledger',cape:0x0e0e12,headShape:'long',stache:'thin',noBlink:true},
   'Sleepy Joe':   {body:'stout',outfit:'vest',braces:0x5a4a3a,notie:true,hat:'cap',hatc:0x5a5048,eyes:'sleepy',brow:'sad',hair:'sides',hairc:0x8a7a6a,hunch:.7,hold:'glass',nose:'big'},
-  'Copper Penny': {body:'slim',outfit:'dress',pat:'check',hat:'cloche',hatc:0x8a4a20,hair:'bob',hairc:0xc0602a,neck:'beads',lips:0xff7a4a,earrings:true,jitter:.4},
-  'Loudmouth Lenny':{body:'broad',outfit:'suit',pat:'check',hat:'fedora',tilt:.2,grin:true,cigar:true,eyes:'wide',chain:true,flower:0xffd27a,double:true},
+  'Kitty': {body:'slim',outfit:'dress',pat:'check',hat:'cloche',hatc:0x8a4a20,hair:'bob',hairc:0xc0602a,neck:'beads',lips:0xff7a4a,earrings:true,jitter:.4},
+  'Lenny':{body:'broad',outfit:'suit',pat:'check',hat:'fedora',tilt:.2,grin:true,cigar:true,eyes:'wide',chain:true,flower:0xffd27a,double:true},
   'Mama Rosa':    {body:'stout',outfit:'dress',pat:'check',hat:'none',hair:'bun',hairc:0x4a4a4a,chin:'double',neck:'pearls',earrings:true,lips:0xc0303f,glasses:'round',headShape:'big',hold:'glass'},
   'Dapper Dan':   {body:'slim',outfit:'tux',hat:'top',band:0x2a3a5a,stache:'thin',bowtie:true,tie:0x1a1a1a,gloves:0xf0eadc,flower:0xf0f0f0,monocle:true},
   'Miss Fortune': {body:'slim',outfit:'dress',pat:'sequin',hat:'turban',hatc:0x2a3a8a,earrings:true,neck:'dice',hold:'ball',lips:0xb04aff,noBlink:true,boa:0x3a1a6a},
   'The Magpie':   {body:'slim',outfit:'cape',cape:0x0a0a10,hat:'cloche',hatc:0x0a0a0a,hair:'bob',hairc:0x0a0a0a,neck:'ruby',rings:true,gloves:0x1a1a1a,longGloves:true,lips:0xe0e0f0,eyes:'narrow'},
-  'The Great Zambini':{body:'avg',outfit:'tux',hat:'top',band:0x7a1424,cape:0x5a0a1a,stache:'handlebar',beard:'goatee',gloves:0xf0eadc,eyes:'wide',brow:'angry',headShape:'long',rings:true},
+  'Zambini':{body:'avg',outfit:'tux',hat:'top',band:0x7a1424,cape:0x5a0a1a,stache:'handlebar',beard:'goatee',gloves:0xf0eadc,eyes:'wide',brow:'angry',headShape:'long',rings:true},
   'Officer Kelly':{body:'stout',outfit:'turtle',hat:'cap',hatc:0x1a2a4a,stache:'walrus',nose:'big',holster:true,chin:'double',brow:'angry',hairc:0xc0602a},
   'Lucky Lucy':   {body:'slim',outfit:'dress',pat:'sequin',hat:'headband',band:0x2a8a4a,feather:0xa0ffb0,hair:'curls',hairc:0xe8c060,neck:'beads',lips:0xff4a6a,hold:'holder',earrings:true},
-  'Doc Mortimer': {body:'slim',outfit:'vest',braces:0x3a3a3a,shirt:0xe8e4dc,hat:'none',hair:'bald',glasses:'round',beard:'goatee',hunch:.4,headShape:'egg',pencil:true,gloves:0xe8e4dc},
-  'The Commissioner':{body:'broad',outfit:'suit',pat:'pin',hat:'cap',hatc:0x1a2236,stache:'walrus',chin:'double',chain:true,rings:true,cigar:true,brow:'angry',headShape:'square',flower:0x2a4a8a},
-  'Cousin Vinnie':{body:'avg',outfit:'vest',braces:0x5a2a1a,hat:'cap',hatc:0x4a3a2a,beard:'stubble',nose:'big',grin:true,toothpick:true},
+  'Doc': {body:'slim',outfit:'vest',braces:0x3a3a3a,shirt:0xe8e4dc,hat:'none',hair:'bald',glasses:'round',beard:'goatee',hunch:.4,headShape:'egg',pencil:true,gloves:0xe8e4dc},
+  'The Chief':{body:'broad',outfit:'suit',pat:'pin',hat:'cap',hatc:0x1a2236,stache:'walrus',chin:'double',chain:true,rings:true,cigar:true,brow:'angry',headShape:'square',flower:0x2a4a8a},
+  'Nickels':{body:'avg',outfit:'vest',braces:0x5a2a1a,hat:'cap',hatc:0x4a3a2a,beard:'stubble',nose:'big',grin:true,toothpick:true},
   'Granny Mae':   {body:'stout',outfit:'dress',pat:'check',hat:'none',hair:'bun',hairc:0xd8d4cc,glasses:'round',neck:'pearls',hunch:.5,hold:'glass',headShape:'big'},
-  'Slim Jim':     {body:'slim',outfit:'suit',pat:'pin',hat:'fedora',tilt:.18,toothpick:true,eyes:'narrow',chin:'narrow',headShape:'long'},
-  'Dockside Rosie':{body:'broad',outfit:'tank',shirt:0xe0d8c8,hat:'headband',band:0xc0303f,feather:0xc0303f,hair:'curls',hairc:0x7a2a1a,lips:0xc0303f,knuckles:true,brow:'angry'},
+  'Slim':     {body:'slim',outfit:'suit',pat:'pin',hat:'fedora',tilt:.18,toothpick:true,eyes:'narrow',chin:'narrow',headShape:'long'},
+  'Hattie':{body:'broad',outfit:'tank',shirt:0xe0d8c8,hat:'headband',band:0xc0303f,feather:0xc0303f,hair:'curls',hairc:0x7a2a1a,lips:0xc0303f,knuckles:true,brow:'angry'},
   'The Kid':      {body:'slim',outfit:'vest',braces:0x2a4a6a,hat:'cap',hatc:0x6a3a1a,hair:'spiky',hairc:0xc0802a,eyes:'wide',jitter:.6,bowtie:true,tie:0xc0303f},
-  'Mister Smiles':{body:'avg',outfit:'tux',hat:'top',band:0xffd27a,grin:true,eyes:'wide',monocle:true,gloves:0xf0eadc,flower:0xffd27a,noBlink:true},
-  'Fingers Malone':{body:'slim',outfit:'suit',pat:'check',hat:'fedora',tilt:-.12,gloves:0x1a1a1a,rings:true,stache:'thin',eyes:'narrow'},
+  'Smiley':{body:'avg',outfit:'tux',hat:'top',band:0xffd27a,grin:true,eyes:'wide',monocle:true,gloves:0xf0eadc,flower:0xffd27a,noBlink:true},
+  'Fingers':{body:'slim',outfit:'suit',pat:'check',hat:'fedora',tilt:-.12,gloves:0x1a1a1a,rings:true,stache:'thin',eyes:'narrow'},
   'Velma':        {body:'slim',outfit:'dress',pat:'sequin',hat:'headband',band:0xffd27a,feather:0xff9ac0,hair:'bob',hairc:0x2a0e0a,neck:'beads',lips:0xff4a8a,earrings:true,gloves:0xf0eadc,longGloves:true},
   'Rocco':        {body:'broad',outfit:'suit',pat:'pin',hat:'fedora',tilt:.08,scar:true,nose:'broken',brow:'angry',chin:'double',knuckles:true,rings:true},
   'Sister Grace': {body:'slim',outfit:'dress',hat:'veil',neck:'black',glasses:'round',gloves:0xf0eadc,hold:'ball',noBlink:true},
-  'Ironjaw Pete': {body:'broad',outfit:'turtle',hat:'cap',hatc:0x2a2a2a,chin:'double',scar:true,brow:'angry',nose:'broken',headShape:'square',knuckles:true},
+  'Iron Pete': {body:'broad',outfit:'turtle',hat:'cap',hatc:0x2a2a2a,chin:'double',scar:true,brow:'angry',nose:'broken',headShape:'square',knuckles:true},
   'Madame Noir':  {body:'slim',outfit:'cape',cape:0x0a0a12,hat:'veil',neck:'ruby',gloves:0x0a0a0a,longGloves:true,lips:0x8a0a2a,hold:'holder',eyes:'narrow'},
   'Benny Blue':   {body:'avg',outfit:'vest',braces:0x1a2a5a,hat:'fedora',tilt:-.2,stache:'thin',bowtie:true,tie:0x2a4a9a,eyes:'sleepy',cig:true},
-  'Judge Harlan': {body:'stout',outfit:'cape',cape:0x0e0e10,hat:'none',hair:'sides',hairc:0xd0ccc4,glasses:'gold',brow:'angry',chin:'double',headShape:'big',stache:'walrus'},
-  'Lola Diamond': {body:'slim',outfit:'dress',pat:'sequin',hat:'headband',band:0xe0f0ff,feather:0xffffff,hair:'bob',hairc:0xf0e0b0,neck:'pearls',rings:true,earrings:true,lips:0xff3a5a,hold:'holder'},
-  'Mack Cutter':  {body:'avg',outfit:'suit',pat:'pin',hat:'fedora',tilt:.1,grin:true,scar:true,toothpick:true,chain:true,stache:'thin'},
+  'The Judge': {body:'stout',outfit:'cape',cape:0x0e0e10,hat:'none',hair:'sides',hairc:0xd0ccc4,glasses:'gold',brow:'angry',chin:'double',headShape:'big',stache:'walrus'},
+  'Lola': {body:'slim',outfit:'dress',pat:'sequin',hat:'headband',band:0xe0f0ff,feather:0xffffff,hair:'bob',hairc:0xf0e0b0,neck:'pearls',rings:true,earrings:true,lips:0xff3a5a,hold:'holder'},
+  'Mack':  {body:'avg',outfit:'suit',pat:'pin',hat:'fedora',tilt:.1,grin:true,scar:true,toothpick:true,chain:true,stache:'thin'},
   'The Undertaker':{body:'slim',outfit:'tux',hat:'top',band:0x1a1a1a,cape:0x0a0a0c,headShape:'long',chin:'narrow',brow:'sad',gloves:0x1a1a1a,noBlink:true},
-  'Diamond Dolores':{body:'stout',outfit:'dress',pat:'velvet',hat:'tiara',hair:'curls',hairc:0xe8e0d0,neck:'pearls',rings:true,earrings:true,lips:0xc01060,gloves:0xf0eadc,longGloves:true,boa:0xf0e8f0},
+  'Dolores':{body:'stout',outfit:'dress',pat:'velvet',hat:'tiara',hair:'curls',hairc:0xe8e0d0,neck:'pearls',rings:true,earrings:true,lips:0xc01060,gloves:0xf0eadc,longGloves:true,boa:0xf0e8f0},
   'The House':    {coat:0x1e1a20,body:'stout',outfit:'tux',hat:'top',band:0xc9a14a,monocle:true,gloves:0xf0eadc,cape:0x1a0a10,rings:true,chin:'double',stache:'handlebar',headShape:'big'},
 };
 // arm poses: [shoulderX, shoulderZ, elbowX, handX]
@@ -693,7 +699,7 @@ async function cupThrow(){ // raise, shake, tip. returns mouth position + direct
 async function cupRest(){ if(!foe) return; const u=foe.userData; await Promise.all([poseArm(u.armR,POSE.restR,420), foeLean(0,420)]); u.mode='idle'; }
 
 /* ---------- 3D dice ---------- */
-const SHAPE={gilded:'cube',bomb:'cube',goose:'cube',boxcar:'cube',devil:'cube',d6:'cube',loaded:'cube',glass:'cube',twin:'cube',d8:'octa',ember:'octa',pebble:'tetra',gamble:'dodeca',coin:'coin'};
+const SHAPE={royal:'cube',deuce:'cube',payday:'cube',trick:'cube',bubbly:'cube',viper:'cube',gilded:'cube',bomb:'cube',goose:'cube',boxcar:'cube',devil:'cube',d6:'cube',loaded:'cube',glass:'cube',twin:'cube',d8:'octa',ember:'octa',pebble:'tetra',gamble:'dodeca',coin:'coin'};
 const shapeOf=t=>SHAPE[t]||'cube';
 const SHAPE_NAME={cube:'Cube',octa:'Octahedron',tetra:'Pyramid',dodeca:'Dodecahedron',coin:'Coin'};
 const geoCache={};
@@ -871,7 +877,7 @@ function onHover(ev){ if(ev.pointerType!=='mouse') return; const o=pickDie(ev); 
 let G=null, F=null, busy=false;
 function best(){ try{return +localStorage.getItem('lr-best')||0}catch(e){return 0} }
 function saveBest(n){ try{ if(n>best()) localStorage.setItem('lr-best',n);}catch(e){} }
-function newRun(mode,lv,pk){ lv=lv||0; pk=pk||'regular'; const P=pocketStart(pk), hp0=P.hp+limitMods(lv).startHp; G={mode,limit:lv,pocket:pk,bossIx:[rnd(2),rnd(2),rnd(2)],act:0,tab:0,lap:0,floor:0,path:[],floors:genFloors(),hp:hp0,maxHp:hp0,gold:P.gold,rep:0,tally:0,filePrice:5,gildPrice:P.gild,bag:P.bag.map(newDie),charms:P.charms.slice(),won:0,used:{},stats:{rounds:0,won:0,lost:0,push:0,dealt:0,taken:0,best:0,bestWho:'',low:50,rich:10,bosses:[],crowns:0,banked:0,earned:0,spent:0,t0:Date.now()}}; if(P.ruby) gildDie(G.bag[0]); }
+function newRun(mode,lv,pk){ lv=lv||0; pk=pk||'regular'; const P=pocketStart(pk), hp0=P.hp+limitMods(lv).startHp; G={grow:{},mode,limit:lv,pocket:pk,bossIx:[rnd(2),rnd(2),rnd(2)],act:0,tab:0,lap:0,floor:0,path:[],floors:genFloors(),hp:hp0,maxHp:hp0,gold:P.gold,rep:0,tally:0,filePrice:5,gildPrice:P.gild,bag:P.bag.map(newDie),charms:P.charms.slice(),won:0,used:{},stats:{rounds:0,won:0,lost:0,push:0,dealt:0,taken:0,best:0,bestWho:'',low:50,rich:10,bosses:[],crowns:0,banked:0,earned:0,spent:0,t0:Date.now()}}; if(P.ruby) gildDie(G.bag[0]); }
 const has=c=>G.charms.includes(c);
 const LIM=()=>limitMods(G&&G.limit);
 const BOSS=()=>bossOf(G.act,(G.bossIx||[])[G.act]||0);
@@ -923,7 +929,11 @@ function facesHTML(d){ const base=DT[d.type].faces, f=facesOf(d); return '<span 
 function charmList(sell){ const w=h('<div class="list cols2"></div>'); if(!G.charms.length){ w.innerHTML='<div class="empty">No charms yet. Every table offers one.</div>'; return w; }
   G.charms.forEach(c=>{ const d=CHARMS[c]; const el=h(`<div class="item">${chipHTML(c)}<div><div class="iname">${d.name} <span class="tier ${d.tier}">${TIER_NAME[d.tier]}</span></div><div class="idesc">${kw(charmDesc(c))}</div>${sell?`<button class="btn ghost small sell">Sell $${Math.floor(d.price/2)}</button>`:''}</div></div>`);
     if(sell) el.querySelector('.sell').onclick=()=>sell(c); w.appendChild(el); }); return w; }
-function charmDesc(c){ const d=CHARMS[c].desc; if(c==='tally'&&G&&G.charms.includes('tally')) return `${d} <b class="tier u">${G.tally} notch${G.tally===1?'':'es'}</b>`; return d; }
+function charmDesc(c){ const d=CHARMS[c].desc, gr=G&&G.grow||{}; if(!G||!G.charms.includes(c)) return d;
+  if(c==='tally') return `${d} <b class="tier u">${G.tally} notch${G.tally===1?'':'es'}</b>`;
+  if(c==='piggy') return `${d} <b class="tier u">Now +${gr.piggy||0} odds</b>`;
+  if(c==='moonshine') return `${d} <b class="tier u">Now \u00d7${fmtOdds(1+.1*(gr.moon||0))} odds</b>`;
+  return d; }
 
 /* ================= CHARM ICONS: little 3D props, rendered once in the room's own light and pixel grid ================= */
 const CHARM_ICON={}, SVC_ICON={}, DIE_ICON={}; const ICON_PX=36;
@@ -945,6 +955,22 @@ function buildCharmIcons(){ if(!GL_OK||!R) return; try{
   const card=(g,x,y,z,rz,ry,pip)=>{ add(g,Bx(.5,.72,.04),CREAM,x,y,z,0,ry,rz); add(g,Bx(.14,.2,.02),pip,x+Math.cos(rz+Math.PI/2)*0+0,y,z+.03,0,ry,rz); };
   const die=(g,x,y,z,ry)=>{ add(g,Bx(.44,.44,.44),CREAM,x,y,z,0,ry,0); add(g,Bx(.15,.03,.15),RED,x,y+.225,z,0,ry,0); };
   const B={
+    collection(g){ for(let k=0;k<3;k++) add(g,Bx(.5,.62,.06),k===1?GOLD:CREAM,(k-1)*.28,.42+k*.02,-k*.08,0,0,(k-1)*.22); add(g,Bx(.16,.16,.02),RED,0,.48,.04); },
+    consolation(g){ add(g,Sp(.24,8),RED,-.15,.5,0); add(g,Sp(.24,8),RED,.15,.5,0); add(g,Co(.34,.42,8),RED,0,.22,0,Math.PI); },
+    savings(g){ add(g,Bx(.86,.5,.04),M(0xd8e8c0),0,.44,0); add(g,Bx(.7,.36,.05),M(0x3a7a4a),0,.44,0); add(g,Cy(.12,.12,.06,10),GOLD,0,.44,.04,Math.PI/2); },
+    shiner(g){ add(g,Sp(.34,10),M(0xe8c0a0),0,.5,0); add(g,To(.16,.06,10),M(0x4a2a6a),.12,.56,.28); add(g,Sp(.11,6),M(0x2a1a3a),.12,.56,.3); },
+    evens(g){ die(g,-.26,.3,0,.3); die(g,.26,.3,.05,-.3); add(g,Bx(.15,.03,.15),M(0x2a6a3a),-.26,.53,0,0,.3,0); },
+    deuces(g){ card(g,-.18,.45,0,.2,0,M(0x2a6a3a)); card(g,.18,.45,.05,-.2,0,M(0x2a6a3a)); },
+    piggy(g){ add(g,Sp(.4,10),M(0xf0a0b0),0,.42,0,0,0,0,1.2,1,1); add(g,Cy(.12,.12,.12,8),M(0xe08a9a),.5,.44,0,0,0,Math.PI/2); for(const x of [-.25,.25]) add(g,Cy(.07,.07,.2,6),M(0xe08a9a),x,.1,0); add(g,Bx(.18,.03,.06),BLACK,0,.82,0); },
+    tommy(g){ add(g,Bx(1.1,.16,.16),BLACK,0,.5,0); add(g,Cy(.22,.22,.12,14),BLACK,-.05,.3,0,Math.PI/2); add(g,Bx(.34,.2,.14),WOOD,-.5,.45,0); add(g,Bx(.14,.24,.12),WOOD,.18,.32,0); },
+    jackpot(g){ for(let k=0;k<3;k++){ add(g,Bx(.3,.44,.1),CREAM,(k-1)*.32,.46,0); add(g,Bx(.14,.24,.02),RED,(k-1)*.32,.46,.06); } add(g,Bx(1.06,.08,.12),GOLD,0,.72,0); },
+    longshot(g){ add(g,Cy(.03,.03,1.1,6),SILVER,0,.5,0,0,0,.9); add(g,To(.22,.04,12),RED,.32,.72,0); add(g,Sp(.06,6),RED,.32,.72,0); },
+    finisher(g){ add(g,Bx(.6,.12,.12),SILVER,0,.5,0); add(g,Bx(.18,.4,.18),BLACK,-.36,.42,0); add(g,Co(.08,.2,6),SILVER,.38,.5,0,0,0,-Math.PI/2); },
+    moonshine(g){ add(g,Cy(.32,.38,.6,10),M(0xc8b48a),0,.36,0); add(g,Cy(.1,.12,.16,8),M(0xc8b48a),0,.74,0); add(g,To(.12,.04,8),BROWN,.36,.5,0,0,Math.PI/2); add(g,Bx(.3,.12,.02),BLACK,0,.4,.36); },
+    crownroom(g){ add(g,Bx(.8,.7,.06),M(0x5a1a2a),0,.44,0); add(g,Cy(.28,.28,.16,10,true),GOLD,0,.5,.08); for(let k=0;k<3;k++) add(g,Co(.07,.2,5),GOLD,(k-1)*.18,.66,.08); },
+    straight(g){ for(let k=0;k<3;k++){ add(g,Bx(.34,.34,.34),CREAM,(k-1)*.36,.24+k*.14,0); add(g,Bx(.1,.02,.1),RED,(k-1)*.36,.42+k*.14,0); } },
+    ringer(g){ add(g,Cy(.28,.28,.16,10,true),GOLD,0,.4,0); for(let k=0;k<3;k++) add(g,Co(.07,.2,5),GOLD,(k-1)*.18,.56,0); add(g,Bx(.7,.08,.08),RED,0,.46,.2,0,0,.7); },
+    bigshot(g){ add(g,Cy(.22,.3,.44,10),BLACK,0,.5,0); add(g,Cy(.5,.5,.04,14),BLACK,0,.28,0); add(g,Cy(.23,.23,.08,10),RED,0,.34,0); add(g,Co(.08,.16,5),GOLD,0,.84,0); },
     jewels(g){ add(g,Cy(.42,.42,.26,12,true),GOLD,0,.34,0); for(let k=0;k<5;k++){ const an=k*Math.PI*2/5; add(g,Co(.1,.28,5),GOLD,Math.cos(an)*.38,.6,Math.sin(an)*.38); add(g,Sp(.05,5),GOLD,Math.cos(an)*.38,.76,Math.sin(an)*.38); } add(g,Sp(.11,6),E(0xe8455a,.5),0,.36,.42); },
     slowburn(g){ add(g,Cy(.17,.19,.72),CREAM,0,.46,0); add(g,Cy(.02,.02,.1,4),BLACK,0,.86,0); add(g,Co(.09,.26,6),E(0xffa030),0,1.02,0); add(g,Sp(.06,5),E(0xfff0a0),0,.95,0); add(g,Cy(.3,.34,.08),GOLD,0,.13,0); },
     cut(g){ add(g,Bx(.52,.74,.04),CREAM,-.14,.5,0,0,0,.28); add(g,Bx(.52,.74,.04),CREAM,.14,.5,.05,0,0,-.22); add(g,Sp(.1,6),RED,.16,.52,.08); add(g,Bx(.05,.32,.02),BLACK,.16,.52,.09,0,0,.8); },
@@ -1180,7 +1206,7 @@ function acts(x){ const a=$('#acts'); if(a) a.innerHTML=x; }
 function setP(v){ const e=$('#pscore'); if(e) e.innerHTML=`${v<0?'\u2212'+(-v):v}<small>You</small>`; }
 function setVs(v){ const e=$('#vs'); if(e) e.innerHTML=`${v}<small>Them</small>`; }
 function updOpp(){ const b=$('#obar'); if(!b) return; b.style.width=Math.max(0,100*F.oppHp/F.oppMax)+'%'; $('#otxt').textContent=`${Math.max(0,F.oppHp)}`; }
-function ctx(){ return {cold:F.opp.q.includes('cold')&&F.throwNo<=1,penny:has('penny')&&F.throwNo<=1}; }
+function ctx(){ return {cold:F.opp.q.includes('cold')&&F.throwNo<=1,penny:has('penny')&&F.throwNo<=1,deuces:has('deuces'),ringer:has('ringer')}; }
 const tray=()=>F.you.filter(o=>!o.banked);
 function minBank(){ return F.opp.q.includes('fuse')&&F.throwNo===1?Math.min(2,tray().length):1; }
 
@@ -1280,7 +1306,7 @@ function crownFx(o){ const p=dieScreen(o); sparksAt(p, o.face==='G'?'#ff5c6f':nu
   if(has('goldcrown')) addGold(1,$('#cash')); }
 // what you'd be paid right now, if the round ended on your current score
 const tgt=(R)=>F.target==null?null:theirScore(F.oScore,R||F.R||newRound(),G.charms,F.opp.q);
-function oddsEnv(done){ return {bag:G.bag.length,round:F.round,q:F.opp.q,raid:isRaid(F.opp,F.round,F.phase2),gold:G.gold,rep:G.rep,tally:G.tally,wins:F.wins||0,margin:F.target!=null?tgt()-F.pScore-(has('bouncer')?1:0):0,score:F.pScore,done}; }
+function oddsEnv(done){ return {bag:G.bag.length,round:F.round,q:F.opp.q,raid:isRaid(F.opp,F.round,F.phase2),gold:G.gold,rep:G.rep,tally:G.tally,wins:F.wins||0,margin:F.target!=null?tgt()-F.pScore-(has('bouncer')?1:0):0,score:F.pScore,done,grow:G.grow||{},oppHalf:F.oppHp<=F.oppMax/2}; }
 function curOdds(done,R){ return oddsOf(R||F.R||newRound(),G.charms,oddsEnv(done)); }
 function updOdds(bump,sel){ if(!F) return; let R2=null, add=0; if(sel&&sel.length&&!sel.some(o=>o.hidden)){ R2={...(F.R||newRound())}; noteBank(R2,sel.map(o=>o.face),sel.map(o=>o.inst.type),G.charms); add=bankVals(sel.map(o=>o.face),ctx(),G.charms,sel.length===tray().length).reduce((a,b)=>a+b,0); }
   const full=!!(sel&&sel.length&&sel.length===tray().length); F._prevR=R2; const O=curOdds(full,R2), eq=$('#eq'); if(!eq) return;
@@ -1332,6 +1358,7 @@ async function endRound(){
   if(r.winner==='them'&&!r.free){ F.streak=(F.streak||0)+1; F.wins=0; if(F.opp.q.includes('heavy')) F.heavy=true; }
   else if(r.winner==='you'){ F.streak=0; F.wins=(F.wins||0)+1; }
   G.stats.rounds++;
+  { const pay=(F.R&&F.R.payday||0)+afterRound(G,r.winner,!!r.free); if(pay) addGold(pay,$('#cash')); if(r.winner==='them'&&has('piggy')&&!r.free) refreshRack(); }
   if(r.winner==='you'){ G.stats.won++; G.stats.dealt+=r.dmg; if(r.dmg>G.stats.best){ G.stats.best=r.dmg; G.stats.bestWho=F.opp.n; }
     await payOut(r);
     F.oppHp-=r.dmg; updOpp(); floatEl($('#obar'),'−'+r.dmg,'dmg'+(r.dmg>=F.oppMax*.5?' big':'')); shake(Math.min(.4,.1+.3*r.dmg/F.oppMax)); foeRecoil();
@@ -1364,7 +1391,7 @@ async function endRound(){
 async function gatherTheirs(list){ await Promise.all(list.map((o,i)=>{ const m=o.mesh, s=m.position.clone(); const t=new THREE.Vector3((s.x>0?1:-1)*8,-.8,s.z);
   return sleep(Math.max(0,4.2-Math.abs(s.x))*70).then(()=>anim(620,k=>{ m.position.x=lerp(s.x,t.x,ease.in(k)); m.position.y=k<.9?s.y+.7*Math.min(1,k/.4):lerp(s.y+.7,t.y,(k-.9)/.1); m.rotation.z-=.08*k; })).then(()=>disposeDie(o)); })); }
 async function fightWon(){ const F0kind=F.kind;
-  G.won++; if(F.kind==='B'){ (G.stats.bosses=G.stats.bosses||[]).push(F.opp.n); G.rep++; store('lr-bossn',bossTotal()+1); } if(has('tally')) G.tally++; if(G.mode==='endless') saveBest(G.won); if(has('cigar')) heal(6,$('#hpbar'));
+  G.won++; if(F.kind==='B'){ (G.stats.bosses=G.stats.bosses||[]).push(F.opp.n); G.rep++; store('lr-bossn',bossTotal()+1); } if(has('tally')) G.tally++; if(G.mode==='endless') saveBest(G.won); if(has('cigar')) heal(6,$('#hpbar')); { const i=afterFight(G); if(i) addGold(i,$('#cash')); }
   G._quick=F.round<=3;
   { const last=F.kind==='B'&&G.mode==='run'&&G.act===2; G.fight=null; G.rw=last?null:{kind:F.kind}; G.at=last?'victory':'reward'; saveRun(); }
   SFX.fanfare(); banner(F.kind==='B'?`${F.opp.short||ACTS[G.act].short} folds`:'Cleaned out',F.opp.n);

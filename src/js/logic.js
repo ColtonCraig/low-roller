@@ -18,8 +18,14 @@ const DT = {
   bomb:   {name:'Cherry Bomb', short:'CB', skin:'bomb',   faces:[1,2,3,4,5,'C'],              tier:'u', price:8,  desc:'Bank its crown: the opponent loses 8% of their max nerve on the spot (at least 2).'},
   goose:  {name:'Goose Egg',   short:'00', skin:'goose',  faces:[0,0,4,5,6,'C'],              tier:'c', price:5,  desc:'Two faces are 0. The rest run high.'},
   boxcar: {name:'Boxcars',     short:'BX', skin:'boxcar', faces:[1,1,1,6,6,'C'],              tier:'c', price:6,  desc:'Three 1s, two 6s. Pairs well with Snake Eyes.'},
+  royal:  {name:'Royal Die',   short:'RY', skin:'royal',  faces:['C','C','C',4,5,6],          tier:'u', price:8,  desc:'Three crowns, three high faces. Feast or famine.'},
+  deuce:  {name:'Deuce',       short:'22', skin:'deuce',  faces:[2,2,2,2,6,'C'],              tier:'c', price:5,  desc:'Four 2s. Pairs with Deuces Wild.'},
+  payday: {name:'Payday',      short:'$1', skin:'payday', faces:[1,2,3,4,5,'C'],              tier:'u', price:7,  desc:'Bank its 1: you get $1.'},
+  trick:  {name:'Trick Die',   short:'TR', skin:'trick',  faces:[-1,3,6,6,6,'C'],             tier:'c', price:5,  desc:'Half the time it’s a 6. The −1 takes a point off your score.'},
+  bubbly: {name:'Champagne',   short:'CH', skin:'bubbly', faces:[1,2,3,4,5,'C'],              tier:'u', price:9,  desc:'Bank its crown: you get ×1.5 odds this round. Stacks.'},
+  viper:  {name:'Viper',       short:'VP', skin:'viper',  faces:[1,1,'C',5,6,6],              tier:'r', price:12, desc:'Bank its 1: you get ×1.5 odds this round. Stacks.'},
 };
-const SHOP_DICE=['pebble','loaded','glass','ember','devil','coin','twin','gamble','gilded','bomb','goose','boxcar','shaved'];
+const SHOP_DICE=['royal','deuce','payday','trick','bubbly','viper','pebble','loaded','glass','ember','devil','coin','twin','gamble','gilded','bomb','goose','boxcar','shaved'];
 // tier: c common · u uncommon · r rare.  Odds math: (1 + every +odds) × every ×odds
 const CHARMS={
   jewels:  {name:'Crown Jewels',  ico:'♛', tier:'c', price:6, desc:'You get +1 odds per crown you bank.'},
@@ -57,6 +63,23 @@ const CHARMS={
   doubledown:{name:'Double Down', ico:'2', tier:'r', price:16, rare:true, desc:'Won your last round at this table: you get ×2 odds.'},
   highstakes:{name:'High Stakes', ico:'×', tier:'r', price:15, rare:true, desc:'You get ×2 odds, but rounds you lose hit you 1 harder.'},
   bookie:  {name:'The Bookie',    ico:'§', tier:'r', price:15, rare:true, desc:'Win a round: you get $1 per point you won by, up to $8.'},
+  // builds: more charms = more odds; streaks that grow; three of a kind; straights; even faces; crowns going negative
+  collection:{name:'The Collection',ico:'≡', tier:'c', price:5, desc:'You get +3 odds per charm you hold (this one too).'},
+  consolation:{name:'Consolation',  ico:'♥', tier:'c', price:4, desc:'Lose a round: you get $2.'},
+  savings: {name:'Savings Bond',  ico:'%', tier:'c', price:6, desc:'Win a fight: you get $1 per $10 you’re holding (up to $5).'},
+  shiner:  {name:'Shiner',        ico:'○', tier:'c', price:5, desc:'Finish a round without banking a crown: you get +6 odds.'},
+  evens:   {name:'Even Money',    ico:'2', tier:'c', price:5, desc:'You get +2 odds per 2, 4 or 6 you bank.'},
+  deuces:  {name:'Deuces Wild',   ico:'2', tier:'u', price:9, desc:'Your 2s score 1.'},
+  piggy:   {name:'Piggy Bank',    ico:'P', tier:'u', price:8, desc:'Grows +3 odds every round you win. Loses half when you lose one.'},
+  tommy:   {name:'Tommy Gun',     ico:'⁞', tier:'u', price:8, desc:'You get +2 odds per die in your final bank each round.'},
+  jackpot: {name:'Jackpot',       ico:'7', tier:'u', price:9, desc:'Bank three of a kind in one go: you get ×2 odds this round.'},
+  longshot:{name:'Long Shot',     ico:'1', tier:'u', price:8, desc:'Win a round by 1 or 2: you get ×2.5 odds.'},
+  finisher:{name:'The Finisher',  ico:'F', tier:'u', price:9, desc:'Opponent at half nerve or less: you get ×2 odds.'},
+  moonshine:{name:'Moonshine',    ico:'M', tier:'r', price:16, rare:true, desc:'Ferments: gains ×0.05 odds every round you win. Never resets.'},
+  crownroom:{name:'The Crown Room',ico:'♛', tier:'r', price:16, rare:true, desc:'Bank 3 or more crowns in a round: you get ×3 odds.'},
+  straight:{name:'Straight Shooter',ico:'S', tier:'r', price:15, rare:true, desc:'Bank a 1, a 2 and a 3 in the same round: you get ×3 odds.'},
+  ringer:  {name:'The Ringer',    ico:'R', tier:'r', price:17, rare:true, desc:'Your crowns score −1 instead of 0, but your 1s score 3.'},
+  bigshot: {name:'Big Shot',      ico:'★', tier:'r', price:16, rare:true, desc:'You get ×1.2 odds per charm you hold (this one too).'},
 };
 const TIER_NAME={c:'Common',u:'Uncommon',r:'Rare'};
 const MAX_CHARMS=5;
@@ -88,7 +111,7 @@ const ACTS=[
     {n:'Twitchy Dee',  s:'Rolls before you sit down.', hp:9,  bag:['pebble','d6','d6','d8','d8','d6'], t:2, look:{coat:0x4a2f3d,hat:'none',eye:0x9ff5d3}},
     {n:'Old Gus',      s:'Been here since ’26.',   hp:10, bag:['d6','d6','d6','d6','d6','d6'], t:2, q:['haze'], look:{coat:0x2e3a2c,hat:'bowler',eye:0xfff1c0,mustache:true}}],
   t2:[
-    {n:'Two-Beer Tina',s:'Hand in your pocket.',       hp:13, bag:['d6','d6','d6','d6','d6','loaded'], t:2, q:['steal'], look:{coat:0x6b1f35,hat:'cloche',eye:0xff8fb0}},
+    {n:'Tipsy Tina',s:'Hand in your pocket.',       hp:13, bag:['d6','d6','d6','d6','d6','loaded'], t:2, q:['steal'], look:{coat:0x6b1f35,hat:'cloche',eye:0xff8fb0}},
     {n:'Lefty',        s:'Deals with his right.',      hp:12, bag:['d6','d6','d6','d6','d6','loaded'], t:2, q:['cold'], look:{coat:0x1f2f45,hat:'fedora',eye:0x8fd3ff,mustache:true}},
     {n:'Dutch',        s:'Bets the deed.',             hp:15, bag:['loaded','loaded','pebble','d6','d6','d6'], t:2, q:['grudge'], look:{coat:0x3d2a1a,hat:'fedora',eye:0xffb547,band:0x2a4a6a}}],
   e1:[{n:'Knuckles',   s:'Bouncer. Off the clock.',    hp:15, bag:['d6','d6','d6','d6','d6','loaded'], t:2, q:['fuse'], look:{coat:0x222222,hat:'cap',eye:0xff5470,scale:1.15}}],
@@ -101,27 +124,27 @@ const ACTS=[
   half:{add:['edge'],t:1,big:'The gloves come off',small:'Two swaps a round, and House Edge',note:'Every round she swaps one of your dice for an Octo. At half nerve it’s two, and she adds House Edge.'},
   foes:{
   t1:[
-    {n:'Silk Vincent', s:'Smells like money.',         hp:16, bag:['loaded','d6','d6','d6','pebble','d6'], t:2, q:['tax'], look:{coat:0x3a1030,hat:'fedora',eye:0xff9ad0}},
+    {n:'Silky Vince', s:'Smells like money.',         hp:16, bag:['loaded','d6','d6','d6','pebble','d6'], t:2, q:['tax'], look:{coat:0x3a1030,hat:'fedora',eye:0xff9ad0}},
     {n:'Madame Ora',   s:'Already knows your roll.',   hp:17, bag:['glass','d6','d6','loaded','d6','d6'], t:2, q:['haze'], look:{coat:0x2a1a3a,hat:'cloche',hatc:0x4a1a4a,eye:0xc9a0ff}},
-    {n:'Cigarette Dot',s:'Sells smokes, steals change.',hp:17, bag:['d6','d6','loaded','pebble','d6','d6'], t:2, q:['steal','nervous'], look:{coat:0x7a1c2a,hat:'cloche',eye:0xffd27a}}],
+    {n:'Dot',s:'Sells smokes, steals change.',hp:17, bag:['d6','d6','loaded','pebble','d6','d6'], t:2, q:['steal','nervous'], look:{coat:0x7a1c2a,hat:'cloche',eye:0xffd27a}}],
   t2:[
-    {n:'Professor Hale',s:'Counts on his fingers. Fast.',hp:20, bag:['loaded','loaded','pebble','d6','d6','d6'], t:1, q:['fuse'], look:{coat:0x2a2a2a,hat:'bowler',eye:0x9ff5d3,mustache:true}},
+    {n:'The Professor',s:'Counts on his fingers. Fast.',hp:20, bag:['loaded','loaded','pebble','d6','d6','d6'], t:1, q:['fuse'], look:{coat:0x2a2a2a,hat:'bowler',eye:0x9ff5d3,mustache:true}},
     {n:'Vito',         s:'Smiles with his mouth only.', hp:21, bag:['loaded','loaded','d6','d6','d6','pebble'], t:1, q:['edge'], look:{coat:0x1a1a2a,hat:'fedora',eye:0xff5470}},
     {n:'Mr. Velvet',   s:'Named the room after himself.',hp:22, bag:['loaded','pebble','pebble','d6','d6','d6'], t:1, q:['cold','hot'], look:{coat:0x5a0f1f,hat:'fedora',band:0xc9a14a,eye:0xffb547}}],
   e1:[{n:'Lady Chance',  s:'Wears your luck as a necklace.',hp:26, bag:['pebble','pebble','loaded','loaded','d6','d6'], t:1, q:['steal','haze','hot'], look:{coat:0x1a0a20,hat:'cloche',hatc:0x6a1a5a,eye:0xff9ad0,scale:1.1}}],
-  e2:[{n:'The Twins Again',s:'Back for your wallet.',     hp:24, bag:['loaded','loaded','pebble','pebble','d6','glass'], t:1, q:['pair','steal'], look:{coat:0x1e3a36,hat:'bowler',eye:0x9ff5d3,scale:1.15}}],
+  e2:[{n:'The Doubles',s:'Back for your wallet.',     hp:24, bag:['loaded','loaded','pebble','pebble','d6','glass'], t:1, q:['pair','steal'], look:{coat:0x1e3a36,hat:'bowler',eye:0x9ff5d3,scale:1.15}}],
   boss:{n:'The Countess', s:'Holds court upstairs', hp:42, bag:['loaded','loaded','loaded','pebble','d6','glass'], t:1, q:[], boss:true, sig:'gift', look:{coat:0x2a0a1a,hat:'cloche',hatc:0x12040c,eye:0xd8a8ff,scale:1.3,tie:0xc9a14a}}}},
  {name:'The Back Room', boss:'The House', short:'The House', bossD:'Nobody’s seen his face. Ties go to the house.', est:'NO EXIT',
   theme:{felt:'#2c383a',trim:'#8f8a74',wall:'#262824',pat:'#3a3c36',style:'brick',lamp:0xd8ffe4,neon:'NO EXIT',neonC:'#ff2a2a',neonT:'#ffb0a0'},
   half:{add:['haze'],t:1,big:'The house always wins',small:'Haze, and he plays tight',note:'Every tie goes to him and costs you 2. At half nerve he adds Haze and plays tight.'},
   foes:{
   t1:[
-    {n:'The Accountant',s:'Counts your breaths.',      hp:24, bag:['loaded','loaded','pebble','coin','d6','d6'], t:1, q:['edge','grudge'], look:{coat:0x2a2a2a,hat:'bowler',eye:0xfff1c0,mustache:true}},
+    {n:'Specs',s:'Counts your breaths.',      hp:24, bag:['loaded','loaded','pebble','coin','d6','d6'], t:1, q:['edge','grudge'], look:{coat:0x2a2a2a,hat:'bowler',eye:0xfff1c0,mustache:true}},
     {n:'Miss Ruby',    s:'Collects debts.',            hp:25, bag:['pebble','pebble','loaded','coin','d6','d6'], t:1, q:['steal'], look:{coat:0x8a1020,hat:'cloche',eye:0xff5470}},
-    {n:'Tony Two-Times',s:'Never says anything once.',  hp:26, bag:['loaded','loaded','loaded','coin','d6','d6'], t:1, q:['haze','hot'], look:{coat:0x1a1a1a,hat:'fedora',eye:0xff8a1a}}],
+    {n:'Tony Twice',s:'Never says anything once.',  hp:26, bag:['loaded','loaded','loaded','coin','d6','d6'], t:1, q:['haze','hot'], look:{coat:0x1a1a1a,hat:'fedora',eye:0xff8a1a}}],
   t2:[
-    {n:'Ledger Lou',   s:'Writes your name down.',      hp:28, bag:['loaded','loaded','pebble','pebble','coin','d6'], t:1, q:['fuse','tax'], look:{coat:0x3a3428,hat:'cap',eye:0xffd27a}},
-    {n:'The Widow',    s:'Third husband this year.',    hp:29, bag:['loaded','pebble','pebble','glass','coin','d6'], t:1, q:['cold','haze'], look:{coat:0x0a0a0a,hat:'cloche',hatc:0x050505,eye:0xffffff}},
+    {n:'Inky Lou',   s:'Writes your name down.',      hp:28, bag:['loaded','loaded','pebble','pebble','coin','d6'], t:1, q:['fuse','tax'], look:{coat:0x3a3428,hat:'cap',eye:0xffd27a}},
+    {n:'The Widow',    s:'Third husband this year.',    hp:26, bag:['loaded','pebble','pebble','glass','coin','d6'], t:1, q:['cold','haze'], look:{coat:0x0a0a0a,hat:'cloche',hatc:0x050505,eye:0xffffff}},
     {n:'Bruno',        s:'Doesn’t play. Collects.',hp:30, bag:['loaded','loaded','loaded','pebble','coin','d6'], t:1, q:['edge','heavy'], look:{coat:0x2a1a10,hat:'cap',eye:0xff5470,scale:1.2}}],
   e1:[{n:'The Enforcer', s:'Cracks his knuckles between throws.',hp:34, bag:['loaded','loaded','loaded','pebble','shaved','coin'], t:1, q:['fuse','steal','heavy'], look:{coat:0x1a1410,hat:'cap',eye:0xff2a2a,scale:1.25}}],
   e2:[{n:'The Ledger',   s:'Nobody leaves owing.',        hp:38, bag:['loaded','loaded','loaded','pebble','pebble','shaved'], t:1, q:['edge','haze'], look:{coat:0x202024,hat:'bowler',eye:0xfff1c0,scale:1.15}}],
@@ -130,43 +153,43 @@ const ACTS=[
 // ---- more faces at every table: extra regulars and sharks, and a second boss for each room ----
 const MORE=[
  {t1:[{n:'Sleepy Joe',   s:'Nods off between throws.',      hp:9,  bag:['d6','d6','d6','d6','d6','d8'], t:2, q:['sloppy'], look:{coat:0x4a4038,hat:'cap',eye:0xffe0a0}}],
-  t2:[{n:'Copper Penny', s:'Copies everything you do.',     hp:13, bag:['d6','d6','d6','d6','loaded','pebble'], t:2, q:['copycat'], look:{coat:0x8a4a20,hat:'cloche',eye:0xffb070}}],
-  e2:[{n:'Loudmouth Lenny',s:'Never shuts up. Never.',      hp:21, bag:['loaded','loaded','pebble','d6','d6','d6'], t:2, q:['loud','hot'], look:{coat:0x6a5a1a,hat:'fedora',eye:0xffd27a}}],
+  t2:[{n:'Kitty', s:'Copies everything you do.',     hp:13, bag:['d6','d6','d6','d6','loaded','pebble'], t:2, q:['copycat'], look:{coat:0x8a4a20,hat:'cloche',eye:0xffb070}}],
+  e2:[{n:'Lenny',s:'Never shuts up. Never.',      hp:21, bag:['loaded','loaded','pebble','d6','d6','d6'], t:2, q:['loud','hot'], look:{coat:0x6a5a1a,hat:'fedora',eye:0xffd27a}}],
   alt:{n:'Mama Rosa', s:'Feeds you, then bleeds you.', hp:40, bag:['loaded','loaded','loaded','pebble','d6','d6'], t:1, q:['tax'], boss:true, sig:'feed', short:'Rosa',
    d:'Runs the kitchen. Every round she wins, she heals what she took.', sigT:'Every round she wins, she heals what she hit you for.',
    half:{add:['hot'],t:1,big:'Second helpings',small:'Rosa adds Hot Streak'}, look:{coat:0x6a1a1a,hat:'none',eye:0xffb547,scale:1.25}}},
  {t1:[{n:'Dapper Dan',   s:'Tie straight. Odds straighter.',hp:17, bag:['loaded','d6','d6','d6','pebble','d6'], t:2, q:['sharp'], look:{coat:0x2a3a5a,hat:'top',eye:0x9fd3ff}}],
   t2:[{n:'Miss Fortune', s:'Reads your dice before they land.',hp:20, bag:['loaded','loaded','pebble','d6','d6','glass'], t:1, q:['copycat','haze'], look:{coat:0x3a1a4a,hat:'turban',eye:0xe0a0ff}}],
   e2:[{n:'The Magpie',   s:'Anything shiny.',               hp:26, bag:['loaded','loaded','pebble','pebble','d6','coin'], t:1, q:['steal','copycat'], look:{coat:0x101418,hat:'cloche',eye:0x9ff5d3}}],
-  alt:{n:'The Great Zambini', s:'Pulls your luck out of a hat.', hp:29, bag:['loaded','loaded','loaded','pebble','d6','glass'], t:1, q:[], boss:true, sig:'trick', short:'Zambini',
+  alt:{n:'Zambini', s:'Pulls your luck out of a hat.', hp:26, bag:['loaded','loaded','loaded','pebble','d6','glass'], t:1, q:[], boss:true, sig:'trick', short:'Zambini',
    d:'A stage magician. Two of your dice land face-down every throw.', sigT:'Two of your dice land face-down every throw. Three at half nerve.',
    half:{add:['copycat'],t:1,big:'For my next trick',small:'Three dice hidden, and Copycat'}, look:{coat:0x1a0a2a,hat:'top',eye:0xc9a0ff,scale:1.25}}},
  {t1:[{n:'Officer Kelly',s:'On the take. On the clock.',    hp:25, bag:['loaded','loaded','pebble','coin','d6','d6'], t:1, q:['loud','tax'], look:{coat:0x1a2a4a,hat:'cap',eye:0x9fd3ff}}],
   t2:[{n:'Lucky Lucy',   s:'Has never lost a tie.',         hp:29, bag:['loaded','loaded','pebble','pebble','coin','d6'], t:1, q:['sharp','hot'], look:{coat:0x2a5a3a,hat:'cloche',eye:0xa0ffb0}}],
-  e1:[{n:'Doc Mortimer', s:'Sews up the losers. Charges extra.',hp:36, bag:['loaded','loaded','pebble','pebble','shaved','coin'], t:1, q:['sharp','grudge','haze'], look:{coat:0xd8d2c4,hat:'none',eye:0xffffff}}],
-  alt:{n:'The Commissioner', s:'Owns the cops. Owns you.', hp:64, bag:['shaved','coin','loaded','loaded','pebble','pebble'], t:1, q:['loud'], boss:true, sig:'raid', short:'The Commissioner',
+  e1:[{n:'Doc', s:'Sews up the losers. Charges extra.',hp:36, bag:['loaded','loaded','pebble','pebble','shaved','coin'], t:1, q:['sharp','grudge','haze'], look:{coat:0xd8d2c4,hat:'none',eye:0xffffff}}],
+  alt:{n:'The Chief', s:'Owns the cops. Owns you.', hp:57, bag:['shaved','coin','loaded','loaded','pebble','pebble'], t:1, q:['loud'], boss:true, sig:'raid', short:'The Chief',
    d:'Every third round is a raid: your odds drop to 1.', sigT:'Every third round is a raid and your odds drop to 1. Every other round at half nerve.',
    half:{add:['sharp'],t:1,big:'Up against the wall',small:'Raids every other round, and Sharp'}, look:{coat:0x1a2236,hat:'cap',eye:0xffd27a,scale:1.35}}}];
 // ---- a deeper bench: enough faces that no two runs meet the same people in the same order ----
 const BENCH=[
- {t1:[{n:'Cousin Vinnie', s:'Owes everybody five bucks.',     hp:9,  bag:['d6','d6','d6','d6','d6','pebble'], t:2, q:['tax'], look:{coat:0x4a3a2a,hat:'cap',eye:0xffd27a}},
+ {t1:[{n:'Nickels', s:'Owes everybody five bucks.',     hp:9,  bag:['d6','d6','d6','d6','d6','pebble'], t:2, q:['tax'], look:{coat:0x4a3a2a,hat:'cap',eye:0xffd27a}},
       {n:'Granny Mae',    s:'Knits between throws.',          hp:10, bag:['d6','d6','d6','d6','d6','d6'], t:2, q:['sloppy'], look:{coat:0x5a4a6a,hat:'none',eye:0xfff1c0}}],
-  t2:[{n:'Slim Jim',      s:'All elbows.',                    hp:13, bag:['d6','d6','d6','d6','d6','loaded'], t:2, q:['fuse'], look:{coat:0x2a3a2a,hat:'fedora',eye:0x9ff5d3}},
-      {n:'Dockside Rosie',s:'Hands like anchors.',            hp:14, bag:['loaded','pebble','d6','d6','d6','d6'], t:2, q:['heavy'], look:{coat:0x2a3a5a,hat:'headband',eye:0xffb070}}],
+  t2:[{n:'Slim',      s:'All elbows.',                    hp:13, bag:['d6','d6','d6','d6','d6','loaded'], t:2, q:['fuse'], look:{coat:0x2a3a2a,hat:'fedora',eye:0x9ff5d3}},
+      {n:'Hattie',s:'Hands like anchors.',            hp:14, bag:['loaded','pebble','d6','d6','d6','d6'], t:2, q:['heavy'], look:{coat:0x2a3a5a,hat:'headband',eye:0xffb070}}],
   e1:[{n:'The Kid',       s:'Too young to be in here.',       hp:14, bag:['pebble','d6','d6','d6','d6','d8'], t:2, q:['hot'], look:{coat:0x5a2a1a,hat:'cap',eye:0x9fd3ff,scale:1.05}}],
-  e2:[{n:'Mister Smiles', s:'Grins the whole time.',          hp:21, bag:['loaded','loaded','pebble','d6','d6','d6'], t:2, q:['sharp','tax'], look:{coat:0x3a2a4a,hat:'top',eye:0xffe070,scale:1.15}}]},
- {t1:[{n:'Fingers Malone',s:'Counts cards. Wrong game.',      hp:16, bag:['loaded','pebble','d6','d6','d6','d6'], t:2, q:['steal'], look:{coat:0x3a3a3a,hat:'fedora',eye:0xc9f0ff}},
+  e2:[{n:'Smiley', s:'Grins the whole time.',          hp:21, bag:['loaded','loaded','pebble','d6','d6','d6'], t:2, q:['sharp','tax'], look:{coat:0x3a2a4a,hat:'top',eye:0xffe070,scale:1.15}}]},
+ {t1:[{n:'Fingers',s:'Counts cards. Wrong game.',      hp:16, bag:['loaded','pebble','d6','d6','d6','d6'], t:2, q:['steal'], look:{coat:0x3a3a3a,hat:'fedora',eye:0xc9f0ff}},
       {n:'Velma',         s:'Sings between rounds.',          hp:17, bag:['loaded','pebble','d6','d6','d6','d6'], t:2, q:['heavy'], look:{coat:0x7a1a3a,hat:'headband',eye:0xffa0d0}}],
   t2:[{n:'Rocco',         s:'Breaks thumbs on weekends.',     hp:21, bag:['loaded','loaded','pebble','d6','d6','d6'], t:1, q:['grudge','tax'], look:{coat:0x2a2420,hat:'fedora',eye:0xff8a5a}},
       {n:'Sister Grace',  s:'Prays for your dice.',           hp:21, bag:['loaded','loaded','pebble','d6','d6','coin'], t:2, q:['haze','edge'], look:{coat:0x18181e,hat:'veil',eye:0xf0f0ff}}],
-  e1:[{n:'Ironjaw Pete',  s:'Never blinks first.',            hp:26, bag:['loaded','loaded','pebble','d6','d6','d6'], t:1, q:['fuse','sharp'], look:{coat:0x3a2a1a,hat:'cap',eye:0xff5470,scale:1.15}}],
+  e1:[{n:'Iron Pete',  s:'Never blinks first.',            hp:26, bag:['loaded','loaded','pebble','d6','d6','d6'], t:1, q:['fuse','sharp'], look:{coat:0x3a2a1a,hat:'cap',eye:0xff5470,scale:1.15}}],
   e2:[{n:'Madame Noir',   s:'Plays with a stranger’s money.', hp:25, bag:['loaded','loaded','pebble','pebble','d6','glass'], t:1, q:['cold','tax'], look:{coat:0x0e0e14,hat:'veil',eye:0xc9a0ff,scale:1.1}}]},
  {t1:[{n:'Benny Blue',    s:'Plays the horn. Badly.',         hp:25, bag:['loaded','loaded','pebble','coin','d6','d6'], t:1, q:['cold','tax'], look:{coat:0x1a2a5a,hat:'fedora',eye:0x8fd3ff}},
-      {n:'Judge Harlan',  s:'Overrules your dice.',           hp:26, bag:['loaded','loaded','pebble','coin','d6','d6'], t:1, q:['sharp','nervous'], look:{coat:0x101010,hat:'none',eye:0xfff1c0}}],
-  t2:[{n:'Lola Diamond',  s:'Wears her winnings.',            hp:29, bag:['loaded','loaded','pebble','pebble','coin','d6'], t:1, q:['steal','hot'], look:{coat:0xd8d2e4,hat:'headband',eye:0xa0e8ff}},
-      {n:'Mack Cutter',   s:'Takes a cut of every pot.',      hp:30, bag:['loaded','loaded','pebble','pebble','d6','d6'], t:2, q:['copycat','tax'], look:{coat:0x2a1a1a,hat:'fedora',eye:0xff7a5a}}],
+      {n:'The Judge',  s:'Overrules your dice.',           hp:26, bag:['loaded','loaded','pebble','coin','d6','d6'], t:1, q:['sharp','nervous'], look:{coat:0x101010,hat:'none',eye:0xfff1c0}}],
+  t2:[{n:'Lola',  s:'Wears her winnings.',            hp:29, bag:['loaded','loaded','pebble','pebble','coin','d6'], t:1, q:['steal','hot'], look:{coat:0xd8d2e4,hat:'headband',eye:0xa0e8ff}},
+      {n:'Mack',   s:'Takes a cut of every pot.',      hp:30, bag:['loaded','loaded','pebble','pebble','d6','d6'], t:2, q:['copycat','tax'], look:{coat:0x2a1a1a,hat:'fedora',eye:0xff7a5a}}],
   e1:[{n:'The Undertaker',s:'Measures you for a box.',        hp:35, bag:['loaded','loaded','pebble','pebble','shaved','d6'], t:1, q:['grudge','heavy','cold'], look:{coat:0x0a0a0c,hat:'top',eye:0xb0ffb0,scale:1.2}}],
-  e2:[{n:'Diamond Dolores',s:'Buys the table, then the room.',hp:37, bag:['shaved','loaded','loaded','pebble','pebble','coin'], t:1, q:['loud','steal'], look:{coat:0xe8e0f0,hat:'tiara',eye:0x9ff5ff,scale:1.2}}]}];
+  e2:[{n:'Dolores',s:'Buys the table, then the room.',hp:37, bag:['shaved','loaded','loaded','pebble','pebble','coin'], t:1, q:['loud','steal'], look:{coat:0xe8e0f0,hat:'tiara',eye:0x9ff5ff,scale:1.2}}]}];
 ACTS.forEach((A,i)=>['t1','t2','e1','e2'].forEach(k=>A.foes[k].push(...BENCH[i][k])));
 const SIG0=['Once she’s at half nerve, she slams the table on your first throw each round: your two best dice get rerolled.','Swaps one of your dice for an Octo every round (two at half nerve).','Every tie goes to the opponent and hits you for 2.'];
 ACTS.forEach((A,i)=>{ const f=A.foes, b=f.boss; b.short=A.short; b.d=A.bossD; b.half=A.half; b.sigT=SIG0[i];
@@ -205,7 +228,7 @@ const FLOORS=[['F'],['F','?'],['F','E','?'],['R','?'],['F','E','?'],['F','E'],['
 const HAND=6;
 // ---- scaling: each act is a new tier, like a new ante. HP grows geometrically, their odds climb. ----
 // nerve at the top of each act for a regular / shark / boss. Regulars and sharks ramp up floor by floor.
-const ACT_HP=[{F:13,E:30,B:52},{F:52,E:74,B:100},{F:132,E:162,B:295}];
+const ACT_HP=[{F:13,E:30,B:52},{F:50,E:70,B:95},{F:125,E:154,B:280}];
 const ACT_ODDS=[1,2,2.5];           // how hard their wins hit you
 const LAP_HP=3;                     // endless: every lap triples nerve
 function rnd(n){return Math.floor(Math.random()*n)}
@@ -214,7 +237,7 @@ function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[
 function facesOf(d){ return (d&&d.f)||DT[typeof d==='string'?d:d.type].faces; }
 function rollFace(type){return pick(DT[type].faces)}
 function rollInst(d){ return pick(facesOf(d)); }
-function effVal(face,ctx){ if(face==='C'||face==='G') return ctx&&ctx.cold?1:0; if(face===1&&ctx&&ctx.penny) return 0; return face; }
+function effVal(face,ctx){ if(face==='C'||face==='G') return ctx&&ctx.cold?1:ctx&&ctx.ringer?-1:0; if(face===1&&ctx&&ctx.penny) return 0; if(face===1&&ctx&&ctx.ringer) return 3; if(face===2&&ctx&&ctx.deuces) return 1; return face; }
 function aiKeep(faces,t){ const e=faces.map(f=>effVal(f)); let k=e.map((v,i)=>v<=t?i:-1).filter(i=>i>=0); if(!k.length){let m=0;e.forEach((v,i)=>{if(v<e[m])m=i});k=[m]} return k; }
 function aiRound(bag,t){ let left=bag.map((_,i)=>i), throws=[], total=0;
   while(left.length){ const faces=left.map(i=>rollFace(bag[i])); const kl=aiKeep(faces,t); const kept=kl.map(k=>left[k]); kl.forEach(k=>total+=effVal(faces[k])); throws.push({left:left.slice(),faces,kept}); left=left.filter(i=>!kept.includes(i)); }
@@ -226,7 +249,7 @@ function makeOpp(def,kind,act,floor,lap,easy,lv){ let bag=def.bag.slice(); for(l
   const LM=limitMods(lv), q=(def.q||[]).slice(); if(LM.extraQ&&(kind==='E'||kind==='B')){ const ex=EXTRA_Q.filter(x=>!q.includes(x)); if(ex.length) q.push(pick(ex)); }
   return {...def, hp:Math.round(oppHP(def,kind,act,floor,lap,easy)*LM.hp), odds:ACT_ODDS[act]+(kind==='B'?1:0)+lap+(act>=1?LM.odds:0), bag, q}; }
 // ---- a round's running record; everything that pays is computed from this ----
-function newRound(){ return {crowns:0,gilt:0,ember:0,roller:0,ones:0,threes:0,glass:0,gold:0,bomb:0,snake:false,singles:true,throws:0}; }
+function newRound(){ return {crowns:0,gilt:0,ember:0,roller:0,ones:0,threes:0,glass:0,gold:0,bomb:0,snake:false,singles:true,throws:0,evens:0,trips:false,lastBank:0,bubbly:0,viper:0,cnt:{}}; }
 function bankVals(faces,ctx,charms,final){ let v=faces.map(f=>effVal(f,ctx));
   if(charms.includes('jacks')){ const s=new Set(); v=faces.map((f,i)=>{ if(s.has(f)) return 0; s.add(f); return v[i]; }); }
   if(final&&charms.includes('lastcall')){ let m=0; v.forEach((x,i)=>{ if(x>v[m]) m=i; }); if(v[m]>0) v[m]-=1; }
@@ -235,7 +258,17 @@ function noteBank(R,faces,types,charms){ R.throws++; if(faces.length!==1) R.sing
   faces.forEach((f,i)=>{ if(f==='G'){ R.crowns++; R.gilt++; } if(f==='C'){ R.crowns++; if(types[i]==='ember') R.ember++; if(types[i]==='gamble') R.roller++; } });
   R.ones+=faces.filter(f=>f===1).length; if(faces.filter(f=>f===1).length>=2) R.snake=true;
   R.threes+=faces.filter(f=>f===3).length; R.glass+=types.filter(t=>t==='glass').length;
-  faces.forEach((f,i)=>{ if(f==='C'&&types[i]==='gilded') R.gold++; if(f==='C'&&types[i]==='bomb') R.bomb++; }); }
+  faces.forEach((f,i)=>{ if(f==='C'&&types[i]==='gilded') R.gold++; if(f==='C'&&types[i]==='bomb') R.bomb++; });
+  R.cnt=R.cnt||{}; const here={}; faces.forEach((f,i)=>{ R.cnt[f]=(R.cnt[f]||0)+1; here[f]=(here[f]||0)+1;
+    if(f===2||f===4||f===6) R.evens=(R.evens||0)+1; if(f==='C'&&types[i]==='bubbly') R.bubbly=(R.bubbly||0)+1; if(f===1&&types[i]==='viper') R.viper=(R.viper||0)+1; if(f===1&&types[i]==='payday') R.payday=(R.payday||0)+1; });
+  if(Object.values(here).some(n=>n>=3)) R.trips=true; R.lastBank=faces.length; }
+// After every round: growing charms and round money. Returns $ to pay out. (game endRound and the sim both call this)
+function afterRound(G,winner,free){ const has=c=>G.charms.includes(c); G.grow=G.grow||{}; let pay=0;
+  if(winner==='you'){ if(has('piggy')) G.grow.piggy=(G.grow.piggy||0)+3; if(has('moonshine')) G.grow.moon=(G.grow.moon||0)+1; }
+  if(winner==='them'&&!free){ if(has('piggy')) G.grow.piggy=Math.floor((G.grow.piggy||0)/2); if(has('consolation')) pay+=2; }
+  return pay; }
+// After a fight you win: interest. Returns $.
+function afterFight(G){ return G.charms.includes('savings')?Math.min(5,Math.floor(Math.max(0,G.gold)/10)):0; }
 // env: {gold, wins (rounds won in a row before this one), margin, score, done}
 function oddsOf(R,charms,env){ const P=[]; let add=0, mul=1; const has=c=>charms.includes(c);
   const A=(l,n)=>{ if(n){ add+=n; P.push([l,'+'+n]); } }, M=(l,x)=>{ if(x!==1){ mul*=x; P.push([l,'×'+(+x.toFixed(1))]); } };
@@ -254,6 +287,12 @@ function oddsOf(R,charms,env){ const P=[]; let add=0, mul=1; const has=c=>charms
   if(has('threes')) A('Three\u2019s Company',2*R.threes);
   if(has('glassblower')) A('Glassblower',2*R.glass);
   if(has('regular')) A('The Regular',Math.max(0,(env.round||1)-1));
+  const grow=env.grow||{}, cnt=R.cnt||{};
+  if(has('collection')) A('The Collection',3*charms.length);
+  if(has('evens')) A('Even Money',2*(R.evens||0));
+  if(has('piggy')) A('Piggy Bank',grow.piggy||0);
+  if(has('tommy')&&env.done) A('Tommy Gun',2*(R.lastBank||0));
+  if(has('shiner')&&env.done&&!R.crowns) A('Shiner',6);
   if(env.q&&env.q.includes('loud')){ add-=2; P.push(['Loudmouth','\u22122']); }
   if(R.roller) M('High Roller',Math.pow(2,R.roller));
   if(has('kingpin')&&R.crowns) M('Kingpin',Math.pow(1.25,R.crowns));
@@ -263,6 +302,15 @@ function oddsOf(R,charms,env){ const P=[]; let add=0, mul=1; const has=c=>charms
   if(has('allin')&&env.done&&R.throws===1) M('All In',3);
   if(has('doubledown')&&(env.wins||0)>=1) M('Double Down',2);
   if(has('highstakes')) M('High Stakes',2);
+  if(R.bubbly) M('Champagne',Math.pow(1.5,R.bubbly));
+  if(R.viper) M('Viper',Math.pow(1.5,R.viper));
+  if(has('jackpot')&&R.trips) M('Jackpot',2);
+  if(has('longshot')&&env.margin>=1&&env.margin<=2) M('Long Shot',2.5);
+  if(has('finisher')&&env.oppHalf) M('The Finisher',2);
+  if(has('moonshine')&&grow.moon) M('Moonshine',1+.05*grow.moon);
+  if(has('crownroom')&&R.crowns>=3) M('The Crown Room',3);
+  if(has('straight')&&cnt[1]&&cnt[2]&&cnt[3]) M('Straight Shooter',3);
+  if(has('bigshot')) M('Big Shot',Math.pow(1.2,charms.length));
   if(env.raid) return {odds:1, add:0, mul:1, parts:[['Raid! Odds forced to','=1']], raid:true};
   return {odds:Math.max(1,Math.max(1,1+add)*mul), add, mul, parts:P}; }
 const fmtOdds=x=>(Math.round(x*10)/10).toString();
@@ -299,4 +347,4 @@ function shopDie(act,not){ const t=rollTier(act,RARITY_DICE), pool=SHOP_DICE.fil
 function shopDice(act,n){ const out=[]; for(let i=0;i<n;i++) out.push(shopDie(act,out)); return out; }
 /*LOGIC-END*/
 
-if(typeof module!=='undefined'&&module.exports) module.exports={rollTier,shopDie,shopDice,RARITY,RARITY_DICE,ACT_HP,DT,SHOP_DICE,CHARMS,QUIRKS,ACTS,FLOORS,HAND,ACT_ODDS,rnd,pick,shuffle,facesOf,rollInst,rollFace,effVal,aiRound,makeOpp,newRound,bankVals,noteBank,oddsOf,settle,genFloors,fileDie,gildDie,canFile,canGild,LIMITS,limitMods,POCKETS,pocketStart,theirScore,breaksAt,bombDmg,isRaid,bossOf,EXTRA_Q};
+if(typeof module!=='undefined'&&module.exports) module.exports={afterRound,afterFight,rollTier,shopDie,shopDice,RARITY,RARITY_DICE,ACT_HP,DT,SHOP_DICE,CHARMS,QUIRKS,ACTS,FLOORS,HAND,ACT_ODDS,rnd,pick,shuffle,facesOf,rollInst,rollFace,effVal,aiRound,makeOpp,newRound,bankVals,noteBank,oddsOf,settle,genFloors,fileDie,gildDie,canFile,canGild,LIMITS,limitMods,POCKETS,pocketStart,theirScore,breaksAt,bombDmg,isRaid,bossOf,EXTRA_Q};

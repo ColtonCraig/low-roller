@@ -167,5 +167,59 @@ test('High Stakes: losses hit 1 harder', () => {
   assert.equal(r.dmg, 4);
 });
 
+// ---- new builds ----
+const bank = (R, faces, types, charms = []) => { L.noteBank(R, faces, types || faces.map(() => 'd6'), charms); return R; };
+test('Deuces Wild and The Ringer change face values', () => {
+  assert.equal(L.effVal(2, { deuces: true }), 1);
+  assert.equal(L.effVal('C', { ringer: true }), -1);
+  assert.equal(L.effVal('C', { ringer: true, cold: true }), 1);
+  assert.equal(L.effVal(1, { ringer: true }), 3);
+});
+test('The Collection and Big Shot count charms held', () => {
+  assert.equal(L.oddsOf(L.newRound(), ['collection', 'tip', 'cut'], env({})).odds, 10);
+  assert.equal(+L.oddsOf(L.newRound(), ['bigshot', 'tip'], env({})).odds.toFixed(2), 1.44);
+});
+test('Even Money: +2 per 2, 4 or 6 banked', () => {
+  const R = bank(L.newRound(), [2, 4, 6, 3]); assert.equal(L.oddsOf(R, ['evens'], env({})).odds, 7);
+});
+test('Tommy Gun counts the final bank only, at round end', () => {
+  const R = bank(bank(L.newRound(), [1]), [2, 3, 1]);
+  assert.equal(L.oddsOf(R, ['tommy'], env({ done: true })).odds, 7);
+  assert.equal(L.oddsOf(R, ['tommy'], env({})).odds, 1);
+});
+test('Shiner: +4 at round end with no crowns banked', () => {
+  assert.equal(L.oddsOf(bank(L.newRound(), [1, 2]), ['shiner'], env({ done: true })).odds, 7);
+  assert.equal(L.oddsOf(bank(L.newRound(), ['C']), ['shiner'], env({ done: true })).odds, 1);
+});
+test('Jackpot needs three of a kind in ONE bank', () => {
+  assert.equal(L.oddsOf(bank(L.newRound(), [3, 3, 3]), ['jackpot'], env({})).odds, 2);
+  assert.equal(L.oddsOf(bank(bank(L.newRound(), [3, 3]), [3]), ['jackpot'], env({})).odds, 1);
+});
+test('Long Shot x2.5 on a win by 1 or 2; Finisher x2 at half nerve', () => {
+  assert.equal(L.oddsOf(L.newRound(), ['longshot'], env({ margin: 2 })).odds, 2.5);
+  assert.equal(L.oddsOf(L.newRound(), ['longshot'], env({ margin: 3 })).odds, 1);
+  assert.equal(L.oddsOf(L.newRound(), ['finisher'], env({ oppHalf: true })).odds, 2);
+});
+test('Crown Room needs 3 crowns; Straight Shooter needs 1, 2 and 3', () => {
+  assert.equal(L.oddsOf(bank(L.newRound(), ['C', 'C', 'C']), ['crownroom'], env({})).odds, 3);
+  assert.equal(L.oddsOf(bank(bank(L.newRound(), [1, 3]), [2]), ['straight'], env({})).odds, 3);
+  assert.equal(L.oddsOf(bank(L.newRound(), [1, 3]), ['straight'], env({})).odds, 1);
+});
+test('Piggy Bank grows on wins, halves on a real loss; Moonshine never resets', () => {
+  const G = { charms: ['piggy', 'moonshine'], gold: 0 };
+  L.afterRound(G, 'you'); L.afterRound(G, 'you'); assert.equal(G.grow.piggy, 6);
+  L.afterRound(G, 'them', true); assert.equal(G.grow.piggy, 6);
+  L.afterRound(G, 'them'); assert.equal(G.grow.piggy, 3); assert.equal(G.grow.moon, 2);
+  assert.equal(+L.oddsOf(L.newRound(), ['moonshine'], env({ grow: G.grow })).odds.toFixed(2), 1.1);
+});
+test('Consolation pays $2 a lost round; Savings Bond pays $1 per $10, max $5', () => {
+  assert.equal(L.afterRound({ charms: ['consolation'] }, 'them'), 2);
+  assert.equal(L.afterFight({ charms: ['savings'], gold: 37 }), 3);
+  assert.equal(L.afterFight({ charms: ['savings'], gold: 99 }), 5);
+});
+test('Champagne and Viper multiply per trigger; Payday counts its 1s', () => {
+  const R = bank(L.newRound(), ['C', 'C', 1, 1], ['bubbly', 'bubbly', 'viper', 'payday']);
+  assert.equal(L.oddsOf(R, [], env({})).odds, 1.5 * 1.5 * 1.5); assert.equal(R.payday, 1);
+});
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

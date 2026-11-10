@@ -41,7 +41,7 @@ async def run(p,name):
   await pg.evaluate("SET.tips=false; SET.speed=2.4; 0")
   for sc,setup,opp in [('normal',"",None),('7dice',"G.bag=['d6','d6','d6','d6','d6','d6','d8','d8','coin'].map(newDie)","heavy"),('twins',"","twins"),('boss',"","boss")]:
     await pg.evaluate("document.querySelectorAll('.overlay').forEach(o=>o.remove()); F=null; newRun('run'); "+setup+"; renderMap(); 0"); await pg.wait_for_timeout(500)
-    if opp=='twins': await pg.evaluate("startFight('E',makeOpp([...ACTS[1].foes.e1,...ACTS[1].foes.e2].find(f=>f.n==='The Twins Again'),'E',1,3,0,false,0)); 0")
+    if opp=='twins': await pg.evaluate("startFight('E',makeOpp([...ACTS[1].foes.e1,...ACTS[1].foes.e2].find(f=>f.n==='The Doubles'),'E',1,3,0,false,0)); 0")
     elif opp=='boss': await pg.evaluate("startFight('B',makeOpp(ACTS[2].foes.boss,'B',2,8,0,false,0)); 0")
     else: await pg.click('#stops .entry')
     if opp=='heavy':

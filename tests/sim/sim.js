@@ -24,7 +24,7 @@ function finishRound(left,p,R,G,o,first,ctxOf,policy){ while(left.length){ const
 function playRound(hand,G,o,F,T,env,lam,smart){
   let left=hand.slice(), p=0, R=L.newRound(), first=true, spoon=has(G,'spoon');
   if(o.sig==='gift'){ const n=F.p2?2:1; for(let i=0;i<n&&i<left.length;i++) left[i]={type:'d8'}; }
-  const ctxOf=fst=>({cold:o.q.includes('cold')&&fst,penny:has(G,'penny')&&fst});
+  const ctxOf=fst=>({cold:o.q.includes('cold')&&fst,penny:has(G,'penny')&&fst,deuces:has(G,'deuces'),ringer:has(G,'ringer')});
   const crowns=[];
   while(left.length){ const ctx=ctxOf(first); let faces=faceSet(left,ctx);
     if(o.sig==='slam'&&F.p2&&first&&left.length>2){ const ord=faces.map((f,i)=>[L.effVal(f,ctx),i]).sort((a,b)=>a[0]-b[0]); ord.slice(0,2).forEach(([,i])=>faces[i]=L.rollInst(left[i])); }
@@ -60,26 +60,29 @@ function fight(G,kind,act,floor,smart,stats){ const def=pickFoe(G,kind,act,floor
   while(G.hp>0&&oh>0&&F.rounds<80){ F.rounds++; const T=o.q.includes('pair')?Math.min(L.aiRound(o.bag,o.t).total,L.aiRound(o.bag,o.t).total):L.aiRound(o.bag,o.t).total;
     if(o.q.includes('tax')) G.gold=Math.max(0,G.gold-1);
     const hand=L.shuffle(G.bag).slice(0,6+(F.heavy?1:0)); F.heavy=false; hand.forEach(d=>{ if(DT[d.type].breaks) d.cracks=(d.cracks||0)+1; });
-    const env={bag:G.bag.length,round:F.rounds,q:o.q,raid:L.isRaid(o,F.rounds,F.p2),gold:G.gold,rep:G.rep,tally:G.tally,wins:F.wins,lossStreak:F.loss,oppHalf:oh<=o.hp/2};
+    const env={bag:G.bag.length,round:F.rounds,q:o.q,raid:L.isRaid(o,F.rounds,F.p2),gold:G.gold,rep:G.rep,tally:G.tally,wins:F.wins,lossStreak:F.loss,oppHalf:oh<=o.hp/2,grow:G.grow||{}};
     const lam=Math.max(.6,Math.min(6,oh/Math.max(8,G.hp)));
     const {p,R,crowns}=playRound(hand,G,o,F,T,env,lam,smart);
     crowns.forEach(t=>{ if(has(G,'hothand')) G.hp=Math.min(G.maxHp,G.hp+1); if(has(G,'goldcrown')) G.gold++; if(t==='gamble') G.gold+=3; if(t==='gilded') G.gold+=2; });
     if(R.bomb) oh=Math.max(1,oh-R.bomb*L.bombDmg(o.hp));
     const r=L.settle(p,T,R,G.charms,o,env);
     if(stats){ stats.rounds++; if(r.winner==='you'){ stats.w++; stats.odds+=r.odds; stats.hit+=r.dmg; stats.best=Math.max(stats.best,r.dmg); } else if(r.winner==='them'){ stats.l++; stats.taken+=r.dmg; } }
+    G.gold+=R.payday||0; let free=false;
     if(r.winner==='you'){ oh-=r.dmg; F.wins++; F.loss=0; if(has(G,'tip')) G.gold+=2; if(has(G,'bookie')) G.gold+=Math.min(8,r.margin); }
-    else if(r.winner==='them'){ let d=r.dmg; if(has(G,'rabbit')&&!F.rabbit){F.rabbit=true;d=0;} G.hp-=d; if(o.sig==='feed') oh=Math.min(o.hp,oh+d); F.wins=0; F.loss++; if(o.q.includes('steal')) G.gold=Math.max(0,G.gold-3); if(o.q.includes('heavy')) F.heavy=true; }
+    else if(r.winner==='them'){ let d=r.dmg; if(has(G,'rabbit')&&!F.rabbit){F.rabbit=true;d=0;free=true;} G.hp-=d; if(o.sig==='feed') oh=Math.min(o.hp,oh+d); F.wins=0; F.loss++; if(o.q.includes('steal')) G.gold=Math.max(0,G.gold-3); if(o.q.includes('heavy')) F.heavy=true; }
+    G.gold+=L.afterRound(G,r.winner,free);
     if(o.q.includes('nervous')) oh-=1;
     if(has(G,'blood')&&G.hp>1) G.hp-=1;
     G.bag=G.bag.filter(d=>!(DT[d.type].breaks&&d.cracks>=L.breaksAt(d.type,G.charms)));
     if(def.boss&&!F.p2&&oh<=o.hp/2){ F.p2=true; const H=def.half||ACTS[act].half; H.add.forEach(q=>{ if(!o.q.includes(q)) o.q.push(q); }); o.t=H.t; } }
+  if(oh<=0) G.gold+=L.afterFight(G);
   return {won:oh<=0,rounds:F.rounds,hp:o.hp,name:def.n}; }
 
 // ---------- judging a build: play sample rounds against this act's regulars ----------
 function evalBuild(G,act,floor){ const save=Math.random; Math.random=seeded(1234+act*77+floor);
   try{ const Af=ACTS[act].foes, pool=[...Af.t2,...Af.e1]; let dealt=0, taken=0;
     for(let k=0;k<EVALK;k++){ const def=pool[k%pool.length]; const o=L.makeOpp(def,'F',act,Math.max(floor,4),G.lap,false); const T=L.aiRound(o.bag,o.t).total;
-      const hand=L.shuffle(G.bag).slice(0,6); const env={bag:G.bag.length,round:1+k%5,q:o.q,gold:G.gold,rep:G.rep,tally:G.tally,wins:k%3,lossStreak:0,oppHalf:false};
+      const hand=L.shuffle(G.bag).slice(0,6); const env={bag:G.bag.length,round:1+k%5,q:o.q,gold:G.gold,rep:G.rep,tally:G.tally,wins:k%3,lossStreak:0,oppHalf:false,grow:G.grow||{}};
       const {p,R}=playRound(hand,{...G,hp:99},o,{p2:false},T,env,1,false); const r=L.settle(p,T,R,G.charms,o,env);
       dealt+=(R.bomb||0)*L.bombDmg(L.ACT_HP[act].F*1.6)+(has(G,'blood')?-.4:0);
       if(r.winner==='you') dealt+=r.dmg; else if(r.winner==='them') taken+=r.dmg*(has(G,'rabbit')?.8:1); }
@@ -123,8 +126,8 @@ function shop(G,act,floor,smart){
     G.gold-=bestO.price; bestO.do(); } }
 
 // "good": reads the charms like a decent human (fixed priorities), plays the dice well
-const VAL={opener:5,packed:5,stack:6,allin:3,glassblower:3,nearmiss:5,blood:6,threes:3,regular:6,heckler:6,doubledown:8,tally:6,jewels:6,slowburn:6,cut:4,bouncer:6,thick:4,tip:2,goldcrown:2,hothand:3,liver:3,cigar:3,penny:9,spoon:5,lastcall:7,jacks:6,snake:5,patience:4,barfly:5,rabbit:4,closer:7,kingpin:9,lowball:8,highstakes:8,bookie:4};
-const DVAL={gilded:0,bomb:1,goose:1,boxcar:2,d8:-3,d6:0,pebble:2,glass:2,gamble:-1,ember:1,twin:1,loaded:3,devil:3,coin:4,shaved:6};
+const VAL={opener:5,packed:5,stack:6,allin:3,glassblower:3,nearmiss:5,blood:6,threes:3,regular:6,heckler:6,doubledown:8,tally:6,jewels:6,slowburn:6,cut:4,bouncer:6,thick:4,tip:2,goldcrown:2,hothand:3,liver:3,cigar:3,penny:9,spoon:5,lastcall:7,jacks:6,snake:5,patience:4,barfly:5,rabbit:4,closer:7,kingpin:9,lowball:8,highstakes:8,bookie:4,collection:5,consolation:2,savings:3,shiner:4,evens:3,deuces:6,piggy:7,tommy:6,jackpot:5,longshot:5,finisher:7,moonshine:9,crownroom:7,straight:7,ringer:9,bigshot:9};
+const DVAL={gilded:0,bomb:1,goose:1,boxcar:2,d8:-3,d6:0,pebble:2,glass:2,gamble:-1,ember:1,twin:1,loaded:3,devil:3,coin:4,shaved:6,royal:2,deuce:1,payday:1,trick:0,bubbly:3,viper:4};
 const worstOf=G=>G.charms.reduce((m,x)=>VAL[x]<VAL[m]?x:m);
 const wantC=(G,c)=>!G.charms.includes(c)&&(G.charms.length<5||VAL[c]>VAL[worstOf(G)]+1);
 const takeC=(G,c)=>applyCharm(G,c,G.charms.length>=5?G.charms.indexOf(worstOf(G)):null);
