@@ -21,7 +21,7 @@ const DT = {
   royal:  {name:'Royal Die',   short:'RY', skin:'royal',  faces:['C','C','C',4,5,6],          tier:'r', price:13,  desc:'Three crowns, three high faces. Feast or famine.'},
   deuce:  {name:'Deuce',       short:'22', skin:'deuce',  faces:[2,2,2,2,3,'C'],              tier:'c', price:5,  desc:'Four 2s. Pairs with Deuces Wild.'},
   payday: {name:'Payday',      short:'$1', skin:'payday', faces:[1,2,3,4,5,'C'],              tier:'u', price:7,  desc:'Bank its 1: you get $1.'},
-  trick:  {name:'Trick Die',   short:'TR', skin:'trick',  faces:[-1,3,6,6,6,'C'],             tier:'c', price:7,  desc:'Half the time it’s a 6. The −1 takes a point off your score.'},
+  trick:  {name:'Trick Die',   short:'TR', skin:'trick',  faces:[-1,3,6,6,6,'C'],             tier:'u', price:8,  desc:'Half the time it’s a 6. The −1 takes a point off your score.'},
   bubbly: {name:'Champagne',   short:'CH', skin:'bubbly', faces:[1,2,3,4,5,'C'],              tier:'u', price:9,  desc:'Bank its crown: you get ×1.5 odds this round. Stacks.'},
   viper:  {name:'Viper',       short:'VP', skin:'viper',  faces:[1,1,'C',5,6,6],              tier:'r', price:12, desc:'Bank its 1: you get ×1.5 odds this round. Stacks.'},
 };
@@ -165,13 +165,13 @@ const MORE=[
  {t1:[{n:'Dapper Dan',   s:'Tie straight. Odds straighter.',hp:17, bag:['loaded','d6','d6','d6','pebble','d6'], t:2, q:['sharp'], look:{coat:0x2a3a5a,hat:'top',eye:0x9fd3ff}}],
   t2:[{n:'Miss Fortune', s:'Reads your dice before they land.',hp:20, bag:['loaded','loaded','pebble','d6','d6','glass'], t:1, q:['copycat','haze'], look:{coat:0x3a1a4a,hat:'turban',eye:0xe0a0ff}}],
   e2:[{n:'The Magpie',   s:'Anything shiny.',               hp:26, bag:['loaded','loaded','pebble','pebble','d6','coin'], t:1, q:['steal','copycat'], look:{coat:0x101418,hat:'cloche',eye:0x9ff5d3}}],
-  alt:{n:'Zambini', s:'Pulls your luck out of a hat.', hp:26, bag:['loaded','loaded','d6','pebble','d6','glass'], t:1, q:[], boss:true, sig:'trick', short:'Zambini',
+  alt:{n:'Zambini', s:'Pulls your luck out of a hat.', hp:24, bag:['loaded','loaded','d6','pebble','d6','glass'], t:1, q:[], boss:true, sig:'trick', short:'Zambini',
    d:'A stage magician. Two of your dice land face-down every throw.', sigT:'Two of your dice land face-down every throw. Three at half nerve.',
    half:{add:['copycat'],t:1,big:'For my next trick',small:'Three dice hidden, and Copycat'}, look:{coat:0x1a0a2a,hat:'top',eye:0xc9a0ff,scale:1.25}}},
  {t1:[{n:'Officer Kelly',s:'On the take. On the clock.',    hp:25, bag:['loaded','loaded','pebble','coin','d6','d6'], t:1, q:['loud','tax'], look:{coat:0x1a2a4a,hat:'cap',eye:0x9fd3ff}}],
   t2:[{n:'Lucky Lucy',   s:'Has never lost a tie.',         hp:29, bag:['loaded','loaded','pebble','pebble','coin','d6'], t:1, q:['sharp','hot'], look:{coat:0x2a5a3a,hat:'cloche',eye:0xa0ffb0}}],
   e1:[{n:'Doc', s:'Sews up the losers. Charges extra.',hp:36, bag:['loaded','loaded','pebble','pebble','shaved','coin'], t:1, q:['sharp','grudge','haze'], look:{coat:0xd8d2c4,hat:'none',eye:0xffffff}}],
-  alt:{n:'The Chief', s:'Owns the cops. Owns you.', hp:57, bag:['shaved','coin','loaded','loaded','pebble','pebble'], t:1, q:['loud'], boss:true, sig:'raid', short:'The Chief',
+  alt:{n:'The Chief', s:'Owns the cops. Owns you.', hp:52, bag:['shaved','coin','loaded','loaded','pebble','pebble'], t:1, q:['loud'], boss:true, sig:'raid', short:'The Chief',
    d:'Every third round is a raid: your odds drop to 1.', sigT:'Every third round is a raid and your odds drop to 1. Every other round at half nerve.',
    half:{add:['sharp'],t:1,big:'Up against the wall',small:'Raids every other round, and Sharp'}, look:{coat:0x1a2236,hat:'cap',eye:0xffd27a,scale:1.35}}}];
 // ---- a deeper bench: enough faces that no two runs meet the same people in the same order ----
@@ -208,8 +208,8 @@ const LIMITS=[
  {n:'Half Dollar',  d:'You walk in with 10 less nerve.'},
  {n:'Silver Dollar',d:'From Act II on, their odds are 1 higher.'},
  {n:'Gold Eagle',   d:'Sharks bring an extra quirk too. No breather on the stairs.'},
- {n:'The Big Board',d:'Everyone has 18% more nerve. Tables pay $2 less.'}];
-function limitMods(lv){ lv=lv||0; return {hp:lv>=7?1.18:lv>=1?1.1:1, extraQ:lv>=2, extraQE:lv>=6, price:lv>=3?2:0, startHp:lv>=4?-10:0, odds:lv>=5?1:0, stairs:lv>=6?0:.5, rest:.4, pay:lv>=7?-2:0}; }
+ {n:'The Big Board',d:'Everyone has 12% more nerve. Tables pay $2 less.'}];
+function limitMods(lv){ lv=lv||0; return {hp:lv>=7?1.12:lv>=1?1.1:1, extraQ:lv>=2, extraQE:lv>=6, price:lv>=3?2:0, startHp:lv>=4?-10:0, odds:lv>=5?1:0, stairs:lv>=6?0:.5, rest:.4, pay:lv>=7?-2:0}; }
 const EXTRA_Q=['cold','fuse','haze','steal','grudge','hot','copycat','sharp','loud'];
 // ---- who you walk in as ----
 const POCKETS=[
