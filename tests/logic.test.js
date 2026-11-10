@@ -42,8 +42,9 @@ test('Near Miss: losing by exactly 1 is a push', () => {
   assert.equal(L.settle(7, 5, R0(), ['nearmiss'], opp(), env()).winner, 'them');
 });
 
-test('Thick Skin takes 2 off a loss, never below 1', () => {
-  assert.equal(L.settle(9, 5, R0(), ['thick'], opp([], 1), env()).dmg, 2);
+test('Thick Skin takes 3 off a loss, never below 1', () => {
+  assert.equal(L.settle(9, 5, R0(), ['thick'], opp([], 1), env()).dmg, 1);
+  assert.equal(L.settle(10, 5, R0(), ['thick'], opp([], 1), env()).dmg, 2);
   assert.equal(L.settle(6, 5, R0(), ['thick'], opp([], 1), env()).dmg, 1);
 });
 
@@ -96,7 +97,7 @@ test('Short Stack: +2 odds per die under 9', () => {
 
 test('Double Down needs the last round won', () => {
   assert.equal(L.oddsOf(R0(), ['doubledown'], env({ wins: 0 })).odds, 1);
-  assert.equal(L.oddsOf(R0(), ['doubledown'], env({ wins: 1 })).odds, 2);
+  assert.equal(L.oddsOf(R0(), ['doubledown'], env({ wins: 1 })).odds, 3);
 });
 
 test('All In: x3 only when everything is banked on the first throw', () => {
@@ -153,9 +154,9 @@ test('opponents always score at least 0 and at most their max', () => {
   }
 });
 
-test('Last Call: the highest die in your final bank counts 1 less', () => {
+test('Last Call: the highest die in your final bank counts 1 less, if 4+', () => {
   assert.deepEqual(L.bankVals([5, 2], {}, ['lastcall'], true), [4, 2]);
-  assert.deepEqual(L.bankVals([1], {}, ['lastcall'], true), [0]);
+  assert.deepEqual(L.bankVals([3], {}, ['lastcall'], true), [3]);
   assert.deepEqual(L.bankVals([5, 2], {}, ['lastcall'], false), [5, 2]);
 });
 test('Lucky Penny: 1s score 0 (game passes penny only on the first throw)', () => {
@@ -176,7 +177,7 @@ test('Deuces Wild and The Ringer change face values', () => {
   assert.equal(L.effVal(1, { ringer: true }), 3);
 });
 test('The Collection and Big Shot count charms held', () => {
-  assert.equal(L.oddsOf(L.newRound(), ['collection', 'tip', 'cut'], env({})).odds, 10);
+  assert.equal(L.oddsOf(L.newRound(), ['collection', 'tip', 'cut'], env({})).odds, 13);
   assert.equal(+L.oddsOf(L.newRound(), ['bigshot', 'tip'], env({})).odds.toFixed(2), 1.44);
 });
 test('Even Money: +2 per 2, 4 or 6 banked', () => {
@@ -195,14 +196,14 @@ test('Jackpot needs three of a kind in ONE bank', () => {
   assert.equal(L.oddsOf(bank(L.newRound(), [3, 3, 3]), ['jackpot'], env({})).odds, 2);
   assert.equal(L.oddsOf(bank(bank(L.newRound(), [3, 3]), [3]), ['jackpot'], env({})).odds, 1);
 });
-test('Long Shot x2.5 on a win by 1 or 2; Finisher x2 at half nerve', () => {
+test('Long Shot x2.5 on a win by 1 or 2; Finisher x2.5 at half nerve', () => {
   assert.equal(L.oddsOf(L.newRound(), ['longshot'], env({ margin: 2 })).odds, 2.5);
   assert.equal(L.oddsOf(L.newRound(), ['longshot'], env({ margin: 3 })).odds, 1);
-  assert.equal(L.oddsOf(L.newRound(), ['finisher'], env({ oppHalf: true })).odds, 2);
+  assert.equal(L.oddsOf(L.newRound(), ['finisher'], env({ oppHalf: true })).odds, 2.5);
 });
 test('Crown Room needs 3 crowns; Straight Shooter needs 1, 2 and 3', () => {
   assert.equal(L.oddsOf(bank(L.newRound(), ['C', 'C', 'C']), ['crownroom'], env({})).odds, 3);
-  assert.equal(L.oddsOf(bank(bank(L.newRound(), [1, 3]), [2]), ['straight'], env({})).odds, 3);
+  assert.equal(L.oddsOf(bank(bank(L.newRound(), [1, 3]), [2]), ['straight'], env({})).odds, 4);
   assert.equal(L.oddsOf(bank(L.newRound(), [1, 3]), ['straight'], env({})).odds, 1);
 });
 test('Piggy Bank grows on wins, halves on a real loss; Moonshine never resets', () => {
@@ -227,7 +228,7 @@ test('Off the Books charms don\'t take a slot', () => {
 });
 test('Picking dice without banking never leaks into the round (shallow copies)', () => {
   const R = L.newRound(); L.noteBank(R, [1], ['d6'], []); const R2 = { ...R }; L.noteBank(R2, [2, 3], ['d6', 'd6'], []);
-  assert.equal(L.oddsOf(R, ['straight'], env({})).odds, 1); assert.equal(L.oddsOf(R2, ['straight'], env({})).odds, 3);
+  assert.equal(L.oddsOf(R, ['straight'], env({})).odds, 1); assert.equal(L.oddsOf(R2, ['straight'], env({})).odds, 4);
 });
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

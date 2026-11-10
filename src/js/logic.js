@@ -5,23 +5,23 @@
 const DT = {
   d6:     {name:'House Die',   short:'d6', skin:'bone',   faces:[1,2,3,4,5,'C'],              tier:'c', price:4,  desc:'The standard die. A crown scores 0.'},
   d8:     {name:'Octo',        short:'d8', skin:'octo',   faces:[1,2,3,4,5,6,7,'C'],          tier:'c', price:3,  desc:'Eight sides. Usually rolls high.'},
-  pebble: {name:'Pebble',      short:'d4', skin:'pebble', faces:[1,2,3,'C'],                  tier:'u', price:8,  size:.46, desc:'Four sides, all low.'},
+  pebble: {name:'Pebble',      short:'d4', skin:'pebble', faces:[1,2,3,'C'],                  tier:'u', price:10,  size:.46, desc:'Four sides, all low.'},
   loaded: {name:'Loaded Die',  short:'LD', skin:'loaded', faces:[1,1,2,3,4,'C'],              tier:'c', price:6,  desc:'Weighted low. Never rolls a 5.'},
   glass:  {name:'Glass Die',   short:'GL', skin:'glass',  faces:[1,1,1,2,'C','C'],            tier:'c', price:5,  breaks:3, desc:'Great faces, but it shatters after you draw it for 3 rounds.'},
   ember:  {name:'Ember',       short:'EM', skin:'ember',  faces:[1,2,3,4,5,6,'C','C'],        tier:'u', price:7,  desc:'Two crowns on eight sides. Bank a crown: you get +2 odds this round.'},
   devil:  {name:"Devil's Die", short:'−1', skin:'devil',  faces:[-1,2,3,4,5,'C'],             tier:'u', price:9,  desc:'One face is −1: it takes a point off your score.'},
-  coin:   {name:'Lucky Coin',  short:'¢',  skin:'coin',   faces:[1,'C'],                      tier:'r', price:12, desc:'Only ever a 1 or a crown.'},
+  coin:   {name:'Lucky Coin',  short:'¢',  skin:'coin',   faces:[1,'C'],                      tier:'r', price:15, desc:'Only ever a 1 or a crown.'},
   twin:   {name:'Twin',        short:'TW', skin:'twin',   faces:[1,2,3,4,5,'C'],              tier:'r', price:11,  desc:'Copies your lowest other die in the same throw.'},
   gamble: {name:'High Roller', short:'12', skin:'gamble', faces:[1,2,3,4,5,6,7,8,9,10,11,'C'], tier:'c', price:6, size:.62, desc:'Mostly awful. Bank its crown: you get ×2 odds this round and $3.'},
   shaved: {name:'Shaved Die',  short:'SH', skin:'shaved', faces:[1,1,2,2,'C','C'],            tier:'r', price:16, desc:'Two 1s, two 2s, two crowns.'},
   gilded: {name:'Gilded Die',  short:'GD', skin:'gilded', faces:[1,2,3,4,5,'C'],              tier:'u', price:9,  desc:'Bank its crown: you get $2.'},
   bomb:   {name:'Cherry Bomb', short:'CB', skin:'bomb',   faces:[1,2,3,4,5,'C'],              tier:'u', price:8,  desc:'Bank its crown: the opponent loses 8% of their max nerve on the spot (at least 2).'},
-  goose:  {name:'Goose Egg',   short:'00', skin:'goose',  faces:[0,0,4,5,6,'C'],              tier:'c', price:5,  desc:'Two faces are 0. The rest run high.'},
+  goose:  {name:'Goose Egg',   short:'00', skin:'goose',  faces:[0,4,5,6,6,'C'],              tier:'c', price:5,  desc:'One face is 0. The rest run high.'},
   boxcar: {name:'Boxcars',     short:'BX', skin:'boxcar', faces:[1,1,1,6,6,'C'],              tier:'c', price:6,  desc:'Three 1s, two 6s. Pairs well with Snake Eyes.'},
-  royal:  {name:'Royal Die',   short:'RY', skin:'royal',  faces:['C','C','C',4,5,6],          tier:'u', price:8,  desc:'Three crowns, three high faces. Feast or famine.'},
-  deuce:  {name:'Deuce',       short:'22', skin:'deuce',  faces:[2,2,2,2,6,'C'],              tier:'c', price:5,  desc:'Four 2s. Pairs with Deuces Wild.'},
+  royal:  {name:'Royal Die',   short:'RY', skin:'royal',  faces:['C','C','C',4,5,6],          tier:'r', price:13,  desc:'Three crowns, three high faces. Feast or famine.'},
+  deuce:  {name:'Deuce',       short:'22', skin:'deuce',  faces:[2,2,2,2,3,'C'],              tier:'c', price:5,  desc:'Four 2s. Pairs with Deuces Wild.'},
   payday: {name:'Payday',      short:'$1', skin:'payday', faces:[1,2,3,4,5,'C'],              tier:'u', price:7,  desc:'Bank its 1: you get $1.'},
-  trick:  {name:'Trick Die',   short:'TR', skin:'trick',  faces:[-1,3,6,6,6,'C'],             tier:'c', price:5,  desc:'Half the time it’s a 6. The −1 takes a point off your score.'},
+  trick:  {name:'Trick Die',   short:'TR', skin:'trick',  faces:[-1,3,6,6,6,'C'],             tier:'c', price:7,  desc:'Half the time it’s a 6. The −1 takes a point off your score.'},
   bubbly: {name:'Champagne',   short:'CH', skin:'bubbly', faces:[1,2,3,4,5,'C'],              tier:'u', price:9,  desc:'Bank its crown: you get ×1.5 odds this round. Stacks.'},
   viper:  {name:'Viper',       short:'VP', skin:'viper',  faces:[1,1,'C',5,6,6],              tier:'r', price:12, desc:'Bank its 1: you get ×1.5 odds this round. Stacks.'},
 };
@@ -32,7 +32,7 @@ const CHARMS={
   slowburn:{name:'Slow Burn',     ico:'≈', tier:'c', price:6, desc:'You get +1 odds per round you’ve won in a row at this table.'},
   cut:     {name:"Dealer's Cut",  ico:'%', tier:'c', price:5, desc:'When you win a round, your “ahead by” counts 2 higher.'},
   bouncer: {name:'The Bouncer',   ico:'B', tier:'u', price:10, desc:'The opponent’s score counts 1 higher, so you win ties. Doesn’t make your hits bigger.'},
-  thick:   {name:'Thick Skin',    ico:'T', tier:'c', price:5, desc:'Rounds you lose hit you 2 less (at least 1).'},
+  thick:   {name:'Thick Skin',    ico:'T', tier:'c', price:5, desc:'Rounds you lose hit you 3 less (at least 1).'},
   tip:     {name:'Tip Jar',       ico:'$', tier:'c', price:5, desc:'You get $2 for every round you win.'},
   goldcrown:{name:'Gold Tooth',   ico:'¢', tier:'c', price:5, desc:'You get $1 per crown you bank.'},
   hothand: {name:'Hot Hand',      ico:'♥', tier:'c', price:5, desc:'You heal 1 nerve per crown you bank.'},
@@ -40,16 +40,16 @@ const CHARMS={
   cigar:   {name:'Victory Cigar', ico:'V', tier:'c', price:5, desc:'You heal 6 nerve after every fight you win.'},
   penny:   {name:'Lucky Penny',   ico:'1', tier:'r', price:17, rare:true, desc:'Your first throw each round: your 1s score 0.'},
   spoon:   {name:'Bent Spoon',    ico:'↻', tier:'u', price:9,  desc:'Once per round: pick one of your dice and reroll it.'},
-  lastcall:{name:'Last Call',     ico:'L', tier:'r', price:16, rare:true, desc:'Your final bank each round: its highest die counts 1 less.'},
+  lastcall:{name:'Last Call',     ico:'L', tier:'r', price:16, rare:true, desc:'Your final bank each round: its highest die counts 1 less, if it’s a 4 or more.'},
   jacks:   {name:'Pair of Jacks', ico:'J', tier:'u', price:9,  desc:'In each bank you make, repeat faces score 0. (3, 3, 5 counts as 3 + 0 + 5.)'},
   snake:   {name:'Snake Eyes',    ico:'∴', tier:'u', price:9,  desc:'You get +1 odds per 1 you bank.'},
   patience:{name:'One at a Time', ico:'I', tier:'u', price:10, desc:'Bank exactly one die every throw for a whole round: you get +4 odds.'},
   barfly:  {name:'Bar Fly',       ico:'b', tier:'u', price:9,  desc:'You get +1 odds per $6 you’re holding.'},
   tally:   {name:'Tally Card',    ico:'#', tier:'u', price:8,  desc:'You get +1 odds per 2 fights you’ve won while holding this.'},
   rabbit:  {name:"Rabbit's Foot", ico:'R', tier:'u', price:9,  desc:'The first round you lose at each table doesn’t hurt you.'},
-  closer:  {name:'The Closer',    ico:'C', tier:'u', price:12, desc:'Win a round by 5 or more: you get ×1.5 odds.'},
+  closer:  {name:'The Closer',    ico:'C', tier:'u', price:12, desc:'Win a round by 5 or more: you get ×2 odds.'},
   kingpin: {name:'Kingpin',       ico:'K', tier:'r', price:18, rare:true, desc:'You get ×1.25 odds per crown you bank. Stacks.'},
-  lowball: {name:'Low Ball',      ico:'0', tier:'r', price:16, rare:true, desc:'Finish a round on 2 or less: you get ×2 odds.'},
+  lowball: {name:'Low Ball',      ico:'0', tier:'r', price:16, rare:true, desc:'Finish a round on 3 or less: you get ×2 odds.'},
   opener:  {name:'Opening Act',   ico:'O', tier:'c', price:6, desc:'Your first round at each table: you get ×2 odds.'},
   packed:  {name:'Packed House',  ico:'P', tier:'c', price:6, desc:'You get +1 odds per 2 dice in your bag.'},
   stack:   {name:'Short Stack',   ico:'S', tier:'u', price:9, desc:'You get +2 odds per die your bag is short of 9.'},
@@ -60,11 +60,11 @@ const CHARMS={
   threes:  {name:'Three\u2019s Company',ico:'3', tier:'c', price:5, desc:'You get +2 odds per 3 you bank.'},
   regular: {name:'The Regular',   ico:'r', tier:'u', price:9, desc:'You get +1 odds per round already played at this table.'},
   heckler: {name:'The Heckler',   ico:'H', tier:'u', price:10, desc:'Your first crown each round adds 1 to the opponent’s score.'},
-  doubledown:{name:'Double Down', ico:'2', tier:'r', price:16, rare:true, desc:'Won your last round at this table: you get ×2 odds.'},
+  doubledown:{name:'Double Down', ico:'2', tier:'r', price:16, rare:true, desc:'Won your last round at this table: you get ×3 odds.'},
   highstakes:{name:'High Stakes', ico:'×', tier:'r', price:15, rare:true, desc:'You get ×2 odds, but rounds you lose hit you 1 harder.'},
   bookie:  {name:'The Bookie',    ico:'§', tier:'r', price:15, rare:true, desc:'Win a round: you get $1 per point you won by, up to $8.'},
   // builds: more charms = more odds; streaks that grow; three of a kind; straights; even faces; crowns going negative
-  collection:{name:'The Collection',ico:'≡', tier:'c', price:5, desc:'You get +3 odds per charm you hold (this one too).'},
+  collection:{name:'The Collection',ico:'≡', tier:'c', price:5, desc:'You get +4 odds per charm you hold (this one too).'},
   consolation:{name:'Consolation',  ico:'♥', tier:'c', price:4, desc:'Lose a round: you get $2 (not when Rabbit’s Foot takes the hit).'},
   savings: {name:'Savings Bond',  ico:'%', tier:'c', price:6, desc:'Win a fight: you get $1 per $10 you’re holding (up to $5).'},
   shiner:  {name:'Shiner',        ico:'○', tier:'c', price:5, desc:'Finish a round without banking a crown: you get +6 odds.'},
@@ -74,10 +74,10 @@ const CHARMS={
   tommy:   {name:'Tommy Gun',     ico:'⁞', tier:'u', price:8, desc:'You get +2 odds per die in your final bank each round.'},
   jackpot: {name:'Jackpot',       ico:'7', tier:'u', price:9, desc:'Bank three of a kind in one go: you get ×2 odds this round.'},
   longshot:{name:'Long Shot',     ico:'1', tier:'u', price:8, desc:'Win a round by 1 or 2: you get ×2.5 odds.'},
-  finisher:{name:'The Finisher',  ico:'F', tier:'u', price:9, desc:'Opponent at half nerve or less: you get ×2 odds.'},
+  finisher:{name:'The Finisher',  ico:'F', tier:'u', price:9, desc:'Opponent at half nerve or less: you get ×2.5 odds.'},
   moonshine:{name:'Moonshine',    ico:'M', tier:'r', price:16, rare:true, desc:'Ferments: gains ×0.05 odds every round you win. Never resets.'},
   crownroom:{name:'The Crown Room',ico:'♛', tier:'r', price:16, rare:true, desc:'Bank 3 or more crowns in a round: you get ×3 odds.'},
-  straight:{name:'Straight Shooter',ico:'S', tier:'r', price:15, rare:true, desc:'Bank a 1, a 2 and a 3 in the same round: you get ×3 odds.'},
+  straight:{name:'Straight Shooter',ico:'S', tier:'r', price:15, rare:true, desc:'Bank a 1, a 2 and a 3 in the same round: you get ×4 odds.'},
   ringer:  {name:'The Ringer',    ico:'R', tier:'r', price:17, rare:true, desc:'Your crowns score −1 instead of 0, but your 1s score 3.'},
   bigshot: {name:'Big Shot',      ico:'★', tier:'r', price:16, rare:true, desc:'You get ×1.2 odds per charm you hold (this one too).'},
 };
@@ -256,7 +256,7 @@ function makeOpp(def,kind,act,floor,lap,easy,lv){ let bag=def.bag.slice(); for(l
 function newRound(){ return {crowns:0,gilt:0,ember:0,roller:0,ones:0,threes:0,glass:0,gold:0,bomb:0,snake:false,singles:true,throws:0,evens:0,trips:false,lastBank:0,bubbly:0,viper:0,cnt:{}}; }
 function bankVals(faces,ctx,charms,final){ let v=faces.map(f=>effVal(f,ctx));
   if(charms.includes('jacks')){ const s=new Set(); v=faces.map((f,i)=>{ if(s.has(f)) return 0; s.add(f); return v[i]; }); }
-  if(final&&charms.includes('lastcall')){ let m=0; v.forEach((x,i)=>{ if(x>v[m]) m=i; }); if(v[m]>0) v[m]-=1; }
+  if(final&&charms.includes('lastcall')){ let m=0; v.forEach((x,i)=>{ if(x>v[m]) m=i; }); if(v[m]>=4) v[m]-=1; }
   return v; }
 function noteBank(R,faces,types,charms){ R.throws++; if(faces.length!==1) R.singles=false;
   faces.forEach((f,i)=>{ if(f==='G'){ R.crowns++; R.gilt++; } if(f==='C'){ R.crowns++; if(types[i]==='ember') R.ember++; if(types[i]==='gamble') R.roller++; } });
@@ -292,7 +292,7 @@ function oddsOf(R,charms,env){ const P=[]; let add=0, mul=1; const has=c=>charms
   if(has('glassblower')) A('Glassblower',2*R.glass);
   if(has('regular')) A('The Regular',Math.max(0,(env.round||1)-1));
   const grow=env.grow||{}, cnt=R.cnt||{};
-  if(has('collection')) A('The Collection',3*charms.length);
+  if(has('collection')) A('The Collection',4*charms.length);
   if(has('evens')) A('Even Money',2*(R.evens||0));
   if(has('piggy')) A('Piggy Bank',grow.piggy||0);
   if(has('tommy')&&env.done) A('Tommy Gun',2*(R.lastBank||0));
@@ -300,20 +300,20 @@ function oddsOf(R,charms,env){ const P=[]; let add=0, mul=1; const has=c=>charms
   if(env.q&&env.q.includes('loud')){ add-=2; P.push(['Loudmouth','\u22122']); }
   if(R.roller) M('High Roller',Math.pow(2,R.roller));
   if(has('kingpin')&&R.crowns) M('Kingpin',Math.pow(1.25,R.crowns));
-  if(has('closer')&&(env.margin||0)>=5) M('The Closer',1.5);
-  if(has('lowball')&&env.done&&env.score<=2) M('Low Ball',2);
+  if(has('closer')&&(env.margin||0)>=5) M('The Closer',2);
+  if(has('lowball')&&env.done&&env.score<=3) M('Low Ball',2);
   if(has('opener')&&env.round===1) M('Opening Act',2);
   if(has('allin')&&env.done&&R.throws===1) M('All In',3);
-  if(has('doubledown')&&(env.wins||0)>=1) M('Double Down',2);
+  if(has('doubledown')&&(env.wins||0)>=1) M('Double Down',3);
   if(has('highstakes')) M('High Stakes',2);
   if(R.bubbly) M('Champagne',Math.pow(1.5,R.bubbly));
   if(R.viper) M('Viper',Math.pow(1.5,R.viper));
   if(has('jackpot')&&R.trips) M('Jackpot',2);
   if(has('longshot')&&env.margin>=1&&env.margin<=2) M('Long Shot',2.5);
-  if(has('finisher')&&env.oppHalf) M('The Finisher',2);
+  if(has('finisher')&&env.oppHalf) M('The Finisher',2.5);
   if(has('moonshine')&&grow.moon) M('Moonshine',1+.05*grow.moon);
   if(has('crownroom')&&R.crowns>=3) M('The Crown Room',3);
-  if(has('straight')&&cnt[1]&&cnt[2]&&cnt[3]) M('Straight Shooter',3);
+  if(has('straight')&&cnt[1]&&cnt[2]&&cnt[3]) M('Straight Shooter',4);
   if(has('bigshot')) M('Big Shot',Math.pow(1.2,charms.length));
   if(env.raid) return {odds:1, add:0, mul:1, parts:[['Raid! Odds forced to','=1']], raid:true};
   return {odds:Math.max(1,Math.max(1,1+add)*mul), add, mul, parts:P}; }
@@ -328,7 +328,7 @@ function settle(p,oRaw,R,charms,opp,env){ const q=opp.q, has=c=>charms.includes(
   if(p>o||house||sharp){ const gap=house?2:sharp?1:p-o; let dmg=Math.ceil(gap*opp.odds);
     if(q.includes('hot')&&env.lossStreak>0) dmg+=env.lossStreak;
     if(q.includes('grudge')&&env.oppHalf) dmg+=2;
-    if(has('thick')) dmg-=2; dmg=Math.max(1,dmg); if(has('highstakes')) dmg+=1;
+    if(has('thick')) dmg-=3; dmg=Math.max(1,dmg); if(has('highstakes')) dmg+=1;
     return {winner:'them',gap,dmg,odds:opp.odds,oFinal:o,house,sharp}; }
   return {winner:'push',dmg:0,oFinal:o}; }
 // bar services that change a die for good
