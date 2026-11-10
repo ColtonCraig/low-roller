@@ -252,8 +252,8 @@ const HAND=6;
 // ---- scaling: each act is a new tier, like a new ante. HP grows geometrically, their odds climb. ----
 // nerve at the top of each act for a regular / shark / boss. Regulars and sharks ramp up floor by floor.
 // sharks and bosses carry a random counter (rulesFor), so they run lighter on nerve than they used to
-const ACT_HP=[{F:13,E:26,B:44},{F:50,E:48,B:68},{F:125,E:105,B:165}];
-const ACT_ODDS=[1,2,2.5];           // how hard their wins hit you
+const ACT_HP=[{F:13,E:26,B:44},{F:45,E:46,B:64},{F:112,E:100,B:158}];
+const ACT_ODDS=[1,2,2];           // how hard their wins hit you
 const ENDLESS_GROW=2;              // endless: every room past Act III doubles nerve (and adds +1 to their odds)
 function rnd(n){return Math.floor(Math.random()*n)}
 function pick(a){return a[rnd(a.length)]}
