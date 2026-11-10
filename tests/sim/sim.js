@@ -13,15 +13,16 @@ const has=(G,c)=>G.charms.includes(c);
 function faceSet(left,ctx){ const f=left.map(L.rollInst);
   left.forEach((d,i)=>{ if(d.type==='twin'){ let b=null; f.forEach((x,j)=>{ if(j!==i&&left[j].type!=='twin'&&(b===null||L.effVal(x,ctx)<L.effVal(b,ctx))) b=x; }); if(b!==null) f[i]=b; } }); return f; }
 const isCrown=f=>f==='C'||f==='G';
+const finsRes=(G,dice)=>dice.map(d=>d.fin==='lucky'?((has(G,'rabbitp')||d._luck)?'lucky':null):(d.fin||null));
 function payoff(p,T,R,G,o,env,lam){ const r=L.settle(p,T,R,G.charms,o,{...env}); if(r.winner==='you') return r.dmg; if(r.winner==='them') return -lam*r.dmg*(has(G,'highstakes')?1:1); return 0; }
 // cheap policy used inside rollouts and for build evaluation
 function greedyKeep(faces,left,ctx,G,need){ const ev=faces.map(f=>L.effVal(f,ctx)); const ord=ev.map((e,i)=>[e-(isCrown(faces[i])?.01:0),i]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
   const th=left.length>=3?1:2; let k=ord.filter(i=>ev[i]<=th); if(has(G,'patience')&&!k.length) k=[ord[0]]; if(has(G,'patience')) k=[ord[0]]; if(!k.length) k=[ord[0]]; for(const i of ord){ if(k.length>=need) break; if(!k.includes(i)) k.push(i); } return k; }
 function finishRound(left,p,R,G,o,first,ctxOf,policy){ while(left.length){ const ctx=ctxOf(first); const faces=faceSet(left,ctx); const need=o.q.includes('fuse')&&first?Math.min(2,left.length):1;
-    const keep=policy(faces,left,ctx,G,need,p,R); const kf=keep.map(i=>faces[i]), kt=keep.map(i=>left[i].type);
-    p+=L.bankVals(kf,ctx,G.charms,keep.length===left.length).reduce((a,b)=>a+b,0); L.noteBank(R,kf,kt,G.charms); left=left.filter((_,i)=>!keep.includes(i)); first=false; } return p; }
+    const keep=policy(faces,left,ctx,G,need,p,R); const kf=keep.map(i=>faces[i]), kt=keep.map(i=>left[i].type), kd=keep.map(i=>left[i]);
+    p+=L.bankVals(kf,ctx,G.charms,keep.length===left.length,kd.map(d=>d.fin)).reduce((a,b)=>a+b,0); L.noteBank(R,kf,kt,G.charms,finsRes(G,kd)); left=left.filter((_,i)=>!keep.includes(i)); first=false; } return p; }
 function playRound(hand,G,o,F,T,env,lam,smart){
-  let left=hand.slice(), p=0, R=L.newRound(), first=true, spoon=has(G,'spoon');
+  let left=hand.map(d=>({...d,_luck:Math.random()<1/3})), p=0, R=L.newRound(), first=true, spoon=has(G,'spoon'), gl=0;
   if(o.sig==='gift'){ const n=F.p2?2:1; for(let i=0;i<n&&i<left.length;i++) left[i]={type:'d8'}; }
   const ctxOf=fst=>({cold:o.q.includes('cold')&&fst,penny:has(G,'penny')&&fst,deuces:has(G,'deuces'),ringer:has(G,'ringer'),crownless:o.q.includes('crownless'),snakebit:o.q.includes('snakebit')&&fst});
   const crowns=[];
@@ -36,18 +37,18 @@ function playRound(hand,G,o,F,T,env,lam,smart){
       const ord=ev.map((e,i)=>[e-(isCrown(faces[i])&&!H.includes(i)?.01:0),i]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
       const cands=[]; for(let k=Math.max(1,need);k<=left.length;k++) cands.push(ord.slice(0,k));
       let best=null, bv=-1e9;
-      for(const c of cands){ let tot=0; const kf=c.map(i=>faces[i]), kt=c.map(i=>left[i].type);
-        const p1=p+L.bankVals(kf,ctx,G.charms,c.length===left.length).reduce((a,b)=>a+b,0);
-        for(let r=0;r<ROLL;r++){ const R2={...R}; L.noteBank(R2,kf,kt,G.charms); const rest=left.filter((_,i)=>!c.includes(i));
+      for(const c of cands){ let tot=0; const kf=c.map(i=>faces[i]), kt=c.map(i=>left[i].type), kd=c.map(i=>left[i]);
+        const p1=p+L.bankVals(kf,ctx,G.charms,c.length===left.length,kd.map(d=>d.fin)).reduce((a,b)=>a+b,0);
+        for(let r=0;r<ROLL;r++){ const R2={...R}; L.noteBank(R2,kf,kt,G.charms,finsRes(G,kd)); const rest=left.filter((_,i)=>!c.includes(i));
           const pf=finishRound(rest,p1,R2,G,o,false,ctxOf,greedyKeep); tot+=payoff(pf,T,R2,G,o,env,lam); }
         if(tot>bv){ bv=tot; best=c; } }
       keep=best; }
     else keep=greedyKeep(faces.map((f,i)=>H.includes(i)?9:f),left,ctx,G,need);
-    const kf=keep.map(i=>faces[i]), kt=keep.map(i=>left[i].type);
-    p+=L.bankVals(kf,ctx,G.charms,keep.length===left.length).reduce((a,b)=>a+b,0); L.noteBank(R,kf,kt,G.charms);
+    const kf=keep.map(i=>faces[i]), kt=keep.map(i=>left[i].type), kd=keep.map(i=>left[i]);
+    p+=L.bankVals(kf,ctx,G.charms,keep.length===left.length,kd.map(d=>d.fin)).reduce((a,b)=>a+b,0); L.noteBank(R,kf,kt,G.charms,finsRes(G,kd)); gl+=kd.filter((d,j)=>d.fin==='goldleaf'&&(kf[j]===1||isCrown(kf[j]))).length;
     kf.forEach((f,j)=>{ if(isCrown(f)) crowns.push(kt[j]); });
     left=left.filter((_,i)=>!keep.includes(i)); first=false; }
-  return {p,R,crowns}; }
+  return {p,R,crowns,gl}; }
 
 // ---------- a table ----------
 function pickFoe(G,kind,act,floor){ const Af=ACTS[act].foes; if(kind==='B') return L.bossOf(act,G.bossIx[act]);
@@ -62,9 +63,9 @@ function fight(G,kind,act,floor,smart,stats){ const def=pickFoe(G,kind,act,floor
     const hand=L.shuffle(G.bag).slice(0,6+(F.heavy?1:0)); F.heavy=false; hand.forEach(d=>{ if(DT[d.type].breaks) d.cracks=(d.cracks||0)+1; });
     // Jinx: one charm sits the round out (the game's has()/live() skip it; afterRound still sees the full set)
     const allCh=G.charms, jx=L.jinxPick(G.charms,o.q); if(jx) G.charms=G.charms.filter(c=>c!==jx);
-    const env={bag:G.bag.length,round:F.rounds,q:o.q,raid:L.isRaid(o,F.rounds,F.p2),gold:G.gold,rep:G.rep,tally:G.tally,wins:F.wins,lossStreak:F.loss,oppHalf:oh<=o.hp/2,grow:G.grow||{},wonOnce:F.won1};
+    const env={finished:G.bag.filter(d=>d.fin).length,fixOdds:L.hasFix(G,'felt')?1:0,bag:G.bag.length,round:F.rounds,q:o.q,raid:L.isRaid(o,F.rounds,F.p2),gold:G.gold,rep:G.rep,tally:G.tally,wins:F.wins,lossStreak:F.loss,oppHalf:oh<=o.hp/2,grow:G.grow||{},wonOnce:F.won1};
     const lam=Math.max(.6,Math.min(6,oh/Math.max(8,G.hp)));
-    const {p,R,crowns}=playRound(hand,G,o,F,T,env,lam,smart);
+    const {p,R,crowns,gl}=playRound(hand,G,o,F,T,env,lam,smart); G.gold+=gl;
     crowns.forEach(t=>{ if(has(G,'hothand')) G.hp=Math.min(G.maxHp,G.hp+1); if(has(G,'goldcrown')) G.gold++; if(t==='gamble') G.gold+=3; if(t==='gilded') G.gold+=2; });
     if(R.bomb) oh=Math.max(1,oh-R.bomb*L.bombDmg(o.hp));
     const r=L.settle(p,T,R,G.charms,o,env);
@@ -86,7 +87,7 @@ function fight(G,kind,act,floor,smart,stats){ const def=pickFoe(G,kind,act,floor
 function evalBuild(G,act,floor){ const save=Math.random; Math.random=seeded(1234+act*77+floor);
   try{ const Af=ACTS[act].foes, pool=[...Af.t2,...Af.e1]; let dealt=0, taken=0;
     for(let k=0;k<EVALK;k++){ const def=pool[k%pool.length]; const o=L.makeOpp(def,'F',act,Math.max(floor,4),G.lap,false); const T=L.aiRound(o.bag,o.t).total;
-      const hand=L.shuffle(G.bag).slice(0,6); const env={bag:G.bag.length,round:1+k%5,q:o.q,gold:G.gold,rep:G.rep,tally:G.tally,wins:k%3,lossStreak:0,oppHalf:false,grow:G.grow||{}};
+      const hand=L.shuffle(G.bag).slice(0,6); const env={finished:G.bag.filter(d=>d.fin).length,fixOdds:L.hasFix(G,'felt')?1:0,bag:G.bag.length,round:1+k%5,q:o.q,gold:G.gold,rep:G.rep,tally:G.tally,wins:k%3,lossStreak:0,oppHalf:false,grow:G.grow||{}};
       const {p,R}=playRound(hand,{...G,hp:99},o,{p2:false},T,env,1,false); const r=L.settle(p,T,R,G.charms,o,env);
       dealt+=(R.bomb||0)*L.bombDmg(L.ACT_HP[act].F*1.6)+(has(G,'blood')?-.4:0);
       if(r.winner==='you') dealt+=r.dmg; else if(r.winner==='them') taken+=r.dmg*(has(G,'rabbit')?.8:1); }
@@ -98,24 +99,43 @@ function takeOff(G,c){ G.charms.push(c); (G.offbook=G.offbook||[]).push(c); if(c
 function applyCharm(G,c,dropIdx){ if(dropIdx!=null){ const w=G.charms[dropIdx]; G.charms.splice(dropIdx,1); G.gold+=Math.floor(CHARMS[w].price/2); if(w==='liver'){ G.maxHp-=12; G.hp=Math.min(G.hp,G.maxHp); } } G.charms.push(c); if(c==='liver'){ G.maxHp+=12; G.hp+=12; } if(c==='tally') G.tally=0; }
 // best way to take a charm (maybe replacing one); returns {cost,drop}
 function charmOption(G,c,act,floor){ if(G.charms.includes(c)) return null;
-  if(L.slotsUsed(G)<5){ const g=cloneG(G); applyCharm(g,c); return {cost:evalBuild(g,act,floor)-(c==='liver'?6:0)-(c==='cigar'?4:0),drop:null}; }
+  if(L.slotsUsed(G)<L.charmSlots(G)){ const g=cloneG(G); applyCharm(g,c); return {cost:evalBuild(g,act,floor)-(c==='liver'?6:0)-(c==='cigar'?4:0),drop:null}; }
   let best=null; G.charms.forEach((x,i)=>{ if(L.offbook(G,x)) return; const g=cloneG(G); applyCharm(g,c,i); const v=evalBuild(g,act,floor); if(!best||v<best.cost) best={cost:v,drop:i}; }); return best; }
 
 const poolT=(G,t)=>Object.keys(CHARMS).filter(c=>!G.charms.includes(c)&&CHARMS[c].tier===t);
 const remaining=(act,floor)=> (2-act)*6+Math.max(1,(8-floor)*.66);
-const PAY=(kind,fast)=>kind==='B'?20:kind==='E'?10:Math.max(1,5+(fast?3:0)+LM.pay);
+const PAY0=(kind,fast)=>kind==='B'?20:kind==='E'?10:Math.max(1,5+(fast?3:0)+LM.pay);
+let PAYG=null; const PAY=(kind,fast)=>{ let g=PAY0(kind,fast); if(PAYG&&PAYG.nb&&PAYG.nb.double){ g*=2; PAYG.nb.double=false; } return g; };
+// chits (game: gainChit). Effects that land at the next bar are approximated by their cash worth.
+function simChit(G){ const k=A.chit||L.pick(L.CHIT_KEYS); G.grow=G.grow||{}; G.grow.chits=(G.grow.chits||0)+1; G.nb=G.nb||{};
+  if(k==='cash') G.gold+=5; else if(k==='stiff') G.hp=Math.min(G.maxHp,G.hp+10);
+  else if(k==='finish'){ const un=G.bag.filter(d=>!d.fin); if(un.length) L.pick(un).fin=L.pick(L.FIN_KEYS); }
+  else if(k==='crate') G.nb.crate=true; else if(k==='double') G.nb.double=true; else G.gold+=4; }
+// fixtures and crates at the bar (game: renderShop extras)
+const FIXPREF=['felt','booth','discount','shelf','taste','vault','rope','crates','ledger','restock'];
+const FINPREF=['chrome','lucky','polished','goldleaf','feather'];
+function openCrateSim(G,kind,act,smart){ const n=L.crateSize(G), tst=L.hasFix(G,'taste');
+  if(kind==='charm'){ const ch=[]; for(let i=0;i<n;i++){ const c=L.pick(poolT(G,L.rollTier(act,null,tst)).filter(x=>!ch.includes(x))); if(c) ch.push(c); }
+    if(!ch.length) return; const c=SKILL==='good'||smart?ch.sort((a,b)=>VAL[b]-VAL[a])[0]:L.pick(ch); if(L.slotsUsed(G)<L.charmSlots(G)) applyCharm(G,c); else if(SKILL==='good'&&VAL[c]>VAL[worstOf(G)]) applyCharm(G,c,G.charms.indexOf(worstOf(G))); }
+  else if(kind==='dice'){ const ds=L.shopDice(act,n,tst); const t=SKILL==='good'||smart?ds.sort((a,b)=>(DVAL[b]||0)-(DVAL[a]||0))[0]:L.pick(ds); G.bag.push({type:t,fin:Math.random()<.35?L.pick(L.FIN_KEYS):undefined}); }
+  else { const fs=L.shuffle(L.FIN_KEYS.slice()).slice(0,n); const f=SKILL==='good'||smart?FINPREF.find(x=>fs.includes(x)):L.pick(fs); const un=G.bag.filter(d=>!d.fin); if(un.length){ const d=un.find(x=>x.type==='d6')||L.pick(un); d.fin=f; } } }
+function barExtras(G,act,smart){ G.act=act; const keen=SKILL==='good'||smart;
+  if(G.nb&&G.nb.crate){ G.nb.crate=false; openCrateSim(G,'charm',act,smart); }
+  const f=A.nofix?null:L.fixOffer(G); if(f){ const pr=L.barPrice(G,L.FIXTURES[f].price+LM.price); const want=keen?FIXPREF.indexOf(f)<6:Math.random()<.4;
+    if(want&&G.gold>=pr+(keen?6:0)){ G.gold-=pr; (G.fix=G.fix||[]).push(f); if(f==='rope'){ G.maxHp+=8; G.hp=Math.min(G.maxHp,G.hp+8); } } }
+  if(!A.nocrate) L.shuffle(Object.keys(L.CRATES)).slice(0,2).forEach(k=>{ const pr=L.barPrice(G,L.CRATES[k].price+LM.price); if(G.gold>=pr+(keen?10:4)&&Math.random()<(keen?.7:.4)){ G.gold-=pr; openCrateSim(G,k,act,smart); } }); }
 function reward(G,kind,fast,act,floor,smart){ G.gold+=PAY(kind,fast);
   let ch=[]; if(kind==='B'){ const r=L.pick([...poolT(G,'r').map(c=>({c})),{t:'shaved'}]); ch.push(r); L.shuffle(poolT(G,'u')).slice(0,2).forEach(c=>ch.push({c})); }
   else if(kind==='E') L.shuffle(poolT(G,'u')).slice(0,3).forEach(c=>ch.push({c}));
   else { ch.push({t:L.shopDie(act)}); L.shuffle(poolT(G,'c')).slice(0,2).forEach(c=>ch.push({c})); }
-  if(!smart){ const c=ch.find(x=>x.c&&!G.charms.includes(x.c)); if(c&&L.slotsUsed(G)<5) applyCharm(G,c.c); return; }
+  if(!smart){ const c=ch.find(x=>x.c&&!G.charms.includes(x.c)); if(c&&L.slotsUsed(G)<L.charmSlots(G)) applyCharm(G,c.c); return; }
   const base=evalBuild(G,act,floor); let best=null;
   ch.forEach(x=>{ if(x.c){ const o=charmOption(G,x.c,act,floor); if(o&&(!best||o.cost<best.cost)) best={...o,x}; } else { const g=cloneG(G); g.bag.push({type:x.t}); const v=evalBuild(g,act,floor); if(!best||v<best.cost) best={cost:v,x}; } });
   if(best&&best.cost<base){ if(best.x.c) applyCharm(G,best.x.c,best.drop); else G.bag.push({type:best.x.t}); }
   else if(G.hp<G.maxHp) G.hp=Math.min(G.maxHp,G.hp+12); }
 function shop(G,act,floor,smart){
-  const up=LM.price; const stock=L.shopDice(act,2).map(t=>({t,price:DT[t].price+up})); for(let i=0;i<3;i++){ const c=L.pick(poolT(G,L.rollTier(act)).filter(c=>!stock.some(s=>s.c===c))); if(c){ const off=Math.random()<L.OFFBOOK_P; stock.push({c,off,price:CHARMS[c].price+up+(off?L.OFFBOOK_FEE:0)}); } }
-  if(!smart){ stock.filter(s=>s.c).forEach(s=>{ if(G.gold>=s.price&&(s.off||L.slotsUsed(G)<5)&&Math.random()<.6){ G.gold-=s.price; s.off?takeOff(G,s.c):applyCharm(G,s.c); } }); if(G.hp<G.maxHp*.5&&G.gold>=6){ G.gold-=6; G.hp=Math.min(G.maxHp,G.hp+12); } return; }
+  const up=LM.price; const tst=L.hasFix(G,'taste'), stock=L.shopDice(act,2,tst).map(t=>({t,price:L.barPrice(G,DT[t].price+up)})); for(let i=0;i<(L.hasFix(G,'shelf')?4:3);i++){ const c=L.pick(poolT(G,L.rollTier(act,null,tst)).filter(c=>!stock.some(s=>s.c===c))); if(c){ const off=Math.random()<L.offbookP(G); stock.push({c,off,price:L.barPrice(G,CHARMS[c].price+up+(off?L.OFFBOOK_FEE:0))}); } }
+  if(!smart){ stock.filter(s=>s.c).forEach(s=>{ if(G.gold>=s.price&&(s.off||L.slotsUsed(G)<L.charmSlots(G))&&Math.random()<.6){ G.gold-=s.price; s.off?takeOff(G,s.c):applyCharm(G,s.c); } }); if(G.hp<G.maxHp*.5&&G.gold>=6){ G.gold-=6; G.hp=Math.min(G.maxHp,G.hp+12); } return; }
   let backUsed=false;
   for(let guard=0;guard<6;guard++){ const base=evalBuild(G,act,floor), fights=remaining(act,floor); const opts=[];
     // value of nerve: a point now is worth about a point, more when low
@@ -135,13 +155,13 @@ function shop(G,act,floor,smart){
 const VAL={opener:5,packed:5,stack:6,allin:3,glassblower:3,nearmiss:5,blood:6,threes:3,regular:6,heckler:6,doubledown:8,tally:6,jewels:6,slowburn:6,cut:4,bouncer:6,thick:4,tip:2,goldcrown:2,hothand:3,liver:3,cigar:3,penny:9,spoon:5,lastcall:7,jacks:6,snake:5,patience:4,barfly:5,rabbit:4,closer:7,kingpin:9,lowball:8,highstakes:8,bookie:4,collection:5,consolation:2,savings:3,shiner:4,evens:3,deuces:6,piggy:7,tommy:6,jackpot:5,longshot:5,finisher:7,moonshine:9,crownroom:7,straight:7,ringer:9,bigshot:9};
 const DVAL={gilded:0,bomb:1,goose:1,boxcar:2,d8:-3,d6:0,pebble:2,glass:2,gamble:-1,ember:1,twin:1,loaded:3,devil:3,coin:4,shaved:6,royal:2,deuce:1,payday:1,trick:0,bubbly:3,viper:4};
 const worstOf=G=>G.charms.filter(x=>!L.offbook(G,x)).reduce((m,x)=>VAL[x]<VAL[m]?x:m);
-const wantC=(G,c)=>!G.charms.includes(c)&&(L.slotsUsed(G)<5||VAL[c]>VAL[worstOf(G)]+1);
-const takeC=(G,c)=>applyCharm(G,c,L.slotsUsed(G)>=5?G.charms.indexOf(worstOf(G)):null);
+const wantC=(G,c)=>!G.charms.includes(c)&&(L.slotsUsed(G)<L.charmSlots(G)||VAL[c]>VAL[worstOf(G)]+1);
+const takeC=(G,c)=>applyCharm(G,c,L.slotsUsed(G)>=L.charmSlots(G)?G.charms.indexOf(worstOf(G)):null);
 function rewardGood(G,kind,fast,act){ G.gold+=PAY(kind,fast);
   let ch=[]; if(kind==='B'){ ch.push(L.pick([...poolT(G,'r').map(c=>({c})),{t:'shaved'}])); L.shuffle(poolT(G,'u')).slice(0,2).forEach(c=>ch.push({c})); }
   else if(kind==='E') L.shuffle(poolT(G,'u')).slice(0,3).forEach(c=>ch.push({c})); else { ch.push({t:L.shopDie(act)}); L.shuffle(poolT(G,'c')).slice(0,2).forEach(c=>ch.push({c})); }
   const b=ch.filter(x=>x.c&&wantC(G,x.c)).sort((a,b)=>VAL[b.c]-VAL[a.c])[0]; if(b) takeC(G,b.c); else { const d=ch.find(x=>x.t&&DVAL[x.t]>=2); if(d) G.bag.push({type:d.t}); else G.hp=Math.min(G.maxHp,G.hp+12); } }
-function shopGood(G,act){ const up=LM.price; const stock=L.shopDice(act,2).map(t=>({t,price:DT[t].price+up})); for(let i=0;i<3;i++){ const c=L.pick(poolT(G,L.rollTier(act)).filter(c=>!stock.some(s=>s.c===c))); if(c){ const off=Math.random()<L.OFFBOOK_P; stock.push({c,off,price:CHARMS[c].price+up+(off?L.OFFBOOK_FEE:0)}); } }
+function shopGood(G,act){ const up=LM.price; const tst=L.hasFix(G,'taste'), stock=L.shopDice(act,2,tst).map(t=>({t,price:L.barPrice(G,DT[t].price+up)})); for(let i=0;i<(L.hasFix(G,'shelf')?4:3);i++){ const c=L.pick(poolT(G,L.rollTier(act,null,tst)).filter(c=>!stock.some(s=>s.c===c))); if(c){ const off=Math.random()<L.offbookP(G); stock.push({c,off,price:L.barPrice(G,CHARMS[c].price+up+(off?L.OFFBOOK_FEE:0))}); } }
   if(G.hp<G.maxHp*.5&&G.gold>=6+up){ G.gold-=6+up; G.hp=Math.min(G.maxHp,G.hp+12); }
   stock.filter(s=>s.c).sort((a,b)=>VAL[b.c]-VAL[a.c]).forEach(s=>{ if(s.off&&G.gold>=s.price&&!G.charms.includes(s.c)){ G.gold-=s.price; takeOff(G,s.c); } else if(!s.off&&G.gold>=s.price&&wantC(G,s.c)){ G.gold-=s.price; takeC(G,s.c); } });
   const w=G.bag.reduce((m,d)=>DVAL[d.type]<DVAL[m.type]?d:m); if(G.bag.length>6&&DVAL[w.type]<0&&G.gold>=6+up){ G.gold-=6+up; G.bag=G.bag.filter(d=>d!==w); }
@@ -150,7 +170,7 @@ function shopGood(G,act){ const up=LM.price; const stock=L.shopDice(act,2).map(t
   const fl=G.bag.filter(L.canFile).sort((a,b)=>DVAL[b.type]-DVAL[a.type]); if(G.gold>=G.filePrice+up+3&&fl.length){ G.gold-=G.filePrice+up; G.filePrice+=2; L.fileDie(fl[0]); } }
 function event(G,act){ const e=L.rnd(14);
   if(e===9){ const fl=G.bag.filter(L.canFile); if(G.gold>=7&&fl.length){ G.gold-=7; L.fileDie(fl.sort((a,b)=>(DVAL[a.type]||0)-(DVAL[b.type]||0))[0]); } }
-  if(e===10){ const pool=poolT(G,'u'); if(G.hp>G.maxHp*.5&&L.slotsUsed(G)<5&&pool.length){ G.hp-=8; applyCharm(G,SKILL==='good'?pool.sort((a,b)=>VAL[b]-VAL[a])[0]:L.pick(pool)); } else G.hp=Math.min(G.maxHp,G.hp+8); }
+  if(e===10){ const pool=poolT(G,'u'); if(G.hp>G.maxHp*.5&&L.slotsUsed(G)<L.charmSlots(G)&&pool.length){ G.hp-=8; applyCharm(G,SKILL==='good'?pool.sort((a,b)=>VAL[b]-VAL[a])[0]:L.pick(pool)); } else G.hp=Math.min(G.maxHp,G.hp+8); }
   if(e===11){ if(G.gold>=9){ G.gold-=9; G.bag.push(...L.shopDice(act,2).map(type=>({type}))); } else G.gold+=6; }
   if(e===12){ if(G.hp>G.maxHp*.6){ if(Math.random()<.5) G.bag.push({type:'shaved'}); else G.hp-=10; } else if(G.gold>=3){ G.gold-=3; G.hp=Math.min(G.maxHp,G.hp+5); } }
   if(e===13){ if(G.gold>=15){ G.gold-=15; G.rep++; } }
@@ -181,6 +201,8 @@ function run(smart){ if(A.tune&&!tuned){ require(path.resolve(A.tune))(L); tuned
   const G={hp:hp0,maxHp:hp0,gold:P.gold,lap:0,rep:0,tally:0,filePrice:5,gildPrice:P.gild,bag:P.bag.map(type=>({type})),charms:P.charms.slice(),bossIx:[L.rnd(2),L.rnd(2),L.rnd(2)]}; if(P.ruby) L.gildDie(G.bag[0]);
   // give=charm[,charm] / givedie=type: start every run holding it (to measure a card's power without pick bias)
   if(A.give) A.give.split(',').forEach(c=>{ if(!G.charms.includes(c)) G.charms.push(c); if(c==='liver'){ G.maxHp+=12; G.hp+=12; } });
+  if(A.givefix){ G.fix=A.givefix.split(','); if(G.fix.includes('rope')){ G.maxHp+=8; G.hp+=8; } }
+  if(A.givefin) G.bag.filter(d=>d.type==='d6').slice(0,2).forEach(d=>d.fin=A.givefin);
   if(A.givedie) for(let k=0;k<2;k++){ const d=G.bag.find(x=>x.type==='d6'); if(d) d.type=A.givedie; }
   const out={acts:0,fights:[],stats:{rounds:0,w:0,l:0,odds:0,hit:0,taken:0,best:0}};
   for(let act=0;act<3;act++){ const floors=L.genFloors();
@@ -189,6 +211,7 @@ function run(smart){ if(A.tune&&!tuned){ require(path.resolve(A.tune))(L); tuned
       const hpb=G.hp; const r=fight(G,n,act,f,playSmart,out.stats); out.fights.push({act,kind:n,rounds:r.rounds,lost:hpb-Math.max(0,G.hp),won:r.won,hp:r.hp,name:r.name});
       if(!r.won){ out.died={act,f,kind:n,name:r.name}; out.G=G; return out; }
       if(n==='B') G.rep++; if(has(G,'tally')) G.tally++; if(has(G,'cigar')) G.hp=Math.min(G.maxHp,G.hp+6);
+      PAYG=G; if(!A.nochit&&n==='E'&&r.rounds<=L.QUICK_WIN) simChit(G); if(!A.noextra) barExtras(G,act,smart);
       if(SKILL==='good'){ rewardGood(G,n,r.rounds<=3,act); shopGood(G,act); } else { reward(G,n,r.rounds<=3,act,f,smart); shop(G,act,f,smart); } }
     out.acts=act+1; (out.snap=out.snap||[])[act]={charms:G.charms.slice(),bag:G.bag.map(d=>d.type)}; G.hp=Math.min(G.maxHp,G.hp+Math.ceil(G.maxHp*LM.stairs)); }
   out.G=G; out.won=true; return out; }

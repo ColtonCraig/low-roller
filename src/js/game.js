@@ -721,9 +721,13 @@ function makeDie3D(inst){
       o.mats.push(m); o.cvs.push(cv); o.decals.push({p,f}); });
   }
   o.mesh.castShadow=true; o.mesh.userData.die=o; ALLDICE.add(o);
+  // a finish shows as a glowing rim in its color
+  if(inst.fin&&FINISHES[inst.fin]){ if(!finEdges[sh]) finEdges[sh]=new THREE.EdgesGeometry(sd.geo,30);
+    const ln=new THREE.LineSegments(finEdges[sh],new THREE.LineBasicMaterial({color:new THREE.Color(FINISHES[inst.fin].col)})); ln.scale.setScalar(1.015); o.mesh.add(ln); o.finMat=ln.material; }
   setFaces(o,1,false);
   return o;
 }
+const finEdges={};
 function baseEmissive(o,i){ if(o.sel) return 0x6a4a10;
   if(o.decals.length){ if(i===0) return o.inst.type==='ember'?0x3a1404:0x141414; const d=o.decals[i-1]; const top=o.upSet&&o.upSet.has(i-1); return (top&&o.face==='C'&&!o.hidden)?0x5a4418:0x303030; }
   if(i===o.topIdx&&o.face==='C'&&!o.hidden) return 0x4a3810; return 0x1c1c1c; }
@@ -745,7 +749,7 @@ function setFaces(o,top,hidden){
 // once a polyhedron settles, turn its top number so it reads upright from your seat
 function uprightTop(o){ if(o.shape==='tetra'||!o.decals.length) return; const d=o.decals[o.upI]; const inv=o.mesh.quaternion.clone().invert(); const hint=new THREE.Vector3(0,0,-1).applyQuaternion(inv); d.p.quaternion.copy(basisQuat(d.f.n,hint)); }
 function setSel(o,on){ o.sel=on; o.mats.forEach((m,i)=>m.emissive.setHex(baseEmissive(o,i))); }
-function disposeDie(o){ ALLDICE.delete(o); if(o.mesh.parent) o.mesh.parent.remove(o.mesh); o.mats.forEach(m=>{ if(m.map) m.map.dispose(); m.dispose(); }); if(o.label){ o.label.remove(); o.label=null; } }
+function disposeDie(o){ ALLDICE.delete(o); if(o.mesh.parent) o.mesh.parent.remove(o.mesh); o.mats.forEach(m=>{ if(m.map) m.map.dispose(); m.dispose(); }); if(o.finMat) o.finMat.dispose(); if(o.label){ o.label.remove(); o.label=null; } }
 const restY=o=>o.restY;
 const _ts=new THREE.Vector3();
 function toScreen(v){ const p=_ts.copy(v).project(CAM); return {x:(p.x+1)/2*VW, y:(1-p.y)/2*VH}; }
@@ -841,7 +845,7 @@ const _lp=new THREE.Vector3();
 frameFns.add(()=>{ if(!F||!F.you||!F.labelsOn) return; const c=ctx(); F.you.forEach(o=>{ const show=!o.banked&&!o.flying&&o.mesh.visible;
   if(!show){ if(o.label&&o.label._op!==0){ o.label.style.opacity=0; o.label._op=0; } return; }
   if(!o.label){ o.label=h('<div class="vp"></div>'); labels.appendChild(o.label); }
-  const v=effVal(o.face,c), txt=o.hidden?'?':v<0?'\u2212'+(-v):String(v), cls='vp'+(o.hidden?' hid':v<0?' neg':v===0?' zero':v>=4?' hi':'')+(o.sel?' sel':'');
+  const v=finVal(effVal(o.face,c),o.inst.fin), txt=o.hidden?'?':v<0?'\u2212'+(-v):String(v), cls='vp'+(o.hidden?' hid':v<0?' neg':v===0?' zero':v>=4?' hi':'')+(o.sel?' sel':'');
   if(o.label._t!==txt){ o.label.textContent=txt; o.label._t=txt; } if(o.label._c!==cls){ o.label.className=cls; o.label._c=cls; }
   _lp.copy(o.mesh.position); _lp.y-=o.size/2; _lp.z+=o.size*.62+.12; const p=toScreen(_lp), x=Math.round(p.x), y=Math.round(p.y);
   if(o.label._x!==x||o.label._y!==y){ o.label.style.left=x+'px'; o.label.style.top=y+'px'; o.label._x=x; o.label._y=y; }
@@ -874,7 +878,7 @@ const ROMAN=['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'];
 function soundBtns(){ return `<div class="tabs pe">${G?`<button class="tab" id="bagbtn" aria-label="Your bag">Bag<span class="tc">${G.bag.length}</span></button>`:''}<button class="tab" id="menubtn">Menu</button></div>`; }
 function hud(){ return `<div class="hud pe">
   <div class="tabcard plate"><div class="statb"><span class="sc">Nerve</span><div class="inkbar ${G.hp<=G.maxHp*.25?'low':''}" id="hpw"><i id="hpbar" style="width:${100*G.hp/G.maxHp}%"></i></div><span class="tabnum" id="hptxt">${G.hp}<small>/${G.maxHp}</small></span></div>
-    <div class="statb"><span class="cash" id="cash">$${G.gold}</span><button class="tabnum owe" id="owe" aria-label="What is the tab?">${G.tab?`tab $${G.tab}`:''}</button></div></div>
+    <div class="statb"><span class="cash" id="cash">$${G.gold}</span><span class="chits" id="chits">${chitsHTML()}</span><button class="tabnum owe" id="owe" aria-label="What is the tab?">${G.tab?`tab $${G.tab}`:''}</button></div></div>
   ${rackHTML()}<div class="spacer"></div><div class="where">${floorLabel()}</div>${soundBtns()}</div>`; }
 function wireSound(){ const m=$('#menubtn'), b=$('#bagbtn'); if(m) m.onclick=()=>openMenu(); if(b) b.onclick=()=>openMenu('bag'); }
 function updTop(){ if(G&&G.stats) G.stats.rich=Math.max(G.stats.rich||0,G.gold); const b=$('#hpbar'); if(b){ b.style.width=Math.max(0,100*G.hp/G.maxHp)+'%'; $('#hptxt').innerHTML=`${Math.max(0,G.hp)}<small>/${G.maxHp}</small>`; const w=$('#hpw'); if(w) w.classList.toggle('low',G.hp<=G.maxHp*.25); } const c=$('#cash'); if(c) c.textContent='$'+G.gold; const o=$('#owe'); if(o) o.textContent=G.tab?`tab $${G.tab}`:''; }
@@ -902,10 +906,11 @@ document.addEventListener('pointerdown',hideTip,true);
 function screen(html){ if(CAMF&&(CAMF.zoom!==1||camGoal)){ CAMF.zoom=1; camGoal=new THREE.Vector3(0,camLook.y+Math.sin(CAMF.el)*CAMF.dist,camLook.z+Math.cos(CAMF.el)*CAMF.dist); fogNow=SCN.fog.near-1.4; fogGoal=CAMF.dist; } document.querySelectorAll('.toast').forEach(t=>t.remove()); closePop&&closePop(); const old=ui.querySelector('.modal,.title,.newspaper'); if(old&&!REDUCED){ const r=old.getBoundingClientRect(); const c=old.cloneNode(true); c.removeAttribute('id'); Object.assign(c.style,{position:'fixed',left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',margin:'0',zIndex:30,pointerEvents:'none',boxSizing:'border-box'}); c.classList.add('leaving'); document.body.appendChild(c); setTimeout(()=>c.remove(),420); SFX.paper(); } ui.innerHTML=html; ui.className=html.includes('id="plate"')?'':'page'; ui.scrollTop=0; wireSound(); wireRack(); closePop(); }
 function clearLabels(){ labels.innerHTML=''; }
 function bagCounts(arr){ const m=new Map(); arr.forEach(t=>m.set(t,(m.get(t)||0)+1)); return [...m.entries()]; }
-function dieKey(d){ return d.type+'|'+facesOf(d).join(','); }
+function dieKey(d){ return d.type+'|'+facesOf(d).join(',')+'|'+(d.fin||''); }
+const finTag=d=>d&&d.fin?` <span class="fintag" style="--fc:${FINISHES[d.fin].col}" data-tip="${FINISHES[d.fin].name}: ${FINISHES[d.fin].desc}">${FINISHES[d.fin].name}</span>`:'';
 function diceList(){ const w=h('<div class="list cols2"></div>'); const groups=new Map(); G.bag.forEach(d=>{ const k=dieKey(d); if(!groups.has(k)) groups.set(k,[]); groups.get(k).push(d); });
   groups.forEach(list=>{ const d0=list[0], t=d0.type, d=DT[t]; const cr=list.filter(x=>d.breaks).map(x=>x.cracks); const mod=!!d0.f;
-  const el=h(`<div class="item"><span class="dico"></span><div><div class="iname">${d.name}${mod?' <span class="tier u">worked</span>':''}<span class="q">\u00d7${list.length}</span></div><div class="idesc">${kw(d.desc)}${cr.length?` Cracks ${cr.join(', ')}/${d.breaks}.`:''}</div><div class="ifaces">${facesHTML(d0)}</div></div></div>`);
+  const el=h(`<div class="item"><span class="dico"></span><div><div class="iname">${d.name}${finTag(d0)}${mod?' <span class="tier u">worked</span>':''}<span class="q">\u00d7${list.length}</span></div><div class="idesc">${kw(d.desc)}${cr.length?` Cracks ${cr.join(', ')}/${d.breaks}.`:''}</div><div class="ifaces">${facesHTML(d0)}</div></div></div>`);
   el.querySelector('.dico').appendChild(iconCanvas(t,'C',38)); w.appendChild(el); }); return w; }
 function facesHTML(d){ const base=DT[d.type].faces, f=facesOf(d); return '<span class="faces">'+f.map((x,i)=>`<span class="f1 ${x!==base[i]?'chg':''} ${x==='C'||x==='G'?'cr':''}">${faceTxt(x)}</span>`).join('')+'</span>'; }
 function charmList(sell){ const w=h('<div class="list cols2"></div>'); if(!G.charms.length){ w.innerHTML='<div class="empty">No charms yet. Every table offers one.</div>'; return w; }
@@ -934,6 +939,12 @@ function buildCharmIcons(){ if(!GL_OK||!R) return; try{
   const card=(g,x,y,z,rz,ry,pip)=>{ add(g,Bx(.5,.72,.04),CREAM,x,y,z,0,ry,rz); add(g,Bx(.14,.2,.02),pip,x+Math.cos(rz+Math.PI/2)*0+0,y,z+.03,0,ry,rz); };
   const die=(g,x,y,z,ry)=>{ add(g,Bx(.44,.44,.44),CREAM,x,y,z,0,ry,0); add(g,Bx(.15,.03,.15),RED,x,y+.225,z,0,ry,0); };
   const B={
+    shoeshine(g){ add(g,Bx(.7,.22,.3),BROWN,0,.3,0); add(g,Bx(.5,.08,.24),M(0x9fe8ff),0,.46,0); add(g,Cy(.04,.04,.4,6),WOOD,.2,.62,0,0,0,.6); },
+    curator(g){ add(g,Bx(.8,.62,.06),M(0x5a3a1a),0,.5,0); add(g,Bx(.6,.44,.07),M(0x2a1a10),0,.5,0); add(g,Bx(.24,.24,.24),CREAM,0,.5,.12); add(g,Bx(.26,.04,.26),M(0x9fe8ff),0,.64,.12); },
+    restless(g){ add(g,To(.3,.07,14),GOLD,0,.5,0); add(g,Co(.1,.18,5),GOLD,.3,.66,0,0,0,-1.2); add(g,Co(.1,.18,5),GOLD,-.3,.34,0,0,0,1.9); },
+    craterat(g){ add(g,Bx(.7,.5,.5),WOOD,0,.3,0); add(g,Bx(.72,.06,.52),BROWN,0,.4,0); add(g,Sp(.18,8),M(0x8a8a90),.18,.66,.1,0,0,0,1.3,1,1); add(g,Cy(.02,.02,.4,4),M(0xd0a0a0),-.15,.62,.1,0,0,1.2); },
+    stub(g){ add(g,Bx(.86,.42,.04),M(0xd8c07a),0,.5,0,0,0,.15); add(g,Bx(.03,.42,.05),M(0x7a5a1a),.2,.5,0,0,0,.15); add(g,Bx(.3,.06,.05),RED,-.12,.54,.01,0,0,.15); },
+    rabbitp(g){ add(g,Sp(.3,10),M(0xf0e8e0),0,.45,0); add(g,Cy(.07,.09,.4,6),M(0xf0e8e0),-.1,.82,0,0,0,.2); add(g,Cy(.07,.09,.4,6),M(0xf0e8e0),.1,.82,0,0,0,-.2); add(g,To(.2,.07,10),GOLD,0,.36,.18); },
     collection(g){ for(let k=0;k<3;k++) add(g,Bx(.5,.62,.06),k===1?GOLD:CREAM,(k-1)*.28,.42+k*.02,-k*.08,0,0,(k-1)*.22); add(g,Bx(.16,.16,.02),RED,0,.48,.04); },
     consolation(g){ add(g,Sp(.24,8),RED,-.15,.5,0); add(g,Sp(.24,8),RED,.15,.5,0); add(g,Co(.34,.42,8),RED,0,.22,0,Math.PI); },
     savings(g){ add(g,Bx(.86,.5,.04),M(0xd8e8c0),0,.44,0); add(g,Bx(.7,.36,.05),M(0x3a7a4a),0,.44,0); add(g,Cy(.12,.12,.06,10),GOLD,0,.44,.04,Math.PI/2); },
@@ -1092,6 +1103,7 @@ function entry(p,i){
     wireChips(el); }
   else el.innerHTML=`${svcIcon(nd.ico||'$',p.n==='?'?'stranger':null)}<div class="txt"><div class="ename">${nd.t}</div><div class="edesc">${nd.d}</div></div><span class="take">${p.n==='S'?'Walk up':p.n==='R'?'Step out':'Hear them out'}</span>`;
   el.onclick=()=>act(el,()=>{ G.path[G.floor]=p.n; enterNode(p.n,p.opp); });
+  if(p.n==='F'&&p.opp&&G.floor>0){ const wp=h('<button class="walkpast" data-tip="Skip this table: no fight, no pay, no spoils. You pick up a chit instead.">Walk past for a chit</button>'); wp.onclick=e=>{ e.stopPropagation(); SFX.ui(); if(G.used) delete G.used[p.opp.n]; G.path[G.floor]=p.n; gainChit(pick(CHIT_KEYS)); saveRun(); setTimeout(advance,600); }; el.appendChild(wp); }
   return el;
 }
 function routeLine(){ return `<div class="route">${FLOORS.map((_,i)=>{ const done=i<G.floor, now=i===G.floor, boss=i===FLOORS.length-1;
@@ -1184,6 +1196,7 @@ function acts(x){ const a=$('#acts'); if(a) a.innerHTML=x; }
 function setP(v){ const e=$('#pscore'); if(e) e.innerHTML=`${v<0?'\u2212'+(-v):v}<small>You</small>`; }
 function setVs(v){ const e=$('#vs'); if(e) e.innerHTML=`${v}<small>Them</small>`; }
 function updOpp(){ const b=$('#obar'); if(!b) return; b.style.width=Math.max(0,100*F.oppHp/F.oppMax)+'%'; $('#otxt').textContent=`${Math.max(0,F.oppHp)}`; }
+function finsOf(list){ return list.map(o=>{ const f=o.inst.fin; if(f!=='lucky') return f||null; return has('rabbitp')||luckyHit(F.pre?F.pre.seed:0,o.inst.uid)?'lucky':null; }); }
 function ctx(){ const q=F.opp.q; return {cold:q.includes('cold')&&F.throwNo<=1,penny:has('penny')&&F.throwNo<=1,deuces:has('deuces'),ringer:has('ringer'),crownless:q.includes('crownless'),snakebit:q.includes('snakebit')&&F.throwNo<=1}; }
 const tray=()=>F.you.filter(o=>!o.banked);
 function minBank(){ return F.opp.q.includes('fuse')&&F.throwNo===1?Math.min(2,tray().length):1; }
@@ -1250,7 +1263,7 @@ async function hopDice(list){ F.labelsOn=false; await Promise.all(list.map((o,i)
 function toggleSel(o){ if(busy||o.banked||o.flying) return; setSel(o,!o.sel); if(o.sel){ dustAt(toScreen(o.mesh.position)); const m=o.mesh; let last=0; anim(320,k=>{ const e=ease.out(k); m.rotateOnWorldAxis(new THREE.Vector3(0,1,0),(e-last)*Math.PI*2); last=e; }); } o.pop=1; o.sel?SFX.pick():SFX.unpick(); refreshActs(); }
 function refreshActs(){
   if(!F) return; const sel=tray().filter(o=>o.sel), need=minBank();
-  const proj=bankVals(sel.map(o=>o.face),ctx(),live(),sel.length===tray().length).reduce((a,b)=>a+b,0), spoon=has('spoon')&&!F.spoonUsed; updOdds(false,sel);
+  const proj=bankVals(sel.map(o=>o.face),ctx(),live(),sel.length===tray().length,sel.map(o=>o.inst.fin)).reduce((a,b)=>a+b,0), spoon=has('spoon')&&!F.spoonUsed; updOdds(false,sel);
   acts(`${spoon?`<button class="btn ghost small" id="spoon" ${sel.length===1?'':'disabled'}>Bent Spoon</button>`:''}<button class="btn go" id="bank" ${sel.length>=need?'':'disabled'}>${sel.length?`Bank ${sel.length}${sel.some(o=>o.hidden)?'':` · +${proj}`}`:need>1?'Pick two':'Pick dice'}</button>`);
   $('#bank').onclick=bank;
   if(spoon) $('#spoon').onclick=async()=>{ if(busy) return; const o=tray().find(x=>x.sel); if(!o) return; F.spoonUsed=true; busy=true; acts(''); setSel(o,false); await throwDice([o],[seeded(()=>rollInst(o.inst))],'you',-1,{slots:[o.home.clone()]}); if(o.face==='C') sparksAt(dieScreen(o)); busy=false; refreshActs(); };
@@ -1259,8 +1272,9 @@ async function bank(){
   if(busy||!F) return; const sel=tray().filter(o=>o.sel); if(sel.length<minBank()) return;
   busy=true; acts('');
   const faces=sel.map(o=>o.face), oddsBefore=curOdds().odds;
-  const vals=bankVals(faces,ctx(),live(),sel.length===tray().length);
-  noteBank(F.R,faces,sel.map(o=>o.inst.type),live());
+  const fins=finsOf(sel), vals=bankVals(faces,ctx(),live(),sel.length===tray().length,sel.map(o=>o.inst.fin));
+  noteBank(F.R,faces,sel.map(o=>o.inst.type),live(),fins);
+  { const gl=sel.filter(o=>o.inst.fin==='goldleaf'&&(o.face===1||o.face==='C'||o.face==='G')).length; if(gl) setTimeout(()=>addGold(gl,$('#cash')),300); if(fins.includes('lucky')) setTimeout(()=>toast('<b class="g">Lucky.</b> +4 odds.'),200); }
   for(let i=0;i<sel.length;i++){ const o=sel[i]; o.banked=true; setSel(o,false); if(o.label) o.label.style.opacity=0;
     if(o.hidden) setFaces(o,o.face,false);
     SFX.bank(i); floatAt(dieScreen(o),vals[i]<0?'\u2212'+(-vals[i]):vals[i]===0?'0':'+'+vals[i],vals[i]<=0?'zero':'pts');
@@ -1285,9 +1299,9 @@ function crownFx(o){ const p=dieScreen(o); sparksAt(p, o.face==='G'?'#ff5c6f':nu
   if(has('goldcrown')) addGold(1,$('#cash')); }
 // what you'd be paid right now, if the round ended on your current score
 const tgt=(R)=>F.target==null?null:theirScore(F.oScore,R||F.R||newRound(),live(),F.opp.q);
-function oddsEnv(done){ return {bag:G.bag.length,round:F.round,q:F.opp.q,raid:isRaid(F.opp,F.round,F.phase2),gold:G.gold,rep:G.rep,tally:G.tally,wins:F.wins||0,margin:F.target!=null?tgt()-F.pScore-(has('bouncer')?1:0):0,score:F.pScore,done,grow:G.grow||{},oppHalf:F.oppHp<=F.oppMax/2,wonOnce:!!F.wonOnce}; }
+function oddsEnv(done){ return {finished:G.bag.filter(d=>d.fin).length,fixOdds:hasFix(G,'felt')?1:0,bag:G.bag.length,round:F.round,q:F.opp.q,raid:isRaid(F.opp,F.round,F.phase2),gold:G.gold,rep:G.rep,tally:G.tally,wins:F.wins||0,margin:F.target!=null?tgt()-F.pScore-(has('bouncer')?1:0):0,score:F.pScore,done,grow:G.grow||{},oppHalf:F.oppHp<=F.oppMax/2,wonOnce:!!F.wonOnce}; }
 function curOdds(done,R){ return oddsOf(R||F.R||newRound(),live(),oddsEnv(done)); }
-function updOdds(bump,sel){ if(!F) return; let R2=null, add=0; if(sel&&sel.length&&!sel.some(o=>o.hidden)){ R2={...(F.R||newRound())}; noteBank(R2,sel.map(o=>o.face),sel.map(o=>o.inst.type),live()); add=bankVals(sel.map(o=>o.face),ctx(),live(),sel.length===tray().length).reduce((a,b)=>a+b,0); }
+function updOdds(bump,sel){ if(!F) return; let R2=null, add=0; if(sel&&sel.length&&!sel.some(o=>o.hidden)){ R2={...(F.R||newRound())}; noteBank(R2,sel.map(o=>o.face),sel.map(o=>o.inst.type),live(),finsOf(sel)); add=bankVals(sel.map(o=>o.face),ctx(),live(),sel.length===tray().length,sel.map(o=>o.inst.fin)).reduce((a,b)=>a+b,0); }
   const full=!!(sel&&sel.length&&sel.length===tray().length); F._prevR=R2; const O=curOdds(full,R2), eq=$('#eq'); if(!eq) return;
   const set=(id,v,l)=>{ const e=$('#'+id); e.innerHTML=`<b>${v}</b><small>${l}</small>`; };
   const known=F.target!=null&&F.target!=='–';
@@ -1376,7 +1390,7 @@ async function gatherTheirs(list){ await Promise.all(list.map((o,i)=>{ const m=o
   return sleep(Math.max(0,4.2-Math.abs(s.x))*70).then(()=>anim(620,k=>{ m.position.x=lerp(s.x,t.x,ease.in(k)); m.position.y=k<.9?s.y+.7*Math.min(1,k/.4):lerp(s.y+.7,t.y,(k-.9)/.1); m.rotation.z-=.08*k; })).then(()=>disposeDie(o)); })); }
 async function fightWon(){ const F0kind=F.kind;
   G.won++; if(F.kind==='B'){ (G.stats.bosses=G.stats.bosses||[]).push(F.opp.n); G.rep++; store('lr-bossn',bossTotal()+1); } if(has('tally')) G.tally++; if(G.mode==='endless') saveBest(G.won); if(has('cigar')) heal(6,$('#hpbar')); { const i=afterFight(G); if(i) addGold(i,$('#cash')); }
-  G._quick=F.round<=3;
+  G._quick=F.round<=QUICK_WIN;
   { const last=F.kind==='B'&&G.mode==='run'&&G.act===2; G.fight=null; G.rw=last?null:{kind:F.kind}; G.at=last?'victory':'reward'; saveRun(); }
   SFX.fanfare(); banner(F.kind==='B'?`${F.opp.short||ACTS[G.act].short} folds`:'Cleaned out',F.opp.n);
   if(foe) await foeWalkOut(); else await sleep(800);
@@ -1390,14 +1404,23 @@ function dieCard(type,price){ const d=DT[type]; const el=h(`<button class="card 
 function charmCard(c,price,off){ const d=CHARMS[c]; return h(`<button class="card t-${d.tier}${off?' offbook':''}"><span class="k">${off?'Off the Books \u00b7 ':''}${TIER_NAME[d.tier]}</span><span class="art">${chipHTML(c)}</span><span class="mid"><span class="n">${d.name}</span><span class="d">${kw(d.desc)}${off?'<br><b class="obk">Doesn\u2019t take a charm slot.</b>':''}</span></span>${price!=null?`<span class="p">$${price}</span>`:''}</button>`); }
 const SVC_OF={'?':'back','+':'heal','W':'heal','\u2715':'remove','1':'file','$':'bar','\u263E':'alley'};
 function svcIcon(ico,key){ const k=key||(String(ico).includes('ruby')?'gild':SVC_OF[ico]); return SVC_ICON[k]?`<span class="cicon sv"><img src="${SVC_ICON[k]}" alt=""></span>`:`<span class="pchip plain"><span>${ico}</span></span>`; }
+// ---- chits: small favors you pick up; the ones that wait for the next bar or table show next to your cash
+function gainChit(k){ G.grow=G.grow||{}; G.grow.chits=(G.grow.chits||0)+1; const c=CHITS[k]; let extra='';
+  if(k==='cash') addGold(5,$('#cash'));
+  else if(k==='stiff') heal(10,$('#hpbar'));
+  else if(k==='finish'){ const un=G.bag.filter(d=>!d.fin); if(un.length){ const d=pick(un); d.fin=pick(FIN_KEYS); extra=` Your <b>${DT[d.type].name}</b> is ${FINISHES[d.fin].name} now.`; } }
+  else { G.nb=G.nb||{}; G.nb[k]=true; }
+  SFX.coin(); toast(`<b class="g">Chit: ${c.name}.</b> ${c.desc}${extra}`); refreshChits(); setTimeout(()=>tip('chit'),900); }
+function chitsHTML(){ const nb=G&&G.nb||{}; return Object.keys(nb).filter(k=>nb[k]).map(k=>`<span class="chit" data-tip="${CHITS[k].name}: ${CHITS[k].desc}">${CHITS[k].name}</span>`).join(''); }
+function refreshChits(){ const e=$('#chits'); if(e) e.innerHTML=chitsHTML(); }
 function plainCard(k,ico,n,d,price){ return h(`<button class="card"><span class="k">${k}</span><span class="art">${svcIcon(ico)}</span><span class="mid"><span class="n">${n}</span><span class="d">${kw(d)}</span></span>${price!=null?`<span class="p">$${price}</span>`:''}</button>`); }
 const charmPool=(tier)=>Object.keys(CHARMS).filter(c=>!G.charms.includes(c)&&(!tier||CHARMS[c].tier===tier));
 const rarePool=()=>[...charmPool('r').map(c=>({k:'charm',c,price:CHARMS[c].price,rare:1})),{k:'die',t:'shaved',price:DT.shaved.price,rare:1}];
-function stockCharms(n){ const out=[]; for(let i=0;i<n;i++){ let t=rollTier(G.act), pool=charmPool(t).filter(c=>!out.includes(c)); if(!pool.length) pool=charmPool().filter(c=>!out.includes(c)); if(pool.length) out.push(pick(pool)); } return out; }
+function stockCharms(n,taste){ const out=[]; for(let i=0;i<n;i++){ let t=rollTier(G.act,null,taste), pool=charmPool(t).filter(c=>!out.includes(c)); if(!pool.length) pool=charmPool().filter(c=>!out.includes(c)); if(pool.length) out.push(pick(pool)); } return out; }
 function gainCharm(c,off){ if(G.charms.includes(c)) return; G.charms.push(c); if(off) (G.offbook=G.offbook||[]).push(c); G._newCharm=c; setTimeout(refreshRack,0); if(c==='liver'){ G.maxHp+=12; G.hp=Math.min(G.maxHp,G.hp+12); } if(c==='tally') G.tally=0; updTop(); toast(`<b>${CHARMS[c].name}</b><br><i>${kw(CHARMS[c].desc)}</i>`); }
 function loseCharm(c){ G.charms=G.charms.filter(x=>x!==c); if(G.offbook) G.offbook=G.offbook.filter(x=>x!==c); setTimeout(refreshRack,0); if(c==='liver'){ G.maxHp-=12; G.hp=Math.min(G.hp,G.maxHp); } updTop(); }
 function offerCharm(c,done,cancel,off){
-  if(off||slotsUsed(G)<MAX_CHARMS){ gainCharm(c,off); done&&done(); return; }
+  if(off||slotsUsed(G)<charmSlots(G)){ gainCharm(c,off); done&&done(); return; }
   const ov=h(`<div class="overlay pe"><div class="modal paper"><div class="mhead"><div class="sc">Your pockets are full</div><div class="mtitle sm">Trade for ${CHARMS[c].name}?</div></div>
     <div class="prose it">${kw(CHARMS[c].desc)}</div><div class="mrule"></div><div class="secthead">Give one up</div><div id="swapt" class="list"></div><div class="row"><button class="btn ghost" id="nvm">Keep what I have</button></div></div></div>`);
   document.body.appendChild(ov);
@@ -1409,7 +1432,8 @@ function renderReward(kind){
   F=null; clearLabels(); clearDebris();
   let W=G.rw&&G.rw.choices?G.rw:null;
   if(W) kind=W.kind; else {
-  const quick=kind==='F'&&G._quick, gold=kind==='B'?20:kind==='E'?10:Math.max(1,5+(quick?3:0)+LIM().pay); G.gold+=gold; G.stats.earned+=gold;
+  const quick=kind==='F'&&G._quick; let gold=kind==='B'?20:kind==='E'?10:Math.max(1,5+(quick?3:0)+LIM().pay); if(G.nb&&G.nb.double){ gold*=2; G.nb.double=false; } G.gold+=gold; G.stats.earned+=gold;
+  if(kind==='E'&&G._quick) setTimeout(()=>{ if(!G) return; gainChit(pick(CHIT_KEYS)); saveRun(); },700);
   if(G.tab>0){ const pay=Math.min(G.gold,G.tab); G.gold-=pay; G.tab-=pay; setTimeout(()=>toast(`The bartender takes <b>$${pay}</b> off your tab.${G.tab?` You still owe $${G.tab}.`:' You\u2019re square.'}`),900); }
   const choices=[];
   if(kind==='B'){ const r=pick(rarePool()); choices.push(r.k==='die'?{k:'die',t:r.t}:{k:'charm',c:r.c}); shuffle(charmPool('u')).slice(0,2).forEach(c=>choices.push({k:'charm',c})); }
@@ -1427,7 +1451,7 @@ function renderReward(kind){
   choices.forEach((c,i)=>{ const el=c.k==='die'?dieCard(c.t):c.k==='charm'?charmCard(c.c):plainCard('A drink','W','Tall glass of water','Restores 12 nerve.');
     el.style.animationDelay=(.15+i*.12)+'s';
     el.onclick=()=>{ if(el.parentElement&&el.parentElement.dataset.busy) return;
-      if(c.k==='charm'&&slotsUsed(G)>=MAX_CHARMS){ offerCharm(c.c,()=>{ G.rw=null; G.at='bar'; G.shop=null; saveRun(); stampCard(el,'Taken',renderShop); }); return; }
+      if(c.k==='charm'&&slotsUsed(G)>=charmSlots(G)){ offerCharm(c.c,()=>{ G.rw=null; G.at='bar'; G.shop=null; saveRun(); stampCard(el,'Taken',renderShop); }); return; }
       stampCard(el,'Taken',()=>{ if(c.k==='die'){ G.bag.push(newDie(c.t)); toast(`<b>${DT[c.t].name}</b> goes in the bag.`); } else if(c.k==='charm') gainCharm(c.c); else G.hp=Math.min(G.maxHp,G.hp+12); renderShop(); }); };
     $('#cards').appendChild(el); });
   $('#skip').onclick=()=>{ const cs=$('#cards'); if(cs&&cs.dataset.busy) return; if(cs) cs.dataset.busy=1; SFX.ui(); renderShop(); };
@@ -1438,23 +1462,49 @@ function renderReward(kind){
 const TAB_LIMIT=15;
 const tabText=()=>`<b class="tbh">Running a tab</b><span>Short on cash? Click a price <b>twice</b> and the bartender covers what you\u2019re missing. The favor costs <b class="kw cash">$2</b>. He\u2019ll front up to <b class="kw cash">$${TAB_LIMIT}</b>, and takes it back out of your next winnings before you see them.</span>${G&&G.tab?`<span class="owe">You owe <b>$${G.tab}</b> of $${TAB_LIMIT}.</span>`:''}`;
 const canTab=price=>G&&(price-G.gold+2+G.tab)<=TAB_LIMIT+2&&(price-G.gold)<=TAB_LIMIT-G.tab;
+// open a crate: pick one of a few. Charms go through offerCharm; dice into the bag; finishes go on a die you pick
+function openCrate(kind,S,done){ const n=crateSize(G), taste=hasFix(G,'taste'); let picks;
+  if(kind==='charm') picks=stockCharms(n,taste).map(c=>({k:'charm',c}));
+  else if(kind==='dice') picks=shopDice(G.act,n,taste).map(t=>({k:'die',t,fin:Math.random()<.35?pick(FIN_KEYS):null}));
+  else picks=shuffle(FIN_KEYS.slice()).slice(0,n).map(f=>({k:'fin',f}));
+  SFX.paper(); const ov=h(`<div class="overlay tipov pe"><div class="modal wide paper"><div class="mhead"><div class="sc">Crowbar</div><div class="mtitle">${CRATES[kind].name}</div></div><div class="secthead">Keep one</div><div class="cards picks" id="cpicks"></div><div class="row"><button class="btn ghost small" id="cskip">Leave it</button></div></div></div>`);
+  document.body.appendChild(ov); const close=()=>{ ov.remove(); done&&done(); };
+  picks.forEach((p,i)=>{ const el=p.k==='charm'?charmCard(p.c,null):p.k==='die'?dieCard(p.t,null):plainCard('Finish','\u2726',FINISHES[p.f].name,FINISHES[p.f].desc,null);
+    if(p.k==='die'&&p.fin) el.querySelector('.n').insertAdjacentHTML('beforeend',finTag({fin:p.fin}));
+    if(p.k==='fin') el.style.setProperty('--fc',FINISHES[p.f].col), el.classList.add('finish');
+    el.style.animationDelay=(.05+i*.06)+'s';
+    el.onclick=()=>{ SFX.stamp();
+      if(p.k==='charm'){ ov.remove(); offerCharm(p.c,()=>{ toast(`<b>${CHARMS[p.c].name}</b> is yours.`); done&&done(); },()=>done&&done()); return; }
+      if(p.k==='die'){ const d=newDie(p.t); if(p.fin) d.fin=p.fin; G.bag.push(d); toast(`<b>${DT[p.t].name}</b>${p.fin?' ('+FINISHES[p.fin].name+')':''} goes in the bag.`); refreshTabs(); close(); if(p.fin) tip('finish'); return; }
+      S.finish=p.f; S.pick='finish'; close(); if(window.__pickFinish) window.__pickFinish(); tip('finish'); };
+    ov.querySelector('#cpicks').appendChild(el); });
+  ov.querySelector('#cskip').onclick=()=>{ SFX.ui(); close(); }; }
 function renderShop(){
   F=null; clearLabels();
   let pickMode=null; const els=[];
-  const up=LIM().price; const stockFor=()=>[...shopDice(G.act,2).map(t=>({k:'die',t,price:DT[t].price+up})),...stockCharms(3).map(c=>{ const off=Math.random()<OFFBOOK_P; return {k:'charm',c,off,price:CHARMS[c].price+up+(off?OFFBOOK_FEE:0),rare:CHARMS[c].tier==='r'}; })];
-  const fixed=()=>[{k:'back',price:4+up},{k:'heal',price:6+up},{k:'remove',price:6+up},{k:'file',price:G.filePrice+up},{k:'gild',price:G.gildPrice+up}];
-  const S=G.shop||(G.shop={stock:stockFor(),fixed:fixed(),pick:null}); pickMode=S.pick||null; G.rw=null; G.at='bar'; saveRun();
+  const up=LIM().price, bp=p=>barPrice(G,p+up), taste=hasFix(G,'taste'), nb=G.nb||(G.nb={});
+  const stockFor=first=>{ const ch=stockCharms(hasFix(G,'shelf')?4:3,taste);
+      if(first&&nb.rare){ const rp=charmPool('r').filter(c=>!ch.includes(c)); if(rp.length) ch[ch.length-1]=pick(rp); nb.rare=false; }
+      return [...shopDice(G.act,2,taste).map(t=>({k:'die',t,price:bp(DT[t].price)})),...ch.map((c,i)=>{ const under=first&&i===0&&nb.offbook, off=under||Math.random()<offbookP(G); return {k:'charm',c,off,price:bp(CHARMS[c].price+(off&&!under?OFFBOOK_FEE:0)),rare:CHARMS[c].tier==='r'}; })]; };
+  const fixed=()=>[{k:'back',price:bp(4)},{k:'heal',price:bp(6)},{k:'remove',price:bp(6)},{k:'file',price:bp(G.filePrice)},{k:'gild',price:bp(G.gildPrice)}];
+  const extras=()=>{ const cr=shuffle(Object.keys(CRATES)).slice(0,2).map(c=>({k:'crate',c,price:bp(CRATES[c].price)})); if(nb.crate){ cr.unshift({k:'crate',c:'charm',price:0,free:true}); nb.crate=false; }
+      const f=fixOffer(G); return f?[...cr,{k:'fix',f,price:bp(FIXTURES[f].price)}]:cr; };
+  let S=G.shop; if(!S){ S=G.shop={stock:stockFor(true),fixed:fixed(),extra:extras(),pick:null,restocks:0}; nb.offbook=false; }
+  if(!S.extra) S.extra=extras();
+  pickMode=S.pick||null; G.rw=null; G.at='bar'; saveRun();
   screen(`${hud()}<div class="modal wide paper pe">
     <div class="mhead"><div class="sc">Between tables</div><div class="mtitle">The Bar</div></div>
-    <div class="secthead">For sale</div>
+    <div class="secthead shelfhead">For sale <button class="btn ghost small" id="restock"></button></div>
     <div class="cards picks" id="shelf"></div>
+    <div class="secthead" style="margin-top:6px">Crates &amp; fixtures</div><div class="svc" id="crates"></div>
     <div class="secthead" style="margin-top:6px">Services</div><div class="svc" id="counter"></div>
     <div class="secthead" style="margin-top:14px" id="baglbl"></div><div id="bagt"></div>
     <div class="tabbox" id="tabbox">${tabText()}</div>
     <div class="row"><button class="btn go" id="leave">Back to the floor</button></div></div>`);
   const PICK={remove:['Which one goes?','Click a die. It stays on the bar for good.',d=>true],
     file:['Which one gets filed?','Its highest face becomes a 1.',d=>canFile(d)],
-    gild:['Which one gets a ruby?','Its highest face becomes a ruby crown: worth 0, and +1 odds when you bank it.',d=>canGild(d)]};
+    gild:['Which one gets a ruby?','Its highest face becomes a ruby crown: worth 0, and +1 odds when you bank it.',d=>canGild(d)],
+    finish:['Which one wears it?','Click a die without a finish.',d=>!d.fin]};
   const paint=()=>{ updTop(); els.forEach(({el,c})=>{ const blocked=(c.k==='remove'&&G.bag.length<=HAND)||(c.k==='file'&&!G.bag.some(canFile))||(c.k==='gild'&&!G.bag.some(canGild)); const short=G.gold<c.price; const cred=short&&canTab(c.price); el.classList.toggle('poor',(short&&!cred)||blocked); el.classList.toggle('credit',cred&&!blocked);
       if(c.k==='file'||c.k==='gild'){ c.price=(c.k==='file'?G.filePrice:G.gildPrice)+LIM().price; const pe=el.querySelector('.p'); if(pe&&!el.classList.contains('sold')) pe.textContent='$'+c.price; } });
     const P=pickMode&&PICK[pickMode];
@@ -1465,8 +1515,10 @@ function renderShop(){
         if(m==='remove'){ G.bag=G.bag.filter(x=>x!==inst); b.classList.add('gone'); toast(`<b>${DT[inst.type].name}</b> left on the bar.`); }
         if(m==='file'){ fileDie(inst); G.filePrice+=2; toast(`<b>${DT[inst.type].name}</b> filed down.<br><i>${facesHTML(inst)}</i>`); }
         if(m==='gild'){ gildDie(inst); G.gildPrice+=4; SFX.crown(); toast(`<b>${DT[inst.type].name}</b> wears a ruby now.<br><i>${facesHTML(inst)}</i>`); }
+        if(m==='finish'){ inst.fin=S.finish; S.finish=null; SFX.crown(); toast(`<b>${DT[inst.type].name}</b> is ${FINISHES[inst.fin].name} now. ${FINISHES[inst.fin].desc}`); }
         S.pick=null; saveRun(); setTimeout(()=>{ if($('#bagt')) paint(); },m==='remove'?400:0); }; w.appendChild(b); }); bt.appendChild(w); }
     else bt.appendChild(diceList()); };
+  window.__pickFinish=()=>{ if(!G.bag.some(d=>!d.fin)){ toast('Every die you own already has a finish.'); S.pick=null; S.finish=null; return; } pickMode='finish'; toast(PICK.finish[1]); paint(); };
   window.__paint=paint; const tb=$('#tabbox'); if(tb){ const _p=paint; window.__paint=()=>{ _p(); tb.innerHTML=tabText(); }; }
   const buyCard=(c,i,where)=>{
     const el=c.k==='back'?plainCard('Rare','?','Back room','Reveals one rare item.',c.price)
@@ -1474,7 +1526,10 @@ function renderShop(){
       :c.k==='heal'?plainCard('Drink','+','A stiff one','+12 nerve',c.price)
       :c.k==='remove'?plainCard('Service','\u2715','Toss a die',`Bag can\u2019t go under ${HAND}.`,c.price)
       :c.k==='file'?plainCard('Service','1','File a face','Highest face becomes a 1.',c.price)
+      :c.k==='crate'?plainCard(c.free?'Chit':'Crate','\u25A3',(c.free?'Free ':'')+CRATES[c.c].name,CRATES[c.c].desc.replace('3',crateSize(G)),c.price)
+      :c.k==='fix'?plainCard('Fixture \u00b7 for good','\u2302',FIXTURES[c.f].name,FIXTURES[c.f].desc,c.price)
       :plainCard('Service','<i class="ruby">\u265B</i>','Ruby crown','Highest face: 0 and +1 odds.',c.price);
+    if(c.k==='fix') el.classList.add('fixture'); if(c.k==='crate') el.classList.add('crate');
     el.style.animationDelay=(.04+i*.05)+'s';
     if(c.rare) el.classList.add('rare');
     if(c.sold){ el.dataset.busy=1; el.classList.add('sold'); }
@@ -1485,24 +1540,32 @@ function renderShop(){
       if(G.gold<c.price){ if(!canTab(c.price)){ SFX.unpick(); toast('Not enough cash, and your tab is maxed.'); return; } if(!el.dataset.credit){ el.dataset.credit=1; SFX.ui(); toast(`Click again to put <b>$${c.price-G.gold+2}</b> on your tab.`); return; } onTab=c.price-G.gold; }
       const pay=()=>{ if(onTab){ G.tab+=onTab+2; G.gold=0; toast(`On the tab. You owe <b>$${G.tab}</b>. It comes out of your next winnings.`); const tb=$('#tabbox'); if(tb) tb.innerHTML=tabText(); } else G.gold-=c.price; G.stats.spent+=c.price; SFX.stamp(); SFX.coin(); };
       const sold=()=>{ c.sold=1; el.dataset.busy=1; el.classList.add('sold'); };
+      if(c.k==='charm'&&nb.comp&&!c.sold){ c.price=0; nb.comp=false; refreshChits(); toast('<b class="g">Comp.</b> On the house.'); }
       if(c.k==='charm'){ offerCharm(c.c,()=>{ pay(); sold(); paint(); saveRun(); },null,c.off); return; }
       pay();
       if(c.k==='die'){ sold(); G.bag.push(newDie(c.t)); toast(`<b>${DT[c.t].name}</b> goes in the bag.`); refreshTabs(); }
       if(c.k==='back'){ sold(); const onShelf=els.map(e=>e.c&&e.c.c).filter(Boolean); const pool=rarePool().filter(x=>!(x.c&&(onShelf.includes(x.c)||G.charms.includes(x.c)))); const r=pick(pool.length?pool:rarePool().filter(x=>x.k==='die')); const nc={...r,price:r.price+up}; S.stock.push(nc); buyCard(nc,0,'#shelf'); toast('He comes back with something wrapped in a bar towel.'); }
       if(c.k==='heal'){ heal(12,el); }
+      if(c.k==='fix'){ sold(); (G.fix=G.fix||[]).push(c.f); if(c.f==='rope'){ G.maxHp+=8; heal(8,el); } SFX.crown(); toast(`<b>${FIXTURES[c.f].name}</b> is yours for the rest of the night.`); G.grow=G.grow||{}; saveRun(); setTimeout(renderShop,500); return; }
+      if(c.k==='crate'){ sold(); G.grow=G.grow||{}; if(G.charms.includes('craterat')) G.grow.crates=(G.grow.crates||0)+1; saveRun(); openCrate(c.c,S,()=>{ paint(); saveRun(); }); return; }
       if(c.k==='remove'||c.k==='file'||c.k==='gild'){ pickMode=c.k; toast(PICK[c.k][1]); setTimeout(()=>{ const b=$('#baglbl'); if(b) b.scrollIntoView({behavior:REDUCED?'auto':'smooth',block:'center'}); },60); }
       paint(); S.pick=pickMode; saveRun(); };
     $(where).appendChild(el); els.push({el,c}); };
-  S.stock.forEach((c,i)=>buyCard(c,i,'#shelf')); S.fixed.forEach((c,i)=>buyCard(c,i,'#counter'));
+  S.stock.forEach((c,i)=>buyCard(c,i,'#shelf')); S.fixed.forEach((c,i)=>buyCard(c,i,'#counter')); S.extra.forEach((c,i)=>buyCard(c,i,'#crates'));
+  // restock the shelf (keeps anything already bought)
+  const rs=$('#restock'), rsp=()=>{ const p=restockPrice(G); rs.textContent=p?`Restock \u00b7 $${p}`:'Restock \u00b7 free'; rs.classList.toggle('poor',G.gold<p); };
+  rsp(); rs.onclick=()=>{ if(pickMode) return; const p=restockPrice(G); if(G.gold<p){ SFX.unpick(); toast('Not enough cash to restock.'); return; }
+    G.gold-=p; G.stats.spent+=p; G.restocks=(G.restocks||0)+1; G.grow=G.grow||{}; if(G.charms.includes('restless')) G.grow.restock=(G.grow.restock||0)+1; SFX.paper();
+    S.stock=stockFor(false); saveRun(); renderShop(); };
   paint();
-  setTimeout(()=>{ if($('#shelf')) tip('bar').then(()=>{ if(G&&G.shop&&G.shop.stock.some(s=>s.off&&!s.sold)) return tip('offbook'); }).then(()=>{ if(G&&G.charms.length) tip('rack'); }); },900);
-  $('#leave').onclick=()=>{ if(pickMode){ pickMode=null; paint(); } window.__paint=null; SFX.ui(); advance(); };
+  setTimeout(()=>{ if($('#shelf')) tip('bar').then(()=>tip('extras')).then(()=>{ if(G&&G.shop&&G.shop.stock.some(s=>s.off&&!s.sold)) return tip('offbook'); }).then(()=>{ if(G&&G.charms.length) tip('rack'); }); },900);
+  $('#leave').onclick=()=>{ if(pickMode){ pickMode=null; paint(); } window.__paint=null; G.restocks=0; SFX.ui(); advance(); };
 }
 
 /* ---- the charm rack: always up top, hover to read, tap to sell ---- */
 function rackHTML(){ if(!G) return ''; const tok=c=>`<button class="token ${G._newCharm===c?'new':''}${offbook(G,c)?' offbook':''}${F&&F.jinx===c?' jinxed':''}" data-c="${c}" data-tip="${CHARMS[c].name}: ${CHARMS[c].desc.replace(/"/g,'&quot;')}" aria-label="${CHARMS[c].name}">${chipHTML(c)}${c==='tally'?`<span class="notch">${G.tally}</span>`:''}</button>`;
   const on=G.charms.filter(c=>!offbook(G,c)), off=G.charms.filter(c=>offbook(G,c)), slots=[];
-  for(let i=0;i<MAX_CHARMS;i++) slots.push(on[i]?tok(on[i]):'<span class="token empty"></span>'); off.forEach(c=>slots.push(tok(c)));
+  for(let i=0;i<charmSlots(G);i++) slots.push(on[i]?tok(on[i]):'<span class="token empty"></span>'); off.forEach(c=>slots.push(tok(c)));
   return `<div class="rack plate pe" id="rack"><div class="sc">Charms</div><div class="tokens">${slots.join('')}</div></div>`; }
 function wireRack(){ document.querySelectorAll('#rack .token[data-c]').forEach(t=>t.onclick=e=>{ e.stopPropagation(); charmPop(t); }); G&&(G._newCharm=null); }
 function refreshRack(){ const r=$('#rack'); if(r){ const n=h(rackHTML()); r.replaceWith(n); wireRack(); } }
@@ -1553,7 +1616,7 @@ const EVENTS=[
   {t:'The Fixer',p:'A little man with a jeweler\u2019s file and no eyebrows. \u201cSeven bucks. I make your worst die behave.\u201d',
    o:[{t:'Pay him seven',d:'Your worst die gets filed: its highest face becomes a 1.',ok:()=>G.gold>=7&&G.bag.some(canFile),go:()=>{ G.gold-=7; const d=G.bag.filter(canFile).sort((a,b)=>facesOf(b).reduce((x,y)=>x+effVal(y),0)-facesOf(a).reduce((x,y)=>x+effVal(y),0))[0]; fileDie(d); return `He works your ${DT[d.type].name} over. It comes back meaner.`; }},{t:'Not today',d:'Nothing happens.',go:()=>'He tips an invisible hat.'}]},
   {t:'The Fortune Teller',p:'A woman with a cracked crystal ball waves you over. \u201cThe cards want something from you. A little of your nerve.\u201d',
-   o:[{t:'Let her read you',d:'Lose 8 nerve. Gain a random Uncommon charm.',ok:()=>G.hp>8&&slotsUsed(G)<MAX_CHARMS&&charmPool('u').length>0,go:()=>{ G.hp-=8; const c=pick(charmPool('u')); gainCharm(c); return `She presses <b>${CHARMS[c].name}</b> into your palm and closes your fingers.`; }},{t:'Ask about love',d:'Heal 8.',go:()=>{ G.hp=Math.min(G.maxHp,G.hp+8); return 'She says somebody\u2019s waiting. It helps more than it should.'; }}]},
+   o:[{t:'Let her read you',d:'Lose 8 nerve. Gain a random Uncommon charm.',ok:()=>G.hp>8&&slotsUsed(G)<charmSlots(G)&&charmPool('u').length>0,go:()=>{ G.hp-=8; const c=pick(charmPool('u')); gainCharm(c); return `She presses <b>${CHARMS[c].name}</b> into your palm and closes your fingers.`; }},{t:'Ask about love',d:'Heal 8.',go:()=>{ G.hp=Math.min(G.maxHp,G.hp+8); return 'She says somebody\u2019s waiting. It helps more than it should.'; }}]},
   {t:'The Bootlegger',p:'A truck idles in the alley. The driver lifts a tarp: crates of dice, still smelling of the factory.',
    o:[{t:'Buy a crate',d:'Pay $9 for two random dice.',ok:()=>G.gold>=9,go:()=>{ G.gold-=9; const [a,b]=shopDice(G.act,2); G.bag.push(newDie(a),newDie(b)); return `Inside: ${DT[a].name} and ${DT[b].name}.`; }},{t:'Rat him out',d:'+$6 from the bartender.',go:()=>{ G.gold+=6; SFX.coin(); return 'The bartender slides you six and a look. +$6.'; }}]},
   {t:'Arm Wrestle',p:'A dockworker slams his elbow on the bar. \u201cBeat me and the shaved one\u2019s yours.\u201d He has a die you\u2019d kill for.',
@@ -1644,7 +1707,7 @@ function renderVictory(){ clearLabels(); SFX.fanfare(); const lv=G.limit||0, up=
 
 /* ================= THE BARTENDER'S NOTES (first-run tutorial) ================= */
 const TIPS={
-  map:['Pick your seat','Each card is a door you can take next. A seat shows who’s sitting there: their nerve, how hard they hit, how they play, their tags and their dice. Hover anything on it to read it. Some floors have a third door.'],
+  map:['Pick your seat','Each card is a door you can take next. A seat shows who’s sitting there: their nerve, how hard they hit, how they play, their tags and their dice. Hover anything on it to read it. Some floors have a third door. After the first floor you can also walk past a table: no fight, no pay, but you pick up a chit.'],
   quirk:['Read their tags','Their tags are on their nameplate, top right. Hover one (or click it) to read it. “Hits ×” is how hard their wins land on you.'],
   counter:['House rules','Bosses and the sharks upstairs draw a house rule at random every night. Maybe your × odds don’t count, maybe one of your charms sits out each round. Same face, different trick, so read their tags every time.'],
   boss:['The owner','Bosses have a signature move, printed on their door before you sit down, and it gets worse once they’re at half nerve. The last boss also has an Iron Jaw: no round takes more than a third of their nerve, so plan on a few rounds.'],
@@ -1655,6 +1718,9 @@ const TIPS={
   odds:['Your odds went up','Every point you finish under them is now worth more. Your slip shows it: ahead by \u00d7 odds = what they lose. Click the sum for where your odds come from.'],
   reward:['Spoils','Take one. Charms go on your rack up top and are always working. Dice go in your bag. The rarer the card, the more it tends to multiply your odds.'],
   bar:['The bar','You stop here after every table. Spend now; the next seat is meaner. Short on cash? Click a price twice and he’ll front you the rest for $2. That’s your tab: it comes out of your next winnings automatically.'],
+  extras:['Crates and fixtures','Crates are a pick of charms, dice or finishes: open one, keep one. A fixture is a permanent upgrade for the rest of the night, and each room offers one. Don’t like the shelf? Restock it (the price climbs each time you do).'],
+  finish:['Finishes','A die can wear one finish, shown as a glowing rim and a colored tag in your bag. Polished, Lucky and Chrome raise your odds when you bank that die, Gold Leaf pays, and Featherweight makes its 1s score 0.'],
+  chit:['Chits','Chits are small favors. Some pay out on the spot. The rest wait for the next bar or table and sit next to your cash until they do. Beat a shark in 2 rounds or less, or walk past a table, to earn one.'],
   offbook:['Off the books','That silver card is off the books. It works like any other charm, but it doesn’t take one of your five slots. They don’t come around often.'],
   rack:['Your charms','Hover a charm up top to read it. Click it to sell it back for half if you need the room. You can hold five.'],
   limit:['The limit went up','You beat the house, so now you can raise the limit. Each one makes the night meaner, and stacks on every limit below it. Click the arrows on Limit to pick. You can always drop back to Penny Ante.'],
@@ -1687,7 +1753,7 @@ function menuPage(tab){
       <div class="stats">${srow('Floor',`${ROMAN[G.act]} \u00b7 ${G.floor+1}/${FLOORS.length}${G.mode==='endless'?` \u00b7 lap ${G.lap+1}`:''}`)}${srow('Tables won',G.won)}${srow('Rounds won',`${st.won} of ${st.rounds}`)}${srow('Rounds lost',st.lost)}${srow('Pushes',st.push)}
       ${srow('Nerve broken',st.dealt)}${srow('Nerve lost',st.taken)}${srow('Biggest hit',st.best)}${srow('Crowns banked',st.crowns)}${srow('Dice banked',st.banked)}${srow('Cash earned',`$${st.earned}`)}${srow('Cash spent',`$${st.spent}`)}${srow('Time at the tables',fmtTime(Date.now()-st.t0))}
       ${best()?srow('Longest night ever',`${best()} tables`):''}</div>`; }
-  if(tab==='bag'){ if(!G) return '<div class="empty">No run in progress.</div>'; return `<div class="secthead">Your Dice<small>${G.bag.length} in the bag. Six come out each round.</small></div><div id="mb1"></div><div class="mrule"></div><div class="secthead">Your Charms<small>Always working. You carry ${G.charms.length} of ${MAX_CHARMS}.</small></div><div id="mb2"></div>`; }
+  if(tab==='bag'){ if(!G) return '<div class="empty">No run in progress.</div>'; return `<div class="secthead">Your Dice<small>${G.bag.length} in the bag. Six come out each round.</small></div><div id="mb1"></div><div class="mrule"></div><div class="secthead">Your Charms<small>Always working. You carry ${slotsUsed(G)} of ${charmSlots(G)}${G.charms.length>slotsUsed(G)?`, plus ${G.charms.length-slotsUsed(G)} off the books`:''}.</small></div><div id="mb2"></div>${(G.fix||[]).length?`<div class="mrule"></div><div class="secthead">Fixtures<small>Yours for the night.</small></div><div class="list">${G.fix.map(f=>`<div class="item"><div><div class="iname">${FIXTURES[f].name}</div><div class="idesc">${kw(FIXTURES[f].desc)}</div></div></div>`).join('')}</div>`:''}${chitsHTML()?`<div class="mrule"></div><div class="secthead">Chits waiting<small>They spend themselves.</small></div><div class="chitrow">${chitsHTML()}</div>`:''}`; }
   if(tab==='settings') return `<div class="secthead">Settings<small>Saved on this device.</small></div>
     <div class="set"><label for="volm">Music</label><input class="dial" id="volm" type="range" min="0" max="10" step="1" value="${Math.round(SET.music*10)}"><span class="sv" id="volmv">${Math.round(SET.music*10)}</span></div>
     <div class="set"><label for="vols">Sound</label><input class="dial" id="vols" type="range" min="0" max="10" step="1" value="${Math.round(SET.sfx*10)}"><span class="sv" id="volsv">${Math.round(SET.sfx*10)}</span></div>

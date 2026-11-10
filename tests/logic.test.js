@@ -260,5 +260,34 @@ test('Endless keeps climbing: lap 1 is harder than Act III', () => {
   const a3 = L.makeOpp(L.ACTS[2].foes.t1[0], 'F', 2, 2, 0, false, 0), l1 = L.makeOpp(L.ACTS[0].foes.t1[0], 'F', 0, 2, 1, false, 0);
   assert.ok(l1.hp > a3.hp && l1.odds > a3.odds);
 });
+// ---- finishes, fixtures, chits ----
+test('Finishes: Polished +2, Lucky +4 on a hit, Chrome x1.25, Featherweight 1s score 0', () => {
+  const R = L.newRound(); L.noteBank(R, [3, 3, 3], ['d6', 'd6', 'd6'], [], ['polished', 'lucky', 'chrome']);
+  assert.equal(L.oddsOf(R, [], env({})).odds, (1 + 2 + 4) * 1.25);
+  assert.deepEqual(L.bankVals([1, 2], {}, [], false, ['feather', 'feather']), [0, 2]);
+});
+test('Shoeshine adds 2 per finished die banked; Curator counts finished dice in the bag', () => {
+  const R = L.newRound(); L.noteBank(R, [3], ['d6'], [], ['polished']);
+  assert.equal(L.oddsOf(R, ['shoeshine'], env({})).odds, 5);
+  assert.equal(L.oddsOf(L.newRound(), ['curator'], env({ finished: 3 })).odds, 7);
+});
+test('Lucky is fixed per round and die (no fishing on reload)', () => {
+  assert.equal(L.luckyHit(1234, 7), L.luckyHit(1234, 7));
+  let hits = 0; for (let s = 0; s < 3000; s++) if (L.luckyHit(s, 5)) hits++; assert.ok(hits > 850 && hits < 1150);
+});
+test('Fixtures: Back Booth 6 slots, discount 20%, Standing Order first restock free', () => {
+  const G = { fix: ['booth', 'discount', 'restock'], restocks: 0 };
+  assert.equal(L.charmSlots(G), 6); assert.equal(L.barPrice(G, 10), 8);
+  assert.equal(L.restockPrice(G), 0); G.restocks = 2; assert.equal(L.restockPrice(G), 4);
+  assert.equal(L.restockPrice({ restocks: 0 }), 3);
+});
+test('Lucky Felt +1 odds; Wall Safe stacks with Savings Bond', () => {
+  assert.equal(L.oddsOf(L.newRound(), [], env({ fixOdds: 1 })).odds, 2);
+  assert.equal(L.afterFight({ charms: ['savings'], fix: ['vault'], gold: 30 }), 6);
+});
+test('Growers: Restless, Crate Rat, Ticket Stub', () => {
+  const grow = { restock: 3, crates: 2, chits: 1 };
+  assert.equal(L.oddsOf(L.newRound(), ['restless', 'craterat', 'stub'], env({ grow })).odds, 1 + 6 + 6 + 2);
+});
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
