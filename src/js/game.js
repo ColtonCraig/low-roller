@@ -2,7 +2,7 @@
 // Uses the globals defined by logic.js, which index.html loads first.
 /* ================= AUDIO ================= */
 let AC=null, master=null, sfxBus=null, musicBus=null;
-const SET={music:.6,sfx:.8,speed:1.6,grain:true,shake:true,tips:true};
+const SET={music:.6,sfx:.8,speed:1.6,grain:true,shake:true,tips:true,deal:'quick',auto:true};
 try{ Object.assign(SET,JSON.parse(localStorage.getItem('lr-set')||'{}')); }catch(e){}
 let sfxOn=SET.sfx>0;
 function saveSet(){ try{localStorage.setItem('lr-set',JSON.stringify(SET))}catch(e){} applySet(); }
@@ -912,6 +912,10 @@ function diceList(){ const w=h('<div class="list cols2"></div>'); const groups=n
   groups.forEach(list=>{ const d0=list[0], t=d0.type, d=DT[t]; const cr=list.filter(x=>d.breaks).map(x=>x.cracks); const mod=!!d0.f;
   const el=h(`<div class="item"><span class="dico"></span><div><div class="iname">${d.name}${finTag(d0)}${mod?' <span class="tier u">worked</span>':''}<span class="q">\u00d7${list.length}</span></div><div class="idesc">${kw(d.desc)}${cr.length?` Cracks ${cr.join(', ')}/${d.breaks}.`:''}</div><div class="ifaces">${facesHTML(d0)}</div></div></div>`);
   el.querySelector('.dico').appendChild(iconCanvas(t,'C',38)); w.appendChild(el); }); return w; }
+// compact bag strip for the bar: one chip per kind of die, hover for the details
+function bagStrip(){ const w=h('<div class="bagstrip"></div>'); const groups=new Map(); G.bag.forEach(d=>{ const k=dieKey(d); if(!groups.has(k)) groups.set(k,[]); groups.get(k).push(d); });
+  groups.forEach(list=>{ const d0=list[0], d=DT[d0.type]; const tipT=`${d.name}${d0.fin?' ('+FINISHES[d0.fin].name+')':''}: ${d.desc} Faces ${facesOf(d0).map(faceTxt).join(' ')}`.replace(/"/g,'&quot;').replace(/<[^>]+>/g,'');
+    const el=h(`<span class="bchip ${d0.fin?'fin':''}" data-tip="${tipT}"><span class="q">\u00d7${list.length}</span></span>`); el.prepend(iconCanvas(d0.type,'C',30)); w.appendChild(el); }); return w; }
 function facesHTML(d){ const base=DT[d.type].faces, f=facesOf(d); return '<span class="faces">'+f.map((x,i)=>`<span class="f1 ${x!==base[i]?'chg':''} ${x==='C'||x==='G'?'cr':''}">${faceTxt(x)}</span>`).join('')+'</span>'; }
 function charmList(sell){ const w=h('<div class="list cols2"></div>'); if(!G.charms.length){ w.innerHTML='<div class="empty">No charms yet. Every table offers one.</div>'; return w; }
   G.charms.forEach(c=>{ const d=CHARMS[c]; const el=h(`<div class="item">${chipHTML(c)}<div><div class="iname">${d.name} <span class="tier ${d.tier}">${TIER_NAME[d.tier]}</span></div><div class="idesc">${kw(charmDesc(c))}</div>${sell?`<button class="btn ghost small sell">Sell $${Math.floor(d.price/2)}</button>`:''}</div></div>`);
@@ -1097,6 +1101,7 @@ function entry(p,i){
       <div class="estats"><span class="stat n"><i>Nerve</i><b>${o.hp}</b></span><span class="stat h" data-tip="When they win a round, they hit you for the gap times this."><i>Hits</i><b>\u00d7${fmtOdds(o.odds)}</b></span><span class="stat" data-tip="${STYLE[o.t]}"><i>Plays</i><b>${STYLE_S[o.t]}</b></span></div>
       <div class="tags">${o.q.map(q=>`<span class="stamp" data-q="${q}" data-tip="${QUIRKS[q].desc}">${QUIRKS[q].name}</span>`).join('')}</div>
       <div class="dicerow"></div>
+      ${(()=>{ const bad=Math.ceil(o.odds*(o.sig==='trick'?8:6)); return bad>=G.hp*.3?`<div class="warn" data-tip="A typical lost round here: about 6 behind \u00d7 their Hits${o.sig==='trick'?', more with your dice face down':''}.">Hits hard: one bad round can cost you ~${bad} nerve</div>`:''; })()}
       <div class="sig">${boss?`<b>Signature</b>${BOSS().sigT}`:''}</div>
       <span class="take">${boss?'Face them':'Take this seat'}</span>`;
     const dr=el.querySelector('.dicerow'); bagCounts(o.bag).forEach(([t,n])=>{ const k=h(`<span class="dk" data-tip="${DT[t].name}: ${DT[t].desc}"></span>`); k.appendChild(iconCanvas(t,null,26)); if(n>1) k.appendChild(h(`<span>\u00d7${n}</span>`)); dr.appendChild(k); });
@@ -1213,7 +1218,18 @@ async function startRound(pre){
   TS=SET.speed;
   F.them=F.opp.bag.map(t=>makeDie3D(newDie(t)));
   F.them.forEach(o=>{ o.mesh.visible=false; SCN.add(o.mesh); });
-  let shown=0;
+  let shown=0; F.theirTurn=true;
+  const dm=(G.stats&&G.stats.rounds>0)?(SET.deal||'quick'):'full';
+  if(dm!=='full'&&!F.opp.q.includes('pair')&&F.opp.sig!=='trick'){
+    const fin=[], ord=[]; sim.throws.forEach(th=>th.kept.forEach(i=>{ fin[i]=th.faces[th.left.indexOf(i)]; ord.push(i); }));
+    if(dm==='quick'&&GL_OK&&foe){ const mp=await cupThrow(); await throwDice(F.them,fin,'them',-1,{from:mp,dur:700}); cupRest(); await sleep(200); }
+    else if(dm==='quick') await throwDice(F.them,fin,'them');
+    if(F!==myF) return;
+    for(const i of ord){ const o=F.them[i]; o.banked=true; const v=effVal(o.face); shown+=v;
+      if(dm==='instant'){ setFaces(o,fin[i],false); o.mesh.visible=true; const t=railSlot(F.railN.them++,'them'); o.mesh.position.set(t.x,3,t.z); moveTo(o,t,BANK_SCALE,260); SFX.bank(0); await sleep(50); }
+      else { SFX.bank(0); floatAt(dieScreen(o),v===0?'0':'+'+v,v===0?'zero':'pts'); moveTo(o,railSlot(F.railN.them++,'them'),BANK_SCALE,320); await sleep(70); } }
+    $('#sitting').innerHTML=`<span>Sitting on</span><b>${shown}</b>`; await sleep(dm==='instant'?380:300);
+  } else
   for(const th of sim.throws){
     if(F!==myF) return;
     const list=th.left.map(i=>F.them[i]);
@@ -1225,7 +1241,7 @@ async function startRound(pre){
     $('#sitting').innerHTML=`<span>Sitting on</span><b>${shown}</b>`;
     await sleep(320);
   }
-  if(F!==myF) return;
+  if(F!==myF) return; F.theirTurn=false;
   if(F.opp.q.includes('pair')){ sim=await secondTwin(sim,shown,F.pre.simB); if(F!==myF) return; }
   F.oScore=sim.total; F._shownT=null;
   const adj=(has('bouncer')?1:0)-(F.opp.q.includes('edge')?1:0)+(F.opp.q.includes('sloppy')?1:0);
@@ -1271,7 +1287,7 @@ function refreshActs(){
 async function bank(){
   if(busy||!F) return; const sel=tray().filter(o=>o.sel); if(sel.length<minBank()) return;
   busy=true; acts('');
-  const faces=sel.map(o=>o.face), oddsBefore=curOdds().odds;
+  const faces=sel.map(o=>o.face), oddsBefore=curOdds().odds, partsBefore=curOdds().parts;
   const fins=finsOf(sel), vals=bankVals(faces,ctx(),live(),sel.length===tray().length,sel.map(o=>o.inst.fin));
   noteBank(F.R,faces,sel.map(o=>o.inst.type),live(),fins);
   { const gl=sel.filter(o=>o.inst.fin==='goldleaf'&&(o.face===1||o.face==='C'||o.face==='G')).length; if(gl) setTimeout(()=>addGold(gl,$('#cash')),300); if(fins.includes('lucky')) setTimeout(()=>toast('<b class="g">Lucky.</b> +4 odds.'),200); }
@@ -1283,6 +1299,7 @@ async function bank(){
   G.stats.banked+=sel.length; G.stats.crowns+=sel.filter(o=>o.face==='C'||o.face==='G').length;
   const before=F.pScore; F.pScore+=vals.reduce((a,b)=>a+b,0); { const T=tgt(), T0=F._shownT??F.target; if(T!==T0){ F._shownT=T; setVs(T); floatEl($('#vs'),(T>T0?'+':'\u2212')+Math.abs(T-T0),T>T0?'heal':'dmg'); } }
   await anim(320,k=>setP(Math.round(lerp(before,F.pScore,k))));
+  { const after=curOdds().parts, bmap={}; partsBefore.forEach(([l,v])=>bmap[l]=v); let i=0; after.forEach(([l,v])=>{ if(bmap[l]!==v&&CHARM_BY_NAME[l]) setTimeout(()=>trigFx(l,v,i),80+i*110), i++; }); }
   const oa=curOdds().odds; updOdds(oa>oddsBefore); if(oa>oddsBefore){ SFX.odds(); tip('odds'); }
   const left=tray().length;
   if(left){ const T=tgt(); msg(F.pScore>T?`Over by <b>${F.pScore-T}</b>. Every die from here still counts.`:`<b>${F.pScore}</b> against <b>${T}</b>. ${left} ${left===1?'die':'dice'} left.`); F.labelsOn=false; await sleep(260); await tip('again'); await playerThrow(); }
@@ -1324,12 +1341,24 @@ function oddsHelp(){ if(!F) return; const O=curOdds(false,F._prevR), parts=[['Ev
     <div class="nrow" style="justify-content:flex-end"><button class="btn small" id="ok">Got it</button></div></div></div>`);
   document.body.appendChild(el); const close=()=>{ el.classList.add('closing'); setTimeout(()=>el.remove(),180); };
   el.querySelector('#ok').onclick=close; el.onclick=e=>{ if(e.target===el) close(); }; }
+// payout: every piece of your odds fires in order, its charm jumps in the rack, the brass climbs a step
+const CHARM_BY_NAME={}; Object.keys(CHARMS).forEach(k=>CHARM_BY_NAME[CHARMS[k].name]=k);
+function trigFx(label,val,i){ const k=CHARM_BY_NAME[label], tk=k&&$(`#rack .token[data-c="${k}"]`);
+  if(tk){ tk.classList.remove('trig'); void tk.offsetWidth; tk.classList.add('trig'); floatEl(tk,val,val[0]==='\u00d7'||val[0]==='\u00f7'?'mult small':'odds small'); }
+  SFX.ding(i); }
+SFX.ding=(i=0)=>{ if(!AC||!sfxOn) return; const st=[0,2,4,7,9,12,14,16,19,21,24,26,28,31][Math.min(13,i)], f=523*Math.pow(2,st/12), t=AC.currentTime; osc('triangle',f,t,.32,.06,null,sfxBus,.003); osc('sine',f*2,t,.22,.025,null,sfxBus,.003); thock(420+st*14,.14,0,.04,.3); };
 async function payOut(r){ const big=r.dmg>=40||r.odds>=5;
   const el=h(`<div class="payout"><div class="pv">${r.margin}</div><div class="pm">under by ${r.gap}${has('cut')?' +2 cut':''}</div></div>`); document.body.appendChild(el);
-  const pv=el.querySelector('.pv'), pm=el.querySelector('.pm'); SFX.win(); await sleep(480);
-  if(r.odds!==1){ pv.innerHTML=`${r.margin} <span class="x">\u00d7 ${fmtOdds(r.odds)}</span>`; pm.textContent=r.parts.map(([l,v])=>`${l} ${v}`).join(' \u00b7 '); SFX.odds(); await sleep(640);
-    const steps=Math.min(14,Math.max(4,Math.round(Math.log2(r.dmg+1)*2))); for(let i=1;i<=steps;i++){ pv.textContent=Math.round(r.dmg*i/steps); SFX.tick(i); await sleep(45); } }
-  pv.textContent=r.dmg; el.classList.add('hit'); pm.textContent='hit'; SFX.ching(big); setTimeout(SFX.hit,120);
+  const pv=el.querySelector('.pv'), pm=el.querySelector('.pm'); SFX.win(); await sleep(420);
+  if(r.odds!==1){ const parts=r.parts||[], seq=[...parts.filter(p=>p[1][0]==='+'||p[1][0]==='\u2212'),...parts.filter(p=>!(p[1][0]==='+'||p[1][0]==='\u2212'))];
+    pv.innerHTML=`${r.margin} <span class="x">\u00d7 <b class="ov">1</b></span>`; const ov=pv.querySelector('.ov'); let o=1;
+    const per=Math.max(90,Math.min(260,2200/Math.max(1,seq.length)));
+    for(let i=0;i<seq.length;i++){ const [l,v]=seq[i], n=parseFloat(v.slice(1));
+      if(v[0]==='+') o+=n; else if(v[0]==='\u2212') o-=n; else if(v[0]==='\u00d7'&&!isNaN(n)) o*=n; else if(v[0]==='\u00f7') o/=n;
+      ov.textContent=fmtOdds(Math.max(1,o)); pm.innerHTML=`<b>${l}</b> ${v}`; ov.classList.remove('bump'); void ov.offsetWidth; ov.classList.add('bump'); trigFx(l,v,i); await sleep(per); }
+    ov.textContent=fmtOdds(r.odds); pm.textContent=`\u00d7 ${fmtOdds(r.odds)} odds`; SFX.odds(); await sleep(380);
+    const steps=Math.min(14,Math.max(4,Math.round(Math.log2(r.dmg+1)*2))); for(let i=1;i<=steps;i++){ pv.textContent=Math.round(r.dmg*i/steps); SFX.tick(i); await sleep(40); } }
+  pv.textContent=r.dmg; el.classList.add('hit'); pm.textContent=r.capped?'Iron Jaw cap':'hit'; SFX.ching(big); setTimeout(SFX.hit,120);
   msg(`<span class="big win">Hit for ${r.dmg}</span><span class="math">${r.margin}${r.odds!==1?` \u00d7 ${fmtOdds(r.odds)} odds`:''} \u00b7 you ${F.pScore} vs ${r.oFinal}</span>`);
   setTimeout(()=>el.remove(),900); }
 // reloaded after the last bank: the result is already decided, so skip straight to settling it
@@ -1347,7 +1376,7 @@ async function endRound(){
   if(r.near) toast('<b>Near Miss.</b> Lost by one. Nobody bleeds.');
   if(r.raid) toast('<b class="r">Raid.</b> Your odds were 1 this round.');
   if(r.armor) toast('<b class="r">Bulletproof Vest.</b> Your first win here bounced off.');
-  else if(r.capped) toast('<b class="r">Iron Jaw.</b> No round takes more than a quarter of their nerve.');
+  else if(r.capped) toast('<b class="r">Iron Jaw.</b> No round takes more than a third of their nerve.');
   if(r.winner==='you') F.wonOnce=true;
   if(r.winner==='you'&&has('bookie')) addGold(Math.min(8,r.margin),$('#cash'));
   if(r.winner==='them'&&has('rabbit')&&!F.rabbitUsed){ F.rabbitUsed=true; r.dmg=0; r.free=true; toast('<b>Rabbit\u2019s Foot</b> takes the hit.'); }
@@ -1383,7 +1412,9 @@ async function endRound(){
   if(F.opp.boss&&!F.phase2&&F.oppHp<=F.oppMax/2){ const H=F.opp.half||ACTS[G.act].half; F.phase2=true; H.add.forEach(q=>{ if(!F.opp.q.includes(q)) F.opp.q.push(q); }); F.opp.t=H.t; $('#quirks').innerHTML=quirkChips(); wireChips($('#quirks'));
     banner(H.big,H.small,true); for(const v of [.4,1,.3,1]){ lampDim=v; await sleep(80); } await foeSlam(); }
   saveFight(); busy=false; acts(`<button class="btn go" id="again">Next round</button>`);
-  $('#again').onclick=()=>{ SFX.ui(); startRound(); };
+  const myF=F; let gone=false; const go=()=>{ if(gone||F!==myF||busy) return; gone=true; SFX.ui(); startRound(); };
+  $('#again').onclick=go;
+  if(SET.auto){ const b=$('#again'); b.classList.add('autogo'); setTimeout(()=>{ if($('#again')===b&&!menuEl&&!tipOpen&&!popEl) go(); else if($('#again')===b) b.classList.remove('autogo'); },1500); }
 }
 // when they're beaten, their dice lift over the side rails, outermost first, clear of the opponent
 async function gatherTheirs(list){ await Promise.all(list.map((o,i)=>{ const m=o.mesh, s=m.position.clone(); const t=new THREE.Vector3((s.x>0?1:-1)*8,-.8,s.z);
@@ -1471,7 +1502,7 @@ function renderReward(kind){
 
 /* ================= SHOP ================= */
 const TAB_LIMIT=15;
-const tabText=()=>`<b class="tbh">Running a tab</b><span>Short on cash? Click a price <b>twice</b> and the bartender covers what you\u2019re missing. The favor costs <b class="kw cash">$2</b>. He\u2019ll front up to <b class="kw cash">$${TAB_LIMIT}</b>, and takes it back out of your next winnings before you see them.</span>${G&&G.tab?`<span class="owe">You owe <b>$${G.tab}</b> of $${TAB_LIMIT}.</span>`:''}`;
+const tabText=()=>`<span><b class="tbh">Running a tab.</b> Short? Click a price <b>twice</b>: he covers it for <b class="kw cash">$2</b>, up to <b class="kw cash">$${TAB_LIMIT}</b>, and takes it out of your next winnings.</span>${G&&G.tab?`<span class="owe">You owe <b>$${G.tab}</b> of $${TAB_LIMIT}.</span>`:''}`;
 const canTab=price=>G&&(price-G.gold+2+G.tab)<=TAB_LIMIT+2&&(price-G.gold)<=TAB_LIMIT-G.tab;
 // open a crate: pick one of a few. Charms go through offerCharm; dice into the bag; finishes go on a die you pick
 function openCrate(kind,S,done){ const n=crateSize(G), taste=hasFix(G,'taste'); let picks;
@@ -1503,15 +1534,16 @@ function renderShop(){
   let S=G.shop; if(!S){ S=G.shop={stock:stockFor(true),fixed:fixed(),extra:extras(),pick:null,restocks:0}; nb.offbook=false; }
   if(!S.extra) S.extra=extras();
   pickMode=S.pick||null; G.rw=null; G.at='bar'; saveRun();
-  screen(`${hud()}<div class="modal wide paper pe">
+  screen(`${hud()}<div class="modal barm paper pe">
     <div class="mhead"><div class="sc">Between tables</div><div class="mtitle">The Bar</div></div>
-    <div class="secthead shelfhead">For sale <button class="btn ghost small" id="restock"></button></div>
-    <div class="cards picks" id="shelf"></div>
-    <div class="secthead" style="margin-top:6px">Crates &amp; fixtures</div><div class="svc" id="crates"></div>
-    <div class="secthead" style="margin-top:6px">Services</div><div class="svc" id="counter"></div>
-    <div class="secthead" style="margin-top:14px" id="baglbl"></div><div id="bagt"></div>
-    <div class="tabbox" id="tabbox">${tabText()}</div>
-    <div class="row"><button class="btn go" id="leave">Back to the floor</button></div></div>`);
+    <div class="barcols"><div class="bmain">
+      <div class="secthead shelfhead">For sale <button class="btn ghost small" id="restock"></button></div>
+      <div class="cards picks" id="shelf"></div>
+      <div class="secthead" style="margin-top:14px" id="baglbl"></div><div id="bagt"></div>
+      <div class="bfoot"><div class="tabbox" id="tabbox">${tabText()}</div><button class="btn go" id="leave">Back to the floor</button></div></div>
+    <div class="bside">
+      <div class="secthead">Crates &amp; fixtures</div><div class="svc rows" id="crates"></div>
+      <div class="secthead" style="margin-top:8px">Services</div><div class="svc rows" id="counter"></div></div></div></div>`);
   const PICK={remove:['Which one goes?','Click a die. It stays on the bar for good.',d=>true],
     file:['Which one gets filed?','Its highest face becomes a 1.',d=>canFile(d)],
     gild:['Which one gets a ruby?','Its highest face becomes a ruby crown: worth 0, and +1 odds when you bank it.',d=>canGild(d)],
@@ -1528,7 +1560,7 @@ function renderShop(){
         if(m==='gild'){ gildDie(inst); G.gildPrice+=4; SFX.crown(); toast(`<b>${DT[inst.type].name}</b> wears a ruby now.<br><i>${facesHTML(inst)}</i>`); }
         if(m==='finish'){ inst.fin=S.finish; S.finish=null; SFX.crown(); toast(`<b>${DT[inst.type].name}</b> is ${FINISHES[inst.fin].name} now. ${FINISHES[inst.fin].desc}`); }
         S.pick=null; saveRun(); setTimeout(()=>{ if($('#bagt')) paint(); },m==='remove'?400:0); }; w.appendChild(b); }); bt.appendChild(w); }
-    else bt.appendChild(diceList()); };
+    else bt.appendChild(bagStrip()); };
   window.__pickFinish=()=>{ if(!G.bag.some(d=>!d.fin)){ toast('Every die you own already has a finish.'); S.pick=null; S.finish=null; return; } pickMode='finish'; toast(PICK.finish[1]); paint(); };
   window.__paint=paint; const tb=$('#tabbox'); if(tb){ const _p=paint; window.__paint=()=>{ _p(); tb.innerHTML=tabText(); }; }
   const buyCard=(c,i,where)=>{
@@ -1689,7 +1721,7 @@ function renderPaper(won,pre){
   hl.push(`Sat at the <b>${LIMITS[G.limit||0].n}</b> limit as <b>${(POCKETS.find(x=>x.k===G.pocket)||POCKETS[0]).n}</b>.`);
   bosses.forEach(b=>hl.push(`Beat <b>${b}</b>.`));
   if(st.best) hl.push(`Hit <b>${st.bestWho||'someone'}</b> for ${st.best} in a single round.`);
-  if(st.low!=null&&st.low<20&&(won||G.hp>0||true)) hl.push(`Got down to <b>${Math.max(0,st.low)} nerve</b> and kept playing.`);
+  if(st.low!=null&&st.low<20&&(won||G.hp>0)) hl.push(`Got down to <b>${Math.max(0,st.low)} nerve</b> and kept playing.`);
   if(st.rich) hl.push(`Had <b>$${st.rich}</b> in pocket at the high point.`);
   if(st.crowns) hl.push(`Banked <b>${st.crowns}</b> crowns.`);
   if(!hl.length) hl.push('A quiet night. Tomorrow will be louder.');
@@ -1787,6 +1819,8 @@ function menuPage(tab){
     <div class="set"><label for="volm">Music</label><input class="dial" id="volm" type="range" min="0" max="10" step="1" value="${Math.round(SET.music*10)}"><span class="sv" id="volmv">${Math.round(SET.music*10)}</span></div>
     <div class="set"><label for="vols">Sound</label><input class="dial" id="vols" type="range" min="0" max="10" step="1" value="${Math.round(SET.sfx*10)}"><span class="sv" id="volsv">${Math.round(SET.sfx*10)}</span></div>
     <div class="set"><span class="lab">Their turn</span><div class="opts" data-k="speed">${SPEEDS.map(([v,n])=>`<button class="opt ${SET.speed===v?'on':''}" data-v="${v}">${n}</button>`).join('')}</div></div>
+    <div class="set"><span class="lab">Their throws</span><div class="opts" data-k="deal">${[['full','Every throw'],['quick','One toss'],['instant','Instant']].map(([v,n])=>`<button class="opt ${SET.deal===v?'on':''}" data-v="${v}">${n}</button>`).join('')}</div></div>
+    <div class="set"><span class="lab">Next round</span><div class="opts" data-k="auto"><button class="opt ${SET.auto?'on':''}" data-v="1">Deals itself</button><button class="opt ${!SET.auto?'on':''}" data-v="0">I click</button></div></div>
     <div class="set"><span class="lab">Film grain</span><div class="opts" data-k="grain"><button class="opt ${SET.grain?'on':''}" data-v="1">On</button><button class="opt ${!SET.grain?'on':''}" data-v="0">Off</button></div></div>
     <div class="set"><span class="lab">Bartender’s notes</span><div class="opts" data-k="tips"><button class="opt ${SET.tips?'on':''}" data-v="1">On</button><button class="opt ${!SET.tips?'on':''}" data-v="0">Off</button><button class="opt" id="tipreset">Show again</button></div></div>
     <div class="set"><span class="lab">Screen shake</span><div class="opts" data-k="shake"><button class="opt ${SET.shake?'on':''}" data-v="1">On</button><button class="opt ${!SET.shake?'on':''}" data-v="0">Off</button></div></div>`;
@@ -1823,10 +1857,11 @@ function setMenuTab(tab){ menuTab=tab; const body=menuEl.querySelector('#pbody')
   if(tab==='bag'&&G){ body.querySelector('#mb1').appendChild(diceList()); body.querySelector('#mb2').appendChild(charmList()); }
   if(tab==='settings'){ const wire=(id,key)=>{ const r=body.querySelector('#'+id); r.oninput=()=>{ SET[key]=r.value/10; body.querySelector('#'+id+'v').textContent=r.value; saveSet(); if(key==='sfx') SFX.bank(0); }; }; wire('volm','music'); wire('vols','sfx');
     const tr=body.querySelector('#tipreset'); if(tr) tr.onclick=e=>{ e.stopPropagation(); try{ localStorage.removeItem('lr-tips'); }catch(x){} SET.tips=true; saveSet(); SFX.stamp(); tr.textContent='Will do'; body.querySelectorAll('[data-k=tips] .opt[data-v]').forEach(x=>x.classList.toggle('on',x.dataset.v==='1')); };
-    body.querySelectorAll('.opts').forEach(g=>g.querySelectorAll('.opt[data-v]').forEach(b=>b.onclick=()=>{ const k=g.dataset.k; SET[k]=k==='speed'?+b.dataset.v:b.dataset.v==='1'; saveSet(); SFX.stamp(); g.querySelectorAll('.opt').forEach(x=>x.classList.toggle('on',x===b)); })); } }
+    body.querySelectorAll('.opts').forEach(g=>g.querySelectorAll('.opt[data-v]').forEach(b=>b.onclick=()=>{ const k=g.dataset.k; SET[k]=k==='speed'?+b.dataset.v:k==='deal'?b.dataset.v:b.dataset.v==='1'; saveSet(); SFX.stamp(); g.querySelectorAll('.opt').forEach(x=>x.classList.toggle('on',x===b)); })); } }
 function closeMenu(){ if(!menuEl) return; const m=menuEl; menuEl=null; SFX.paper(); m.classList.add('closing'); setTimeout(()=>{ m.remove(); PAUSED=tipOpen>0||!!menuEl; },REDUCED?0:260); }
 function quitRun(){ clearSave(); if(menuEl){ menuEl.remove(); menuEl=null; } document.querySelectorAll('.overlay,.payout,.banner,.toast').forEach(e=>e.remove()); closePop(); tipOpen=0; PAUSED=false; tweens.length=0; TS=1; busy=false;
   ALLDICE.forEach(o=>disposeDie(o)); ALLDICE.clear(); decoDice=[]; if(foe){ disposeFoe(foe); foe=null; } clearDebris(); clearLabels(); lampDim=1; F=null; G=null; renderTitle(); }
+addEventListener('pointerdown',e=>{ if(F&&F.theirTurn&&TS<6&&!menuEl&&!tipOpen&&!e.target.closest('button,input,.modal,.overlay')){ TS=6; } },true);
 addEventListener('keydown',e=>{ if(e.key==='Escape'){ menuEl?closeMenu():openMenu(); return; }
   if(menuEl||tipOpen) return; if(e.key==='Enter'||e.key===' '){ const b=$('#bank:not([disabled])')||$('#again'); if(b){ e.preventDefault(); b.click(); } } });
 

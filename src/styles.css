@@ -537,3 +537,46 @@ button.tabnum.owe{border:0;background:none;padding:0;cursor:pointer;font:inherit
 .bookgrid{display:flex;flex-wrap:wrap;gap:6px}
 .bk{font:13px/1.8 'Nunito';font-weight:800;padding:0 9px;border-radius:8px;background:#e8dcc014;color:#e8dcc0}
 .bk.unk{color:#e8dcc055;font-style:italic}
+/* auto-advance: the Next round button fills, then deals itself */
+.btn.autogo{position:relative;overflow:hidden}
+.btn.autogo::after{content:'';position:absolute;left:0;bottom:0;height:3px;width:0;background:currentColor;opacity:.55;animation:autogo 1.5s linear forwards}
+@keyframes autogo{to{width:100%}}
+/* payout: charms fire one by one */
+.token.trig{animation:trig .42s var(--spring)}
+@keyframes trig{0%{transform:scale(1)}35%{transform:translateY(-7px) scale(1.32) rotate(-8deg);filter:brightness(1.6) drop-shadow(0 0 8px var(--brass-hi))}70%{transform:translateY(-2px) scale(1.1) rotate(4deg)}100%{transform:none}}
+.float.small{font-size:18px}.float.mult{color:var(--mult);font-size:22px}
+.payout .pv .ov{display:inline-block;color:var(--odds);font:inherit;vertical-align:baseline;min-width:1.2em;text-align:left}
+.payout .pv .ov.bump{animation:ovb .22s var(--spring)}
+@keyframes ovb{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
+.payout .pm b{color:var(--brass-hi);font-weight:400}
+/* the bar fits on one screen: shelf + your dice on the left, crates, services and the door on the right */
+.modal.barm{width:min(1240px,100%);padding:12px 16px 16px}
+.barm .mhead{margin-bottom:4px} .barm .mtitle{font-size:32px}
+.barcols{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;align-items:start}
+.barm #shelf{grid-template-columns:repeat(auto-fill,minmax(122px,1fr));gap:10px}
+.barm #shelf .card{padding:10px 8px 26px;gap:5px}
+.barm #shelf .card .art{height:58px} .barm #shelf .card .art .cicon,.barm #shelf .card .art img.dieimg{width:58px!important;height:58px!important}
+.barm #shelf .card .n{font-size:16px} .barm #shelf .card .d{font-size:12.5px;line-height:1.3}
+.barm #bagt .list.cols2{grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px}
+.svc.rows{grid-template-columns:1fr;gap:6px}
+.svc.rows .card{flex-direction:row;text-align:left;align-items:center;padding:6px 64px 6px 8px;gap:8px;border-radius:12px;min-height:46px}
+.svc.rows .card .art{height:34px;width:34px;flex:none} .svc.rows .card .art .cicon{width:34px;height:34px}
+.svc.rows .card .mid{display:flex;flex-direction:column;gap:1px;min-width:0}
+.svc.rows .card .n{font-size:14.5px} .svc.rows .card .d{font-size:11.5px;line-height:1.25;text-wrap:pretty}
+.svc.rows .card .p{left:auto;right:8px;top:50%;bottom:auto;transform:translateY(-50%);font-size:14px;padding:5px 9px 4px}
+.svc.rows .card:hover{transform:translateX(-3px)}
+.barm .tabbox{margin-top:8px;padding:7px 10px;font-size:12px;font-weight:600}
+.barm .bside .row{margin-top:10px} .barm .bside .row .btn{width:100%}
+@media (max-width:900px){ .barcols{grid-template-columns:1fr} }
+.bagstrip{display:flex;flex-wrap:wrap;gap:6px}
+.bchip{position:relative;display:flex;align-items:center;gap:2px;padding:4px 8px 4px 4px;border-radius:10px;background:#0004;box-shadow:inset 0 0 0 1px #c9a14a33;cursor:help}
+.bchip canvas{width:30px!important;height:30px!important}
+.bchip .q{font-family:var(--f-ui);font-size:14px;color:var(--cream-2)}
+.bchip.fin{box-shadow:inset 0 0 0 1.5px #f0c04099}
+.barm #shelf{grid-template-columns:repeat(auto-fill,minmax(106px,1fr));gap:8px}
+.barm #shelf .card{padding:8px 6px 24px}
+.svc.rows{gap:5px} .svc.rows .card{min-height:40px;padding:4px 60px 4px 8px}
+.barm .mhead .sc{display:none}
+.bfoot{display:flex;gap:14px;align-items:center;margin-top:16px} .bfoot .tabbox{flex:1;margin:0} .bfoot .btn{flex:none}
+.entry .warn{margin-top:6px;font-size:12.5px;font-weight:800;color:var(--ox-hi);background:#5a101a55;border-radius:8px;padding:4px 8px;box-shadow:inset 0 0 0 1px #ff5a6a44}
+.card:hover{animation-play-state:paused}

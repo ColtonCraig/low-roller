@@ -379,7 +379,7 @@ function regenOf(opp){ return opp.q.includes('regen')?Math.max(1,Math.ceil(opp.h
 function afterFight(G){ const i=Math.min(5,Math.floor(Math.max(0,G.gold)/10)); return (G.charms.includes('savings')?i:0)+(hasFix(G,'vault')?i:0); }
 // env: {gold, wins (rounds won in a row before this one), margin, score, done}
 function oddsOf(R,charms,env){ const P=[]; let add=0, mul=1; const has=c=>charms.includes(c);
-  const A=(l,n)=>{ if(n){ add+=n; P.push([l,'+'+n]); } }, M=(l,x)=>{ if(x!==1){ mul*=x; P.push([l,'×'+(+x.toFixed(1))]); } };
+  const A=(l,n)=>{ if(n){ add+=n; P.push([l,'+'+n]); } }, M=(l,x)=>{ if(x!==1){ mul*=x; P.push([l,'×'+(+x.toFixed(x<2?2:1))]); } };
   if(env.rep) A('Reputation',env.rep);
   if(R.gilt) A('Ruby crowns',R.gilt);
   if(has('tally')) A('Tally Card',Math.floor((env.tally||0)/2));
