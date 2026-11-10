@@ -10,7 +10,7 @@ const N = +(process.env.BALANCE_N || 800);
 const CHECKS = [
   { args: ['skill=good', 'lim=0'], min: 22, max: 40, label: 'Penny Ante, good bot' },
   { args: ['skill=good', 'lim=3'], min: 9, max: 26, label: 'Quarter, good bot' },
-  { args: ['skill=good', 'lim=7'], min: 1, max: 12, label: 'The Big Board, good bot' },
+  { args: ['skill=good', 'lim=10'], min: 1, max: 12, label: 'The Big Board, good bot' },
 ];
 
 let failed = 0;

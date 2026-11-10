@@ -26,7 +26,7 @@ AUD=r"""(()=>{ const P=[]; const R=e=>e.getBoundingClientRect(); const vis=e=>{c
  const hs=document.documentElement.scrollWidth>innerWidth+1; if(hs) P.push('horizontal scroll');
  return P; })()"""
 async def fight(pg,setup):
-  await pg.evaluate("document.querySelectorAll('.overlay').forEach(o=>o.remove()); SET.tips=false; tipOpen=0; PAUSED=false; newRun('run'); G.charms=['tip','penny']; "+setup+"; renderMap()"); await pg.wait_for_timeout(600)
+  await pg.evaluate("document.querySelectorAll('.overlay').forEach(o=>o.remove()); SET.tips=false; SET.auto=false; tipOpen=0; PAUSED=false; newRun('run'); G.charms=['tip','penny']; "+setup+"; renderMap()"); await pg.wait_for_timeout(600)
   await pg.click('#stops .entry')
   for i in range(40):
     await pg.wait_for_timeout(500)

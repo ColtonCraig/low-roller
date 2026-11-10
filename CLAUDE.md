@@ -23,7 +23,7 @@ Owner: Colton. Desktop only, no phone or tablet layouts.
 | Browser checks, quick | `QUICK=1 npm run test:e2e` | a few min |
 | Browser checks, all sizes | `npm run test:e2e` | 10-20 min |
 | Run the game | `npm start` | |
-| One-off balance run | `npm run sim -- n=800 skill=good lim=0` | |
+| One-off balance run | `npm run sim -- n=800 skill=good lim=0` (limits 0-11; The Big Board is lim=10) | |
 
 Browser checks need `pip install playwright && python3 -m playwright install chromium`.
 `tests/e2e/dicecheck.py` and `audit.py` take size names (`deck,fhd`) and `shots` to save screenshots.
@@ -33,7 +33,9 @@ Browser checks need `pip install playwright && python3 -m playwright install chr
   boss phase 2, signatures, quirks). Any rule or flow change in `game.js` must be mirrored there, then run the balance gate.
 - **Card text = code.** Every charm/die/quirk `desc` must say exactly what the code does. Add a unit test in
   `tests/logic.test.js` for any new rule a player can read.
-- **Balance targets** (good bot, 800 runs): Penny Ante 22-40% (aim ~30), Quarter 9-26%, The Big Board 1-12%.
+- **Balance targets** (good bot, 800 runs): Penny Ante 22-40% (aim ~30), Quarter (lim 3) 9-26%, The Big Board (lim 10) 1-12%.
+  The sim also mirrors the floor plan (`genMap`), Shakes, Raise/Fold, intents, Plays, deeds and every limit; sim flags
+  `noshake=1 noraise=1 nointent=1 notip=1 nodeed=1 drink=<k>|none` switch a system off to measure it.
   Deaths should spread across Acts II-III, not pile on one fight. Changing a band is a design decision: say why in the PR.
 - **Table zones never overlap.** Back right, from the cup out to the corner: their banked dice. Middle: their throws. Front left, from the corner: your banked dice.
   Banked dice in a row may overlap slightly; dice in different zones never touch. Front: your tray. Every die stays on the felt. `fitCam()` zooms the camera to fit the zones; never move dice to make room.

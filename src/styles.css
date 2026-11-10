@@ -591,3 +591,33 @@ button.tabnum.owe{border:0;background:none;padding:0;cursor:pointer;font:inherit
 .stamp.next{opacity:.75;font-style:italic}
 .float.play{font-size:20px;white-space:nowrap}
 .card.hottip{box-shadow:inset 0 0 0 1.5px #ff9a3a88,0 4px 0 #0007} .card.hottip .k{color:#ffb070}
+/* the floor plan */
+.modal.mapm{width:min(1180px,100%)}
+.mapcols{display:grid;grid-template-columns:auto minmax(0,1fr);gap:22px;align-items:start}
+.floorplan{padding:10px 12px 8px;border-radius:14px;background:#00000038;box-shadow:inset 0 0 0 1px #c9a14a33}
+.plan{position:relative}
+.planlines{position:absolute;inset:0}
+.planlines line{stroke:#c9a14a55;stroke-width:2;stroke-dasharray:4 5}
+.planlines line.done{stroke:var(--brass-hi);stroke-width:3;stroke-dasharray:none}
+.planlines line.open{stroke:var(--brass-hi);stroke-dasharray:5 4;animation:dashgo 1s linear infinite}
+@keyframes dashgo{to{stroke-dashoffset:-18}}
+.mn{position:absolute;width:34px;height:34px;margin:-17px 0 0 -17px;border:0;padding:6px;border-radius:50%;display:grid;place-items:center;cursor:default;background:#1a120c;color:#b8a888;box-shadow:inset 0 0 0 2px #c9a14a55,0 3px 0 #0008;transition:transform .2s var(--spring)}
+.mn svg{width:100%;height:100%}
+.mn.n-F{color:#e8dcc0} .mn.n-E{color:#ff8a94} .mn.n-B{color:var(--gold);width:44px;height:44px;margin:-22px 0 0 -22px} .mn.n-S{color:#9fe8ff} .mn.n-R{color:#b8b0ff} .mn.n-q{color:#f0c86a}
+.mn.ahead{opacity:.82}
+.mn.gone{opacity:.28}
+.mn.here{background:#3a2a10;box-shadow:inset 0 0 0 2.5px var(--brass-hi),0 3px 0 #0008}
+.mn.can{cursor:pointer;background:#2a1e10;box-shadow:inset 0 0 0 2.5px var(--brass-hi),0 0 0 4px #f0c04030,0 3px 0 #0008;animation:mnpulse 1.4s ease-in-out infinite}
+.mn.can:hover,.mn.can.hl{transform:scale(1.22);animation:none}
+@keyframes mnpulse{50%{box-shadow:inset 0 0 0 2.5px var(--brass-hi),0 0 0 7px #f0c04018,0 3px 0 #0008}}
+.legend{display:grid;grid-template-columns:1fr 1fr;gap:3px 8px;margin-top:6px;font-size:11px;font-weight:700;color:var(--cream-2)}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend .mn{position:static;width:20px;height:20px;margin:0;padding:3px;animation:none}
+.mapside .entries{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.entry.hl{transform:translateY(-4px);box-shadow:inset 0 0 0 2px var(--brass-hi),0 6px 0 #0008}
+@media (max-width:900px){ .mapcols{grid-template-columns:1fr} .floorplan{justify-self:center} }
+.mapm .mhead{margin-bottom:6px} .mapm .mtitle{font-size:34px}
+.svc.rows.lastcall{grid-template-columns:1fr 1fr}
+.card.deed{box-shadow:inset 0 0 0 1.5px #d8b060aa,0 4px 0 #0007;background:#2a1a0870} .card.deed .k{color:#f0c86a}
+.chit.deed{background:#3a2a10;color:#f0c86a;box-shadow:inset 0 0 0 1px #f0c86a66}
+.cards.deeds .card{padding:10px 8px 14px} .cards.deeds .card .art{height:40px}

@@ -4,6 +4,7 @@
 /*LOGIC-START*/
 const DT = {
   d6:     {name:'House Die',   short:'d6', skin:'bone',   faces:[1,2,3,4,5,'C'],              tier:'c', price:4,  desc:'The standard die. A crown scores 0.'},
+  lead:   {name:'Lead Die',    short:'Pb', skin:'lead',   faces:[1,2,3,4,5,5],                tier:'x', price:0,  desc:'Cursed: two 5s and never a crown, and you can’t toss it.'},
   d8:     {name:'Octo',        short:'d8', skin:'octo',   faces:[1,2,3,4,5,6,7,'C'],          tier:'c', price:3,  desc:'Eight sides. Usually rolls high.'},
   pebble: {name:'Pebble',      short:'d4', skin:'pebble', faces:[1,2,3,'C'],                  tier:'u', price:10,  size:.46, desc:'Four sides, all low.'},
   loaded: {name:'Loaded Die',  short:'LD', skin:'loaded', faces:[1,1,2,3,4,'C'],              tier:'c', price:6,  desc:'Weighted low. Never rolls a 5.'},
@@ -81,9 +82,9 @@ const CHARMS={
   shiner:  {name:'Shiner',        ico:'○', tier:'c', price:5, desc:'Finish a round without banking a crown: you get +6 odds.'},
   evens:   {name:'Even Money',    ico:'2', tier:'c', price:5, desc:'You get +2 odds per 2, 4 or 6 you bank.'},
   deuces:  {name:'Deuces Wild',   ico:'2', tier:'u', price:9, desc:'Your 2s score 1.'},
-  thumb:   {name:'Loaded Thumb',  ico:'T', tier:'u', price:8, desc:'Twice per table: click Nudge, then a die in your tray, to turn it down by 1. Crowns don’t move.'},
-  echo:    {name:'The Echo',      ico:'E', tier:'u', price:9, desc:'The first crown you bank each round counts as two crowns.'},
-  doubletake:{name:'Double Take', ico:'D', tier:'c', price:5, desc:'Every 1 you bank counts as two 1s (for Snake Eyes and Pair of Ones).'},
+  thumb:   {name:'Loaded Thumb',  ico:'T', tier:'u', price:9, desc:'Twice per table: click Nudge, then a die in your tray, to turn it down by 1. Crowns don’t move.'},
+  echo:    {name:'The Echo',      ico:'E', tier:'u', price:9, desc:'Crowns you bank on your first throw of a round count as two crowns each.'},
+  doubletake:{name:'Double Take', ico:'D', tier:'u', price:8, desc:'Every 1 you bank counts as two 1s (for Snake Eyes and Pair of Ones).'},
   sleight: {name:'Sleight of Hand',ico:'S', tier:'r', price:15, rare:true, desc:'Your first throw each round: every die that lands on 4 or more gets one free rethrow.'},
   bump:    {name:'Bump the Table',ico:'B', tier:'u', price:8, desc:'Once per table, after they throw: click Bump and their lowest die gets thrown again.'},
   bodyguard:{name:'The Bodyguard',ico:'G', tier:'u', price:9, desc:'Every round you win, he adds 3 to his wall. The next hit you take loses the wall first, then the wall’s gone.'},
@@ -142,11 +143,11 @@ const QUIRKS={
 // Balatro-style boss blinds / Spire-style elites: every boss and most sharks draw a counter at random each run,
 // so a build that one-shots one table has to deal with something different at the next.
 const BOSS_RULES=[['armor','regen','bloodlust','snakebit'],['ironjaw','jinx','armor','bloodlust','regen','snakebit','thorns','vig'],['jinx','flat','vig','thorns','bloodlust','regen','snakebit']];
-const SHARK_RULES=['armor','regen','jinx','snakebit','thorns','bloodlust'];
-const RULE_Q=[...new Set(['ironjaw',...BOSS_RULES.flat(),...SHARK_RULES])];
+const SHARK_RULES=['armor','regen','jinx','snakebit','thorns','bloodlust'], SHARK_RULES_1=['regen','snakebit','thorns','bloodlust'];
+const RULE_Q=[...new Set(['ironjaw',...BOSS_RULES.flat(),...SHARK_RULES,...SHARK_RULES_1])];
 function rulesFor(kind,act,lap,q){ const add=[], take=pool=>{ const ok=pool.filter(x=>!q.includes(x)&&!add.includes(x)); if(ok.length) add.push(pick(ok)); };
-  if(kind==='B'){ if(act===2||lap>0) add.push('ironjaw'); take(BOSS_RULES[act]); for(let k=0;k<lap;k++) take(BOSS_RULES[2]); }
-  if(kind==='E'&&(act>0||lap>0)){ take(SHARK_RULES); for(let k=0;k<lap;k++) take(SHARK_RULES); }
+  if(kind==='B'){ if(lap>0) add.push('ironjaw'); take(BOSS_RULES[act]); if(act===2&&!lap) take(BOSS_RULES[2]); for(let k=0;k<lap;k++) take(BOSS_RULES[2]); }
+  if(kind==='E'){ take(act===0&&!lap?SHARK_RULES_1:SHARK_RULES); for(let k=0;k<lap;k++) take(SHARK_RULES); }
   return add; }
 // Three rooms, each with its own regulars, sharks and a boss with a signature move.
 const ACTS=[
@@ -168,7 +169,7 @@ const ACTS=[
     {n:'The Twins',    s:'Finish each other’s rolls.', hp:17, bag:['loaded','loaded','pebble','d6','d6','glass'], t:2, q:['pair'], look:{coat:0x2b2440,hat:'bowler',eye:0xc9a0ff,scale:1.1}}],
   boss:{n:'Big Sal', s:'Owns the Rusty Nail', hp:32, bag:['loaded','loaded','d6','d6','d6','pebble'], t:2, q:['edge'], boss:true, sig:'slam', look:{coat:0x5a1520,hat:'fedora',eye:0xffb547,scale:1.3,cigar:true,band:0xc9a14a,tie:0x1a1a1a}}}},
  {name:'The Velvet Room', boss:'The Countess', short:'The Countess', bossD:'She runs the room upstairs. Every round she swaps one of your dice for an Octo.', est:'MEMBERS ONLY',
-  theme:{felt:'#4a1424',trim:'#d8b25c',wall:'#3a0c16',pat:'#b8903f',style:'diamond',lamp:0xffb89a,neon:'VELVET',neonC:'#b04aff',neonT:'#e8c4ff'},
+  theme:{felt:'#5c1e30',trim:'#d8b25c',wall:'#3a0c16',pat:'#b8903f',style:'diamond',lamp:0xffb89a,neon:'VELVET',neonC:'#b04aff',neonT:'#e8c4ff'},
   half:{add:['edge'],t:1,big:'The gloves come off',small:'Two swaps a round, and House Edge',note:'Every round she swaps one of your dice for an Octo. At half nerve it’s two, and she adds House Edge.'},
   foes:{
   t1:[
@@ -183,7 +184,7 @@ const ACTS=[
   e2:[{n:'The Doubles',s:'Back for your wallet.',     hp:24, bag:['loaded','loaded','pebble','pebble','d6','glass'], t:1, q:['pair','steal'], look:{coat:0x1e3a36,hat:'bowler',eye:0x9ff5d3,scale:1.15}}],
   boss:{n:'The Countess', s:'Holds court upstairs', hp:42, bag:['loaded','loaded','loaded','pebble','d6','glass'], t:1, q:[], boss:true, sig:'gift', look:{coat:0x2a0a1a,hat:'cloche',hatc:0x12040c,eye:0xd8a8ff,scale:1.3,tie:0xc9a14a}}}},
  {name:'The Back Room', boss:'The House', short:'The House', bossD:'Nobody’s seen his face. Ties go to the house.', est:'NO EXIT',
-  theme:{felt:'#2c383a',trim:'#8f8a74',wall:'#262824',pat:'#3a3c36',style:'brick',lamp:0xd8ffe4,neon:'NO EXIT',neonC:'#ff2a2a',neonT:'#ffb0a0'},
+  theme:{felt:'#3a4c4e',trim:'#a8a288',wall:'#2e302c',pat:'#3a3c36',style:'brick',lamp:0xd8ffe4,neon:'NO EXIT',neonC:'#ff2a2a',neonT:'#ffb0a0'},
   half:{add:['haze'],t:1,big:'The house always wins',small:'Haze, and he plays tight',note:'Every tie goes to him and costs you 2. At half nerve he adds Haze and plays tight.'},
   foes:{
   t1:[
@@ -210,8 +211,8 @@ const MORE=[
   t2:[{n:'Miss Fortune', s:'Reads your dice before they land.',hp:20, bag:['loaded','loaded','pebble','d6','d6','glass'], t:1, q:['copycat','haze'], look:{coat:0x3a1a4a,hat:'turban',eye:0xe0a0ff}}],
   e2:[{n:'The Magpie',   s:'Anything shiny.',               hp:26, bag:['loaded','loaded','pebble','pebble','d6','coin'], t:1, q:['steal','copycat'], look:{coat:0x101418,hat:'cloche',eye:0x9ff5d3}}],
   alt:{n:'Zambini', s:'Pulls your luck out of a hat.', hp:21, bag:['loaded','loaded','d6','pebble','d6','glass'], t:1, q:[], boss:true, sig:'trick', short:'Zambini',
-   d:'A stage magician. Two of your dice land face-down every throw.', sigT:'Two of your dice land face-down every throw. Three at half nerve.',
-   half:{add:['copycat'],t:1,big:'For my next trick',small:'Three dice hidden, and Copycat'}, look:{coat:0x1a0a2a,hat:'top',eye:0xc9a0ff,scale:1.25}}},
+   d:'A stage magician. One of your dice lands face-down every throw.', sigT:'One of your dice lands face-down every throw. Two at half nerve.',
+   half:{add:['copycat'],t:1,big:'For my next trick',small:'Two dice hidden, and Copycat'}, look:{coat:0x1a0a2a,hat:'top',eye:0xc9a0ff,scale:1.25}}},
  {t1:[{n:'Officer Kelly',s:'On the take. On the clock.',    hp:25, bag:['loaded','loaded','pebble','coin','d6','d6'], t:1, q:['loud','tax'], look:{coat:0x1a2a4a,hat:'cap',eye:0x9fd3ff}}],
   t2:[{n:'Lucky Lucy',   s:'Has never lost a tie.',         hp:29, bag:['loaded','loaded','pebble','pebble','coin','d6'], t:1, q:['sharp','hot'], look:{coat:0x2a5a3a,hat:'cloche',eye:0xa0ffb0}}],
   e1:[{n:'Doc', s:'Sews up the losers. Charges extra.',hp:36, bag:['loaded','loaded','pebble','pebble','shaved','coin'], t:1, q:['sharp','grudge','haze'], look:{coat:0xd8d2c4,hat:'none',eye:0xffffff}}],
@@ -248,12 +249,30 @@ const LIMITS=[
  {n:'Penny Ante',   d:'House rules. Nothing extra.'},
  {n:'Nickel',       d:'Everyone you face has 10% more nerve.'},
  {n:'Dime',         d:'Bosses bring an extra quirk.'},
- {n:'Quarter',      d:'Everything at the bar costs $2 more.'},
- {n:'Half Dollar',  d:'You walk in with 10 less nerve.'},
- {n:'Silver Dollar',d:'From Act II on, their odds are 1 higher.'},
+ {n:'Quarter',      d:'Everything at the bar costs $1 more.'},
+ {n:'Half Dollar',  d:'You walk in with 5 less nerve.'},
+ {n:'Lead Slug',    d:'One of your House Dice is a cursed Lead Die: 1 2 3 4 5 5, never a crown. It can’t be tossed.'},
+ {n:'Silver Dollar',d:'In Act III, their odds are 1 higher.'},
+ {n:'Card Sharp',   d:'Sharks throw one die face-down. You only see it after your first bank.'},
  {n:'Gold Eagle',   d:'Sharks bring an extra quirk too. No breather on the stairs.'},
- {n:'The Big Board',d:'Everyone has 12% more nerve. Tables pay $2 less.'}];
-function limitMods(lv){ lv=lv||0; return {hp:lv>=7?1.12:lv>=1?1.1:1, extraQ:lv>=2, extraQE:lv>=6, price:lv>=3?2:0, startHp:lv>=4?-10:0, odds:lv>=5?1:0, stairs:lv>=6?0:.5, rest:.4, pay:lv>=7?-2:0}; }
+ {n:'Last Orders',  d:'The bar shelf holds one charm less, and restocks cost double.'},
+ {n:'The Big Board',d:'Everyone has 12% more nerve. Tables pay $2 less.'},
+ {n:'Double Down',  d:'Beat the last owner and the other one sits down right after, at three-quarter nerve. No breather.'}];
+function limitMods(lv){ lv=lv||0; return {hp:lv>=10?1.12:lv>=1?1.1:1, extraQ:lv>=2, price:lv>=3?1:0, startHp:lv>=4?-5:0, lead:lv>=5, odds:lv>=6?1:0, hideE:lv>=7, extraQE:lv>=8, stairs:lv>=8?0:.5, rest:.4, lastOrders:lv>=9, pay:lv>=10?-2:0, double:lv>=11}; }
+// old saves numbered the ladder 0-7; this maps an old limit to the same rung on the new 0-11 ladder
+const LIMIT_V1=[0,1,2,3,4,6,8,10];
+// ---- Deeds: beat an owner and you can take the deed to one of their rackets. Each is strong and costs you something.
+const DEEDS={
+  still:{name:'The Still',desc:'+1 charm slot. Everything at the bar costs $2 more.'},
+  loadedcup:{name:'Loaded Cup',desc:'+1 Shake every round. Your first throw each round: crowns score 1.'},
+  brass:{name:'Brass Plate',desc:'No round takes more than 12 nerve from you. −10 max nerve.'},
+  pockets:{name:'Deep Pockets',desc:'You draw 7 dice a round. Rounds you lose hit you 2 harder.'},
+  badrep:{name:'Bad Reputation',desc:'+3 odds for good. Everyone you face has 15% more nerve.'},
+  blackbook:{name:'The Black Book',desc:'Every Play goes up 2 levels. Hot Tips stop turning up.'} };
+const DEED_KEYS=Object.keys(DEEDS);
+const hasDeed=(G,k)=>!!(G&&G.deeds&&G.deeds.includes(k));
+function takeDeed(G,k){ (G.deeds=G.deeds||[]).push(k); if(k==='brass'){ G.maxHp-=10; G.hp=Math.min(G.hp,G.maxHp); } if(k==='badrep') G.rep=(G.rep||0)+3; if(k==='blackbook'){ G.plays=G.plays||{}; PLAY_KEYS.forEach(p=>G.plays[p]=(G.plays[p]||0)+2); } }
+const handSize=G=>HAND+(hasDeed(G,'pockets')?1:0);
 const EXTRA_Q=['cold','fuse','haze','steal','grudge','hot','copycat','sharp','loud'];
 // ---- who you walk in as ----
 const POCKETS=[
@@ -286,7 +305,7 @@ const HAND=6;
 // ---- scaling: each act is a new tier, like a new ante. HP grows geometrically, their odds climb. ----
 // nerve at the top of each act for a regular / shark / boss. Regulars and sharks ramp up floor by floor.
 // sharks and bosses carry a random counter (rulesFor), so they run lighter on nerve than they used to
-const ACT_HP=[{F:13,E:26,B:44},{F:45,E:46,B:64},{F:112,E:100,B:158}];
+const ACT_HP=[{F:13,E:30,B:40},{F:45,E:46,B:52},{F:112,E:100,B:125}];
 const ACT_ODDS=[1,2,2];           // how hard their wins hit you
 const ENDLESS_GROW=2;              // endless: every room past Act III doubles nerve (and adds +1 to their odds)
 function rnd(n){return Math.floor(Math.random()*n)}
@@ -304,10 +323,10 @@ function aiRound(bag,t){ let left=bag.map((_,i)=>i), throws=[], total=0;
 function tierRef(act,kind){ const f=ACTS[act].foes, L=kind==='E'?[...f.e1,...f.e2]:kind==='B'?[f.boss]:[...f.t1,...f.t2]; return L.reduce((a,d)=>a+d.hp,0)/L.length; }
 function oppHP(def,kind,act,floor,lap,easy){ const w=def.hp/tierRef(act,kind), base=lap?ACT_HP[2][kind]*Math.pow(ENDLESS_GROW,3*lap+act-2):ACT_HP[act][kind];
   return Math.max(4,Math.round(base*w*(kind==='B'?1:1+.08*floor)*(easy?.72:1))); }
-function makeOpp(def,kind,act,floor,lap,easy,lv){ let bag=def.bag.slice(); for(let k=0;k<lap;k++){const i=bag.findIndex(b=>b==='d6'||b==='d8'); if(i>=0) bag[i]=k%2?'pebble':'loaded';}
+function makeOpp(def,kind,act,floor,lap,easy,lv,hpMul){ let bag=def.bag.slice(); for(let k=0;k<lap;k++){const i=bag.findIndex(b=>b==='d6'||b==='d8'); if(i>=0) bag[i]=k%2?'pebble':'loaded';}
   const LM=limitMods(lv), q=(def.q||[]).slice(); if((LM.extraQ&&kind==='B')||(LM.extraQE&&kind==='E')){ const ex=EXTRA_Q.filter(x=>!q.includes(x)); if(ex.length) q.push(pick(ex)); }
   q.push(...rulesFor(kind,act,lap||0,q));
-  return {...def, hp:Math.round(oppHP(def,kind,act,floor,lap,easy)*LM.hp), odds:(lap?ACT_ODDS[2]+3*lap+act-2:ACT_ODDS[act])+(kind==='B'&&q.indexOf('ironjaw')<0?1:0)+(act>=1||lap?LM.odds:0), bag, q}; }
+  return {...def, hp:Math.round(oppHP(def,kind,act,floor,lap,easy)*LM.hp*(hpMul||1)), odds:(lap?ACT_ODDS[2]+3*lap+act-2:ACT_ODDS[act])+(kind==='B'&&q.indexOf('ironjaw')<0?1:0)+(act>=2||lap?LM.odds:0), bag, q}; }
 // ---- a round's running record; everything that pays is computed from this ----
 function newRound(){ return {crowns:0,gilt:0,ember:0,roller:0,ones:0,threes:0,glass:0,gold:0,bomb:0,snake:false,singles:true,throws:0,evens:0,trips:false,lastBank:0,bubbly:0,viper:0,cnt:{}}; }
 function bankVals(faces,ctx,charms,final,fins){ let v=faces.map((f,i)=>finVal(effVal(f,ctx),fins&&fins[i]));
@@ -317,7 +336,7 @@ function bankVals(faces,ctx,charms,final,fins){ let v=faces.map((f,i)=>finVal(ef
 function noteBank(R,faces,types,charms,fins){ R.throws++; if(faces.length!==1) R.singles=false;
   (fins||[]).forEach(f=>{ if(!f) return; R.fin={...(R.fin||{})}; R.fin[f]=(R.fin[f]||0)+1; });
   const ch=charms||[];
-  faces.forEach((f,i)=>{ if(f==='G'||f==='C'){ if(ch.includes('echo')&&!R.echoed){ R.crowns++; R.echoed=true; } } if(f==='G'){ R.crowns++; R.gilt++; } if(f==='C'){ R.crowns++; if(types[i]==='ember') R.ember++; if(types[i]==='gamble') R.roller++; } });
+  faces.forEach((f,i)=>{ if(f==='G'||f==='C'){ if(ch.includes('echo')&&R.throws===1) R.crowns++; } if(f==='G'){ R.crowns++; R.gilt++; } if(f==='C'){ R.crowns++; if(types[i]==='ember') R.ember++; if(types[i]==='gamble') R.roller++; } });
   { const n1=faces.filter(f=>f===1).length*(ch.includes('doubletake')?2:1); R.ones+=n1; if(n1>=2) R.snake=true; }
   R.threes+=faces.filter(f=>f===3).length; R.glass+=types.filter(t=>t==='glass').length;
   faces.forEach((f,i)=>{ if(f==='C'&&types[i]==='gilded') R.gold++; if(f==='C'&&types[i]==='bomb') R.bomb++; });
@@ -346,9 +365,9 @@ const FIX_KEYS=Object.keys(FIXTURES);
 function fixOffer(G){ const own=G.fix||[], un=FIX_KEYS.filter(k=>!own.includes(k)); G.fixRoom=G.fixRoom||{}; const key=G.act+'/'+(G.lap||0);
   if(!G.fixRoom[key]||own.includes(G.fixRoom[key])) G.fixRoom[key]=un.length?pick(un):null; return G.fixRoom[key]; }
 function hasFix(G,k){ return !!(G.fix&&G.fix.includes(k)); }
-function charmSlots(G){ return MAX_CHARMS+(hasFix(G,'booth')?1:0); }
-function barPrice(G,p){ return hasFix(G,'discount')?Math.max(1,Math.round(p*.8)):p; }
-function restockPrice(G){ const n=G.restocks||0; if(hasFix(G,'restock')&&n===0) return 0; return Math.max(1,3+n-(hasFix(G,'restock')?1:0)); }
+function charmSlots(G){ return MAX_CHARMS+(hasFix(G,'booth')?1:0)+(hasDeed(G,'still')?1:0); }
+function barPrice(G,p){ p+=hasDeed(G,'still')?2:0; return hasFix(G,'discount')?Math.max(1,Math.round(p*.8)):p; }
+function restockPrice(G){ const n=G.restocks||0; if(hasFix(G,'restock')&&n===0) return 0; return Math.max(1,3+n-(hasFix(G,'restock')?1:0))*(limitMods(G.limit).lastOrders?2:1); }
 // ---- Drinks: single-use, carried in your coat (2 at most). Drink one on your turn; it lasts the round.
 const DRINKS={
   gin:     {name:'Gin',        price:4, desc:'+3 odds this round.'},
@@ -369,7 +388,7 @@ const PLAY_KEYS=Object.keys(PLAYS), TIP_PRICE=5;
 const playLv=(plays,k)=>((plays||{})[k]||0)+1;
 function playsHit(R,env){ const c=R.cnt||{}, out=[]; if(R.snake) out.push('pair'); if(R.trips) out.push('trips'); if(c[1]&&c[2]&&c[3]) out.push('ladder'); if((R.crowns||0)>=3) out.push('court'); if(env&&env.done&&env.score!=null&&env.score<=3) out.push('clean'); return out; }
 // ---- Shakes: rethrow any of your tray dice without banking. One a round, more with Bent Spoon.
-const shakesFor=charms=>1+(charms.includes('spoon')?1:0);
+const shakesFor=(charms,G)=>1+(charms.includes('spoon')?1:0)+(hasDeed(G,'loadedcup')?1:0);
 // ---- Raise / Fold: after your first throw, before your first bank.
 const foldDmg=(opp,intent)=>Math.max(2,Math.ceil(2*theirOdds(opp,{intent})));
 // ---- Intents: what the opponent is up to this round. Shown a round ahead.
@@ -491,7 +510,7 @@ function settle(p,oRaw,R,charms,opp,env){ const q=opp.q, has=c=>charms.includes(
   if(p>o||house||sharp){ const gap=house?2:sharp?1:p-o, tOdds=theirOdds(opp,env); let dmg=Math.ceil(gap*tOdds);
     if(q.includes('hot')&&env.lossStreak>0) dmg+=env.lossStreak;
     if(q.includes('grudge')&&env.oppHalf) dmg+=2;
-    if(has('thick')) dmg-=3; dmg=Math.max(1,dmg); if(has('highstakes')) dmg+=1; dmg*=stakesOf(env);
+    if(has('thick')) dmg-=3; dmg=Math.max(1,dmg); if(has('highstakes')) dmg+=1; if(env.deeds&&env.deeds.includes('pockets')) dmg+=2; dmg*=stakesOf(env); if(env.deeds&&env.deeds.includes('brass')) dmg=Math.min(12,dmg);
     return {winner:'them',gap,dmg,odds:tOdds,oFinal:o,house,sharp}; }
   return {winner:'push',dmg:0,oFinal:o}; }
 // bar services that change a die for good
@@ -504,6 +523,23 @@ const EXTRA_STOPS=['F','?','E'];
 function genFloors(){ return FLOORS.map((pool,f)=>{ const out=shuffle(pool).slice(0,Math.min(2,pool.length));
   if(f>0&&f<FLOORS.length-1&&Math.random()<.35){ const ex=shuffle(EXTRA_STOPS.filter(x=>!out.includes(x)&&!(f<2&&x==='E')))[0]; if(ex) out.push(ex); }
   return out; }); }
+// ---- The floor plan (Slay the Spire style): 9 rows of up to 3 seats, drawn up front for the whole act. You climb one
+// row at a time along the lines. Rows 5 and 8 are always a choice between the back alley and the bar, and every act
+// has at least one bar on rows 3-4 and on rows 6-7. Lines never cross.
+function wpick(w){ let t=Math.random()*Object.values(w).reduce((a,b)=>a+b,0); for(const k in w){ t-=w[k]; if(t<0) return k; } return Object.keys(w)[0]; }
+function genMap(){ const rows=[];
+  for(let r=0;r<9;r++){ let k;
+    if(r===8) k=['B']; else if(r===0) k=['F','F','F']; else if(r===1) k=shuffle(['F','F','?']);
+    else if(r===4||r===7) k=shuffle(['R','S',Math.random()<.5?'R':'S']);
+    else k=[0,1,2].map(()=>wpick({F:40,E:24,'?':20,S:16}));
+    rows.push(k.map((n,i)=>({n,x:r===8?1:i}))); }
+  for(const [a,b] of [[2,3],[5,6]]){ if(![...rows[a],...rows[b]].some(o=>o.n==='S')) rows[pick([a,b])][rnd(3)].n='S';
+    if(![...rows[a],...rows[b]].some(o=>o.n==='E')) { const c=[...rows[a],...rows[b]].filter(o=>o.n==='F'); if(c.length) pick(c).n='E'; } }
+  for(let r=0;r<7;r++){ rows[r].forEach(o=>o.to=[o.x]); for(let x=0;x<2;x++){ const u=Math.random(); if(u<.32) rows[r][x].to.push(x+1); else if(u<.64) rows[r][x+1].to.push(x); } }
+  rows[7].forEach(o=>o.to=[1]); rows[8][0].to=[];
+  return rows; }
+// which lanes of row f you can take next, given the lane you took on the row below (trail[f-1])
+function mapReach(M,f,trail){ if(f===0) return M[0].map(o=>o.x); const prev=M[f-1].find(o=>o.x===(trail||[])[f-1]); return prev?prev.to.slice():M[f].map(o=>o.x); }
 // Rarity, for dice and charms alike (Balatro-style): every slot rolls common / uncommon / rare. Rares can turn up
 // from the first room; they just get likelier the deeper you go.
 const RARITY=[[.70,.275,.025],[.63,.32,.05],[.57,.35,.08]];
@@ -514,4 +550,4 @@ function shopDie(act,not,taste){ const t=rollTier(act,RARITY_DICE,taste), pool=S
 function shopDice(act,n,taste){ const out=[]; for(let i=0;i<n;i++) out.push(shopDie(act,out,taste)); return out; }
 /*LOGIC-END*/
 
-if(typeof module!=='undefined'&&module.exports) module.exports={bumpLowest,PLAYS,PLAY_KEYS,TIP_PRICE,playLv,playsHit,shakesFor,foldDmg,INTENTS,INTENT_W,rollIntent,intentT,theirOdds,stakesOf,gateDmg,tossPrice,DRINKS,DRINK_KEYS,DRINK_MAX,FINISHES,FIN_KEYS,luckyHit,finVal,FIXTURES,FIX_KEYS,fixOffer,hasFix,charmSlots,barPrice,restockPrice,CHITS,CHIT_KEYS,QUICK_WIN,CRATES,crateSize,offbookP,RULE_Q,BOSS_RULES,SHARK_RULES,jinxPick,regenOf,rulesFor,ENDLESS_GROW,OFFBOOK_P,OFFBOOK_FEE,offbook,slotsUsed,afterRound,afterFight,rollTier,shopDie,shopDice,RARITY,RARITY_DICE,ACT_HP,DT,SHOP_DICE,CHARMS,QUIRKS,ACTS,FLOORS,HAND,ACT_ODDS,rnd,pick,shuffle,facesOf,rollInst,rollFace,effVal,aiRound,makeOpp,newRound,bankVals,noteBank,oddsOf,settle,genFloors,fileDie,gildDie,canFile,canGild,LIMITS,limitMods,POCKETS,pocketStart,theirScore,breaksAt,bombDmg,isRaid,bossOf,EXTRA_Q};
+if(typeof module!=='undefined'&&module.exports) module.exports={LIMIT_V1,DEEDS,DEED_KEYS,hasDeed,takeDeed,handSize,genMap,mapReach,wpick,bumpLowest,PLAYS,PLAY_KEYS,TIP_PRICE,playLv,playsHit,shakesFor,foldDmg,INTENTS,INTENT_W,rollIntent,intentT,theirOdds,stakesOf,gateDmg,tossPrice,DRINKS,DRINK_KEYS,DRINK_MAX,FINISHES,FIN_KEYS,luckyHit,finVal,FIXTURES,FIX_KEYS,fixOffer,hasFix,charmSlots,barPrice,restockPrice,CHITS,CHIT_KEYS,QUICK_WIN,CRATES,crateSize,offbookP,RULE_Q,BOSS_RULES,SHARK_RULES,jinxPick,regenOf,rulesFor,ENDLESS_GROW,OFFBOOK_P,OFFBOOK_FEE,offbook,slotsUsed,afterRound,afterFight,rollTier,shopDie,shopDice,RARITY,RARITY_DICE,ACT_HP,DT,SHOP_DICE,CHARMS,QUIRKS,ACTS,FLOORS,HAND,ACT_ODDS,rnd,pick,shuffle,facesOf,rollInst,rollFace,effVal,aiRound,makeOpp,newRound,bankVals,noteBank,oddsOf,settle,genFloors,fileDie,gildDie,canFile,canGild,LIMITS,limitMods,POCKETS,pocketStart,theirScore,breaksAt,bombDmg,isRaid,bossOf,EXTRA_Q};

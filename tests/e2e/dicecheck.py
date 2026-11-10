@@ -38,7 +38,7 @@ async def toTurn(pg):
   return False
 async def run(p,name):
   w,h=SIZES[name]; b,pg,errs=await open_game(p,w,h); out=[]
-  await pg.evaluate("SET.tips=false; SET.speed=2.4; 0")
+  await pg.evaluate("SET.tips=false; SET.auto=false; SET.deal='full'; SET.speed=2.4; 0")
   for sc,setup,opp in [('normal',"",None),('7dice',"G.bag=['d6','d6','d6','d6','d6','d6','d8','d8','coin'].map(newDie)","heavy"),('twins',"","twins"),('boss',"","boss")]:
     await pg.evaluate("document.querySelectorAll('.overlay').forEach(o=>o.remove()); F=null; newRun('run'); "+setup+"; renderMap(); 0"); await pg.wait_for_timeout(500)
     if opp=='twins': await pg.evaluate("startFight('E',makeOpp([...ACTS[1].foes.e1,...ACTS[1].foes.e2].find(f=>f.n==='The Doubles'),'E',1,3,0,false,0)); 0")
