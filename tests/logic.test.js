@@ -289,5 +289,15 @@ test('Growers: Restless, Crate Rat, Ticket Stub', () => {
   const grow = { restock: 3, crates: 2, chits: 1 };
   assert.equal(L.oddsOf(L.newRound(), ['restless', 'craterat', 'stub'], env({ grow })).odds, 1 + 6 + 6 + 2);
 });
+test('Drinks: Gin +3, Absinthe x2, Soda +2 to their score, Bitters makes their odds 1', () => {
+  assert.equal(L.oddsOf(L.newRound(), [], env({ drink: { gin: 1, absinthe: 1 } })).odds, 8);
+  assert.equal(L.settle(3, 4, L.newRound(), [], O([], 100, 1), env({ drink: { soda: 1 } })).dmg, 3);
+  assert.equal(L.settle(8, 3, L.newRound(), [], O([], 100, 3), env({ drink: { bitters: 1 } })).dmg, 5);
+});
+test('New pockets start as described', () => {
+  assert.deepEqual(L.pocketStart('collector').fins, ['polished', 'lucky']);
+  assert.equal(L.pocketStart('bootlegger').drinks.length, 2);
+  assert.deepEqual(L.pocketStart('mechanic').fix, ['felt']); assert.equal(L.pocketStart('ghost').hp, 40);
+});
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

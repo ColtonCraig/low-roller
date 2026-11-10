@@ -527,3 +527,13 @@ button.tabnum.owe{border:0;background:none;padding:0;cursor:pointer;font:inherit
 .card.finish{box-shadow:0 0 0 2px var(--fc),0 0 14px color-mix(in srgb,var(--fc) 40%,transparent)}
 .walkpast{display:block;margin:8px auto 0;padding:3px 10px;border-radius:8px;border:1px dashed #e8dcc066;background:transparent;color:#e8dcc0aa;font:13px 'Nunito';font-weight:700;cursor:pointer}
 .walkpast:hover{color:#f0c040;border-color:#f0c040}
+
+/* ---- coat (drinks) and the collection book ---- */
+.coat{display:flex;gap:6px;align-items:center;padding:6px 10px;margin-left:8px}
+.drink{width:34px;height:40px;border-radius:10px;display:grid;place-items:center;background:#0000002a;border:1px solid #e8dcc033;cursor:pointer;transition:transform .15s}
+.drink:hover{transform:translateY(-3px) scale(1.06)}
+.drink.empty{border-style:dashed;cursor:default;background:transparent}
+.card.k-drink .k{color:#9fe8ff}
+.bookgrid{display:flex;flex-wrap:wrap;gap:6px}
+.bk{font:13px/1.8 'Nunito';font-weight:800;padding:0 9px;border-radius:8px;background:#e8dcc014;color:#e8dcc0}
+.bk.unk{color:#e8dcc055;font-style:italic}

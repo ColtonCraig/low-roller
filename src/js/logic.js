@@ -252,13 +252,22 @@ const EXTRA_Q=['cold','fuse','haze','steal','grudge','hot','copycat','sharp','lo
 // ---- who you walk in as ----
 const POCKETS=[
  {k:'regular',n:'The Regular',d:'Six House Dice, two Octos, $8. The usual.',need:0},
- {k:'hustler',n:'The Hustler',d:'$22 in your pocket, but only 40 nerve.',need:1},
+ {k:'hustler',n:'The Hustler',d:'$22 in your pocket, but only 45 nerve.',need:1},
+ {k:'collector',n:'The Collector',d:'Two House Dice come Polished and Lucky. $4.',need:2},
  {k:'gambler',n:'The Gambler',d:'Two High Rollers instead of Octos, and a Bent Spoon.',need:3},
- {k:'jeweler',n:'The Jeweler',d:'One House Die already has a ruby. Rubies start at $6.',need:5},
- {k:'heavy',  n:'The Heavy',  d:'60 nerve and Thick Skin, but only $2.',need:8}];
+ {k:'bootlegger',n:'The Bootlegger',d:'Gin and Absinthe in your coat and $12, but only 45 nerve.',need:4},
+ {k:'jeweler',n:'The Jeweler',d:'One House Die already has a ruby, but only $3 and rubies at the bar start at $10.',need:5},
+ {k:'mechanic',n:'The Mechanic',d:'Lucky Felt already installed (+1 odds, always). No cash, no Octos.',need:6},
+ {k:'heavy',  n:'The Heavy',  d:'55 nerve and Thick Skin, but only $2.',need:8},
+ {k:'ghost',  n:'The Ghost',  d:'Back Booth already installed (6 charm slots), but only 40 nerve.',need:10}];
 function pocketStart(k){ const P={hp:50,gold:8,bag:['d6','d6','d6','d6','d6','d6','d8','d8'],charms:[],gild:8,ruby:0};
-  if(k==='hustler'){ P.gold=22; P.hp=40; } if(k==='gambler'){ P.bag=['d6','d6','d6','d6','d6','d6','gamble','gamble']; P.charms=['spoon']; }
-  if(k==='jeweler'){ P.gild=6; P.ruby=1; } if(k==='heavy'){ P.hp=60; P.gold=2; P.charms=['thick']; } return P; }
+  if(k==='hustler'){ P.gold=22; P.hp=45; } if(k==='gambler'){ P.bag=['d6','d6','d6','d6','d6','d6','gamble','gamble']; P.charms=['spoon']; }
+  if(k==='jeweler'){ P.gild=10; P.gold=3; P.ruby=1; } if(k==='heavy'){ P.hp=55; P.gold=2; P.charms=['thick']; }
+  if(k==='collector'){ P.gold=4; P.fins=['polished','lucky']; }
+  if(k==='bootlegger'){ P.hp=45; P.gold=12; P.drinks=['gin','absinthe']; }
+  if(k==='mechanic'){ P.gold=0; P.bag=['d6','d6','d6','d6','d6','d6','d6','d6']; P.fix=['felt']; }
+  if(k==='ghost'){ P.hp=40; P.fix=['booth']; }
+  return P; }
 // what they're really sitting on, after charms and quirks that move it
 function theirScore(oRaw,R,charms,q){ let o=oRaw+(charms.includes('bouncer')?1:0)-(q.includes('edge')?1:0)+(q.includes('sloppy')?1:0);
   if(charms.includes('heckler')) o+=Math.min(1,R.crowns); if(q.includes('copycat')&&R.crowns) o-=1; return Math.max(0,o); }
@@ -333,6 +342,16 @@ function hasFix(G,k){ return !!(G.fix&&G.fix.includes(k)); }
 function charmSlots(G){ return MAX_CHARMS+(hasFix(G,'booth')?1:0); }
 function barPrice(G,p){ return hasFix(G,'discount')?Math.max(1,Math.round(p*.8)):p; }
 function restockPrice(G){ const n=G.restocks||0; if(hasFix(G,'restock')&&n===0) return 0; return Math.max(1,3+n-(hasFix(G,'restock')?1:0)); }
+// ---- Drinks: single-use, carried in your coat (2 at most). Drink one on your turn; it lasts the round.
+const DRINKS={
+  gin:     {name:'Gin',        price:4, desc:'+3 odds this round.'},
+  absinthe:{name:'Absinthe',   price:6, desc:'×2 odds this round.'},
+  soda:    {name:'Soda Water', price:4, desc:'The opponent’s score counts 2 higher this round.'},
+  bitters: {name:'Bitters',    price:4, desc:'If you lose this round, their odds count as 1.'},
+  bourbon: {name:'Bourbon',    price:4, desc:'Heal 10 nerve.'},
+  sidecar: {name:'Sidecar',    price:3, desc:'$6, right now.'},
+};
+const DRINK_KEYS=Object.keys(DRINKS), DRINK_MAX=2;
 // ---- Chits: earned by beating a shark in 2 rounds or less, or by walking past a table. Spent on their own when they apply.
 const CHITS={
   cash:   {name:'Cash Chit',     desc:'$5, right now.'},
@@ -391,6 +410,7 @@ function oddsOf(R,charms,env){ const P=[]; let add=0, mul=1; const has=c=>charms
   if(has('craterat')) A('Crate Rat',3*(grow.crates||0));
   if(has('stub')) A('Ticket Stub',2*(grow.chits||0));
   if(env.fixOdds) A('Lucky Felt',env.fixOdds);
+  const dk=env.drink||{}; if(dk.gin) A('Gin',3*dk.gin);
   if(env.q&&env.q.includes('loud')){ add-=2; P.push(['Loudmouth','\u22122']); }
   if(R.roller) M('High Roller',Math.pow(2,R.roller));
   if(has('kingpin')&&R.crowns) M('Kingpin',Math.pow(1.25,R.crowns));
@@ -402,6 +422,7 @@ function oddsOf(R,charms,env){ const P=[]; let add=0, mul=1; const has=c=>charms
   if(has('highstakes')) M('High Stakes',2);
   if(R.bubbly) M('Champagne',Math.pow(1.5,R.bubbly));
   if((R.fin||{}).chrome) M('Chrome',Math.pow(1.25,R.fin.chrome));
+  if(dk.absinthe) M('Absinthe',Math.pow(2,dk.absinthe));
   if(R.viper) M('Viper',Math.pow(1.5,R.viper));
   if(has('jackpot')&&R.trips) M('Jackpot',2);
   if(has('longshot')&&env.margin>=1&&env.margin<=2) M('Long Shot',2.5);
@@ -418,7 +439,7 @@ function oddsOf(R,charms,env){ const P=[]; let add=0, mul=1; const has=c=>charms
 const fmtOdds=x=>(Math.round(x*10)/10).toString();
 // final reckoning of a round
 function settle(p,oRaw,R,charms,opp,env){ const q=opp.q, has=c=>charms.includes(c);
-  const o=theirScore(oRaw,R,charms,q);
+  const o=theirScore(oRaw,R,charms,q)+(env.drink&&env.drink.soda?2*env.drink.soda:0);
   if(p<o){ const margin=Math.max(1,o-p-(has('bouncer')?1:0))+(has('cut')?2:0); const O=oddsOf(R,charms,{...env,margin:o-p-(has('bouncer')?1:0),score:p,done:true});
     let dmg=Math.max(1,Math.round(margin*O.odds)), armor=false, capped=false;
     if(q.includes('ironjaw')){ const cap=Math.ceil((opp.hp||1)/3); if(dmg>cap){ dmg=cap; capped=true; } }
@@ -427,7 +448,7 @@ function settle(p,oRaw,R,charms,opp,env){ const q=opp.q, has=c=>charms.includes(
     return {winner:'you',gap:o-p,margin,odds:O.odds,parts:O.parts,dmg,armor,capped,recoil,oFinal:o,raid:O.raid}; }
   if(p===o+1&&has('nearmiss')) return {winner:'push',dmg:0,oFinal:o,near:true};
   const house=p===o&&opp.sig==='house', sharp=p===o&&!house&&q.includes('sharp');
-  if(p>o||house||sharp){ const gap=house?2:sharp?1:p-o, tOdds=opp.odds+(q.includes('bloodlust')?Math.floor(Math.max(0,(env.round||1)-1)/2):0); let dmg=Math.ceil(gap*tOdds);
+  if(p>o||house||sharp){ const gap=house?2:sharp?1:p-o, tOdds=(env.drink&&env.drink.bitters)?1:opp.odds+(q.includes('bloodlust')?Math.floor(Math.max(0,(env.round||1)-1)/2):0); let dmg=Math.ceil(gap*tOdds);
     if(q.includes('hot')&&env.lossStreak>0) dmg+=env.lossStreak;
     if(q.includes('grudge')&&env.oppHalf) dmg+=2;
     if(has('thick')) dmg-=3; dmg=Math.max(1,dmg); if(has('highstakes')) dmg+=1;
@@ -453,4 +474,4 @@ function shopDie(act,not,taste){ const t=rollTier(act,RARITY_DICE,taste), pool=S
 function shopDice(act,n,taste){ const out=[]; for(let i=0;i<n;i++) out.push(shopDie(act,out,taste)); return out; }
 /*LOGIC-END*/
 
-if(typeof module!=='undefined'&&module.exports) module.exports={FINISHES,FIN_KEYS,luckyHit,finVal,FIXTURES,FIX_KEYS,fixOffer,hasFix,charmSlots,barPrice,restockPrice,CHITS,CHIT_KEYS,QUICK_WIN,CRATES,crateSize,offbookP,RULE_Q,BOSS_RULES,SHARK_RULES,jinxPick,regenOf,rulesFor,ENDLESS_GROW,OFFBOOK_P,OFFBOOK_FEE,offbook,slotsUsed,afterRound,afterFight,rollTier,shopDie,shopDice,RARITY,RARITY_DICE,ACT_HP,DT,SHOP_DICE,CHARMS,QUIRKS,ACTS,FLOORS,HAND,ACT_ODDS,rnd,pick,shuffle,facesOf,rollInst,rollFace,effVal,aiRound,makeOpp,newRound,bankVals,noteBank,oddsOf,settle,genFloors,fileDie,gildDie,canFile,canGild,LIMITS,limitMods,POCKETS,pocketStart,theirScore,breaksAt,bombDmg,isRaid,bossOf,EXTRA_Q};
+if(typeof module!=='undefined'&&module.exports) module.exports={DRINKS,DRINK_KEYS,DRINK_MAX,FINISHES,FIN_KEYS,luckyHit,finVal,FIXTURES,FIX_KEYS,fixOffer,hasFix,charmSlots,barPrice,restockPrice,CHITS,CHIT_KEYS,QUICK_WIN,CRATES,crateSize,offbookP,RULE_Q,BOSS_RULES,SHARK_RULES,jinxPick,regenOf,rulesFor,ENDLESS_GROW,OFFBOOK_P,OFFBOOK_FEE,offbook,slotsUsed,afterRound,afterFight,rollTier,shopDie,shopDice,RARITY,RARITY_DICE,ACT_HP,DT,SHOP_DICE,CHARMS,QUIRKS,ACTS,FLOORS,HAND,ACT_ODDS,rnd,pick,shuffle,facesOf,rollInst,rollFace,effVal,aiRound,makeOpp,newRound,bankVals,noteBank,oddsOf,settle,genFloors,fileDie,gildDie,canFile,canGild,LIMITS,limitMods,POCKETS,pocketStart,theirScore,breaksAt,bombDmg,isRaid,bossOf,EXTRA_Q};

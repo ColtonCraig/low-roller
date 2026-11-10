@@ -862,7 +862,7 @@ function onHover(ev){ if(ev.pointerType!=='mouse') return; const o=pickDie(ev); 
 let G=null, F=null, busy=false;
 function best(){ try{return +localStorage.getItem('lr-best')||0}catch(e){return 0} }
 function saveBest(n){ try{ if(n>best()) localStorage.setItem('lr-best',n);}catch(e){} }
-function newRun(mode,lv,pk){ lv=lv||0; pk=pk||'regular'; const P=pocketStart(pk), hp0=P.hp+limitMods(lv).startHp; G={grow:{},mode,limit:lv,pocket:pk,bossIx:[rnd(2),rnd(2),rnd(2)],act:0,tab:0,lap:0,floor:0,path:[],floors:genFloors(),hp:hp0,maxHp:hp0,gold:P.gold,rep:0,tally:0,filePrice:5,gildPrice:P.gild,bag:P.bag.map(newDie),charms:P.charms.slice(),won:0,used:{},stats:{rounds:0,won:0,lost:0,push:0,dealt:0,taken:0,best:0,bestWho:'',low:50,rich:10,bosses:[],crowns:0,banked:0,earned:0,spent:0,t0:Date.now()}}; if(P.ruby) gildDie(G.bag[0]); }
+function newRun(mode,lv,pk){ lv=lv||0; pk=pk||'regular'; const P=pocketStart(pk), hp0=P.hp+limitMods(lv).startHp; G={grow:{},mode,limit:lv,pocket:pk,bossIx:[rnd(2),rnd(2),rnd(2)],act:0,tab:0,lap:0,floor:0,path:[],floors:genFloors(),hp:hp0,maxHp:hp0,gold:P.gold,rep:0,tally:0,filePrice:5,gildPrice:P.gild,bag:P.bag.map(newDie),charms:P.charms.slice(),won:0,used:{},stats:{rounds:0,won:0,lost:0,push:0,dealt:0,taken:0,best:0,bestWho:'',low:50,rich:10,bosses:[],crowns:0,banked:0,earned:0,spent:0,t0:Date.now()}}; if(P.ruby) gildDie(G.bag[0]); (P.fins||[]).forEach((f,i)=>{ if(G.bag[i]) G.bag[i].fin=f; }); G.fix=(P.fix||[]).slice(); G.drinks=(P.drinks||[]).slice(); }
 // a Jinx switches one charm off for the round: has() and live() both skip it
 const has=c=>G.charms.includes(c)&&!(F&&F.jinx===c);
 const live=()=>F&&F.jinx?G.charms.filter(c=>c!==F.jinx):G.charms;
@@ -879,7 +879,7 @@ function soundBtns(){ return `<div class="tabs pe">${G?`<button class="tab" id="
 function hud(){ return `<div class="hud pe">
   <div class="tabcard plate"><div class="statb"><span class="sc">Nerve</span><div class="inkbar ${G.hp<=G.maxHp*.25?'low':''}" id="hpw"><i id="hpbar" style="width:${100*G.hp/G.maxHp}%"></i></div><span class="tabnum" id="hptxt">${G.hp}<small>/${G.maxHp}</small></span></div>
     <div class="statb"><span class="cash" id="cash">$${G.gold}</span><span class="chits" id="chits">${chitsHTML()}</span><button class="tabnum owe" id="owe" aria-label="What is the tab?">${G.tab?`tab $${G.tab}`:''}</button></div></div>
-  ${rackHTML()}<div class="spacer"></div><div class="where">${floorLabel()}</div>${soundBtns()}</div>`; }
+  ${rackHTML()}${coatHTML()}<div class="spacer"></div><div class="where">${floorLabel()}</div>${soundBtns()}</div>`; }
 function wireSound(){ const m=$('#menubtn'), b=$('#bagbtn'); if(m) m.onclick=()=>openMenu(); if(b) b.onclick=()=>openMenu('bag'); }
 function updTop(){ if(G&&G.stats) G.stats.rich=Math.max(G.stats.rich||0,G.gold); const b=$('#hpbar'); if(b){ b.style.width=Math.max(0,100*G.hp/G.maxHp)+'%'; $('#hptxt').innerHTML=`${Math.max(0,G.hp)}<small>/${G.maxHp}</small>`; const w=$('#hpw'); if(w) w.classList.toggle('low',G.hp<=G.maxHp*.25); } const c=$('#cash'); if(c) c.textContent='$'+G.gold; const o=$('#owe'); if(o) o.textContent=G.tab?`tab $${G.tab}`:''; }
 function heal(n,el){ const b=G.hp; G.hp=Math.min(G.maxHp,G.hp+n); if(G.hp>b&&el) floatEl(el,'+'+(G.hp-b),'heal'); updTop(); }
@@ -907,7 +907,7 @@ function screen(html){ if(CAMF&&(CAMF.zoom!==1||camGoal)){ CAMF.zoom=1; camGoal=
 function clearLabels(){ labels.innerHTML=''; }
 function bagCounts(arr){ const m=new Map(); arr.forEach(t=>m.set(t,(m.get(t)||0)+1)); return [...m.entries()]; }
 function dieKey(d){ return d.type+'|'+facesOf(d).join(',')+'|'+(d.fin||''); }
-const finTag=d=>d&&d.fin?` <span class="fintag" style="--fc:${FINISHES[d.fin].col}" data-tip="${FINISHES[d.fin].name}: ${FINISHES[d.fin].desc}">${FINISHES[d.fin].name}</span>`:'';
+const finTag=d=>(d&&d.fin&&seen('f',d.fin),d&&d.fin)?` <span class="fintag" style="--fc:${FINISHES[d.fin].col}" data-tip="${FINISHES[d.fin].name}: ${FINISHES[d.fin].desc}">${FINISHES[d.fin].name}</span>`:'';
 function diceList(){ const w=h('<div class="list cols2"></div>'); const groups=new Map(); G.bag.forEach(d=>{ const k=dieKey(d); if(!groups.has(k)) groups.set(k,[]); groups.get(k).push(d); });
   groups.forEach(list=>{ const d0=list[0], t=d0.type, d=DT[t]; const cr=list.filter(x=>d.breaks).map(x=>x.cracks); const mod=!!d0.f;
   const el=h(`<div class="item"><span class="dico"></span><div><div class="iname">${d.name}${finTag(d0)}${mod?' <span class="tier u">worked</span>':''}<span class="q">\u00d7${list.length}</span></div><div class="idesc">${kw(d.desc)}${cr.length?` Cracks ${cr.join(', ')}/${d.breaks}.`:''}</div><div class="ifaces">${facesHTML(d0)}</div></div></div>`);
@@ -1050,7 +1050,7 @@ function renderTitle(){
       <ol><li data-i="1"><span>Throw six dice. Bank at least one, rethrow the rest.</span></li>
       <li data-i="2"><span>Lowest total wins. A <span class="kw crown">\u265B</span> crown is 0.</span></li>
       <li data-i="3"><span>You hit for the gap <b class="kw mult">\u00d7 your odds</b>.</span></li>
-      <li data-i="4"><span>Charms raise your odds. Build fast.</span></li></ol></div>
+      <li data-i="4"><span>Charms, finishes and drinks raise your odds. Build fast.</span></li></ol></div>
     ${SAVED?`<div class="menu"><button class="btn go" id="cont0">Continue the night</button></div><div class="best" style="margin-top:-8px">${ACTS[SAVED.act].name}, floor ${ROMAN[SAVED.floor]} · ${SAVED.hp} nerve · $${SAVED.gold}${SAVED.at==='fight'&&SAVED.fight&&SAVED.fight.opp?` · at the table with ${SAVED.fight.opp.n}`:''}</div>`:''}
     <div class="picker paper" id="picker"></div></div>
     <div class="menu"><button class="btn ${SAVED?'ghost':'go hand'}" id="go">${SAVED?'New run':'Take a seat'}</button><button class="btn ghost" id="endless">Stay all night</button></div>
@@ -1187,7 +1187,7 @@ async function startFight(kind,pre,snap){
   if(GL_OK){ buildFoe({...opp.look,...(LOOKX[opp.n]||{})}); if(kind==='B'&&!snap){ for(const v of [.3,1,.2,1]){ lampDim=v; await sleep(90); } } await foeWalkIn(); }
   if(snap){ if(!F||F.opp!==opp) return; if(snap.end) return resumeEnd(snap.end); return startRound(snap.sim?snap:null); }
   if(kind==='B'){ banner(opp.n,opp.sigT||'Signature: see the bill of fare',true); await foeSlam(); }
-  if(opp.q.length) await tip('quirk'); if(opp.q.some(q=>RULE_Q.includes(q))) await tip('counter'); if(kind==='B'){ await tip('boss'); if(opp!==ACTS[G.act].foes.boss&&ACTS[G.act].foes.bosses.some(b=>b.n===opp.n&&b!==ACTS[G.act].foes.boss)) await tip('altboss'); }
+  seen('o',opp.n); opp.q.forEach(q=>seen('q',q)); if(opp.q.length) await tip('quirk'); if(opp.q.some(q=>RULE_Q.includes(q))) await tip('counter'); if(kind==='B'){ await tip('boss'); if(opp!==ACTS[G.act].foes.boss&&ACTS[G.act].foes.bosses.some(b=>b.n===opp.n&&b!==ACTS[G.act].foes.boss)) await tip('altboss'); }
   startRound();
 }
 const quirkChips=()=>`<span class="stamp odds" data-tip="When the opponent wins a round, they hit you for the gap times this.">Hits \u00d7${fmtOdds(F.opp.odds)}</span>`+F.opp.q.map(q=>`<button class="stamp" data-q="${q}" data-tip="${QUIRKS[q].desc}">${QUIRKS[q].name}</button>`).join('');
@@ -1206,7 +1206,7 @@ async function startRound(pre){
   setP(0); setVs('–'); acts(''); updOdds(); $('#sitting').innerHTML='<span>Shaking the cup</span>';
   msg(`Round ${F.round}. <b>${F.opp.n}</b> throws first.`);
   if(!pre) pre={sim:aiRound(F.opp.bag,F.opp.t),simB:F.opp.q.includes('pair')?aiRound(F.opp.bag,F.opp.t):null,seed:(Math.random()*4294967296)>>>0,jinx:jinxPick(G.charms,F.opp.q)};
-  F.jinx=pre.jinx||null; refreshRack(); if(F.jinx) toast(`<b class="r">Jinx.</b> ${CHARMS[F.jinx].name} sits this round out.`);
+  F.jinx=pre.jinx||null; F.drink={}; refreshRack(); if(F.jinx) toast(`<b class="r">Jinx.</b> ${CHARMS[F.jinx].name} sits this round out.`);
   F.pre={sim:pre.sim,simB:pre.simB||null,seed:pre.seed>>>0}; F.rng=mkRng(F.pre.seed); saveFight(F.pre);
   let sim=F.pre.sim;
   await tip('theirs');
@@ -1299,7 +1299,7 @@ function crownFx(o){ const p=dieScreen(o); sparksAt(p, o.face==='G'?'#ff5c6f':nu
   if(has('goldcrown')) addGold(1,$('#cash')); }
 // what you'd be paid right now, if the round ended on your current score
 const tgt=(R)=>F.target==null?null:theirScore(F.oScore,R||F.R||newRound(),live(),F.opp.q);
-function oddsEnv(done){ return {finished:G.bag.filter(d=>d.fin).length,fixOdds:hasFix(G,'felt')?1:0,bag:G.bag.length,round:F.round,q:F.opp.q,raid:isRaid(F.opp,F.round,F.phase2),gold:G.gold,rep:G.rep,tally:G.tally,wins:F.wins||0,margin:F.target!=null?tgt()-F.pScore-(has('bouncer')?1:0):0,score:F.pScore,done,grow:G.grow||{},oppHalf:F.oppHp<=F.oppMax/2,wonOnce:!!F.wonOnce}; }
+function oddsEnv(done){ return {drink:F.drink||{},finished:G.bag.filter(d=>d.fin).length,fixOdds:hasFix(G,'felt')?1:0,bag:G.bag.length,round:F.round,q:F.opp.q,raid:isRaid(F.opp,F.round,F.phase2),gold:G.gold,rep:G.rep,tally:G.tally,wins:F.wins||0,margin:F.target!=null?tgt()-F.pScore-(has('bouncer')?1:0):0,score:F.pScore,done,grow:G.grow||{},oppHalf:F.oppHp<=F.oppMax/2,wonOnce:!!F.wonOnce}; }
 function curOdds(done,R){ return oddsOf(R||F.R||newRound(),live(),oddsEnv(done)); }
 function updOdds(bump,sel){ if(!F) return; let R2=null, add=0; if(sel&&sel.length&&!sel.some(o=>o.hidden)){ R2={...(F.R||newRound())}; noteBank(R2,sel.map(o=>o.face),sel.map(o=>o.inst.type),live(),finsOf(sel)); add=bankVals(sel.map(o=>o.face),ctx(),live(),sel.length===tray().length,sel.map(o=>o.inst.fin)).reduce((a,b)=>a+b,0); }
   const full=!!(sel&&sel.length&&sel.length===tray().length); F._prevR=R2; const O=curOdds(full,R2), eq=$('#eq'); if(!eq) return;
@@ -1400,8 +1400,8 @@ async function fightWon(){ const F0kind=F.kind;
 }
 
 /* ================= REWARD ================= */
-function dieCard(type,price){ const d=DT[type]; const el=h(`<button class="card k-die t-${d.tier}"><span class="k">${TIER_NAME[d.tier]} die</span><span class="art"><span class="slot"></span></span><span class="mid"><span class="n">${d.name}</span><span class="d">${kw(d.desc)}</span><span class="f">${facesHTML({type})}</span></span>${price!=null?`<span class="p">$${price}</span>`:''}</button>`); el.querySelector('.slot').replaceWith(iconCanvas(type,'C',46)); return el; }
-function charmCard(c,price,off){ const d=CHARMS[c]; return h(`<button class="card t-${d.tier}${off?' offbook':''}"><span class="k">${off?'Off the Books \u00b7 ':''}${TIER_NAME[d.tier]}</span><span class="art">${chipHTML(c)}</span><span class="mid"><span class="n">${d.name}</span><span class="d">${kw(d.desc)}${off?'<br><b class="obk">Doesn\u2019t take a charm slot.</b>':''}</span></span>${price!=null?`<span class="p">$${price}</span>`:''}</button>`); }
+function dieCard(type,price){ seen('d',type); const d=DT[type]; const el=h(`<button class="card k-die t-${d.tier}"><span class="k">${TIER_NAME[d.tier]} die</span><span class="art"><span class="slot"></span></span><span class="mid"><span class="n">${d.name}</span><span class="d">${kw(d.desc)}</span><span class="f">${facesHTML({type})}</span></span>${price!=null?`<span class="p">$${price}</span>`:''}</button>`); el.querySelector('.slot').replaceWith(iconCanvas(type,'C',46)); return el; }
+function charmCard(c,price,off){ seen('c',c); const d=CHARMS[c]; return h(`<button class="card t-${d.tier}${off?' offbook':''}"><span class="k">${off?'Off the Books \u00b7 ':''}${TIER_NAME[d.tier]}</span><span class="art">${chipHTML(c)}</span><span class="mid"><span class="n">${d.name}</span><span class="d">${kw(d.desc)}${off?'<br><b class="obk">Doesn\u2019t take a charm slot.</b>':''}</span></span>${price!=null?`<span class="p">$${price}</span>`:''}</button>`); }
 const SVC_OF={'?':'back','+':'heal','W':'heal','\u2715':'remove','1':'file','$':'bar','\u263E':'alley'};
 function svcIcon(ico,key){ const k=key||(String(ico).includes('ruby')?'gild':SVC_OF[ico]); return SVC_ICON[k]?`<span class="cicon sv"><img src="${SVC_ICON[k]}" alt=""></span>`:`<span class="pchip plain"><span>${ico}</span></span>`; }
 // ---- chits: small favors you pick up; the ones that wait for the next bar or table show next to your cash
@@ -1413,6 +1413,17 @@ function gainChit(k){ G.grow=G.grow||{}; G.grow.chits=(G.grow.chits||0)+1; const
   SFX.coin(); toast(`<b class="g">Chit: ${c.name}.</b> ${c.desc}${extra}`); refreshChits(); setTimeout(()=>tip('chit'),900); }
 function chitsHTML(){ const nb=G&&G.nb||{}; return Object.keys(nb).filter(k=>nb[k]).map(k=>`<span class="chit" data-tip="${CHITS[k].name}: ${CHITS[k].desc}">${CHITS[k].name}</span>`).join(''); }
 function refreshChits(){ const e=$('#chits'); if(e) e.innerHTML=chitsHTML(); }
+// ---- the collection book: everything you've laid eyes on, kept across runs (synced like your save)
+let BOOK=(()=>{ try{ return JSON.parse(localStorage.getItem('lr-book')||'{}'); }catch(e){ return {}; } })(), bookT=0;
+function seen(cat,key){ if(key==null) return; const b=BOOK[cat]||(BOOK[cat]={}); if(b[key]) return; b[key]=1; clearTimeout(bookT); bookT=setTimeout(()=>{ try{ localStorage.setItem('lr-book',JSON.stringify(BOOK)); }catch(e){} },400); }
+const ALL_FOES=()=>{ const out=[]; ACTS.forEach(A=>{ const f=A.foes; [...f.t1,...f.t2,...f.e1,...f.e2,f.boss,...(f.bosses||[])].forEach(d=>{ if(d&&!out.some(x=>x.n===d.n)) out.push(d); }); }); return out; };
+function bookHTML(){ const cats=[['c','Charms',Object.keys(CHARMS).map(k=>[k,CHARMS[k].name,CHARMS[k].desc])],['d','Dice',Object.keys(DT).map(k=>[k,DT[k].name,DT[k].desc])],
+    ['f','Finishes',FIN_KEYS.map(k=>[k,FINISHES[k].name,FINISHES[k].desc])],['x','Fixtures',FIX_KEYS.map(k=>[k,FIXTURES[k].name,FIXTURES[k].desc])],['k','Drinks',DRINK_KEYS.map(k=>[k,DRINKS[k].name,DRINKS[k].desc])],
+    ['o','Faces at the table',ALL_FOES().map(d=>[d.n,d.n,d.s])],['q','Tags',Object.keys(QUIRKS).map(k=>[k,QUIRKS[k].name,QUIRKS[k].desc])]];
+  const all=cats.reduce((a,c)=>a+c[2].length,0), got=cats.reduce((a,[k,,L])=>a+L.filter(([id])=>BOOK[k]&&BOOK[k][id]).length,0);
+  return `<div class="secthead">The Collection<small>${got} of ${all} found. Kept across every night you play.</small></div>`+cats.map(([k,n,L])=>{ const have=L.filter(([id])=>BOOK[k]&&BOOK[k][id]).length;
+    return `<div class="secthead" style="margin-top:12px">${n}<small>${have}/${L.length}</small></div><div class="bookgrid">${L.map(([id,nm,d])=>BOOK[k]&&BOOK[k][id]?`<span class="bk" data-tip="${nm}: ${String(d).replace(/"/g,'&quot;')}">${nm}</span>`:'<span class="bk unk">???</span>').join('')}</div>`; }).join(''); }
+function drinkCard(k,price){ seen('k',k); return h(`<button class="card k-drink"><span class="k">Drink</span><span class="art">${drinkIco(k).replace('width="18" height="26"','width="40" height="58"')}</span><span class="mid"><span class="n">${DRINKS[k].name}</span><span class="d">${kw(DRINKS[k].desc)}</span></span>${price!=null?`<span class="p">$${price}</span>`:''}</button>`); }
 function plainCard(k,ico,n,d,price){ return h(`<button class="card"><span class="k">${k}</span><span class="art">${svcIcon(ico)}</span><span class="mid"><span class="n">${n}</span><span class="d">${kw(d)}</span></span>${price!=null?`<span class="p">$${price}</span>`:''}</button>`); }
 const charmPool=(tier)=>Object.keys(CHARMS).filter(c=>!G.charms.includes(c)&&(!tier||CHARMS[c].tier===tier));
 const rarePool=()=>[...charmPool('r').map(c=>({k:'charm',c,price:CHARMS[c].price,rare:1})),{k:'die',t:'shaved',price:DT.shaved.price,rare:1}];
@@ -1485,7 +1496,7 @@ function renderShop(){
   const up=LIM().price, bp=p=>barPrice(G,p+up), taste=hasFix(G,'taste'), nb=G.nb||(G.nb={});
   const stockFor=first=>{ const ch=stockCharms(hasFix(G,'shelf')?4:3,taste);
       if(first&&nb.rare){ const rp=charmPool('r').filter(c=>!ch.includes(c)); if(rp.length) ch[ch.length-1]=pick(rp); nb.rare=false; }
-      return [...shopDice(G.act,2,taste).map(t=>({k:'die',t,price:bp(DT[t].price)})),...ch.map((c,i)=>{ const under=first&&i===0&&nb.offbook, off=under||Math.random()<offbookP(G); return {k:'charm',c,off,price:bp(CHARMS[c].price+(off&&!under?OFFBOOK_FEE:0)),rare:CHARMS[c].tier==='r'}; })]; };
+      return [...shopDice(G.act,2,taste).map(t=>({k:'die',t,price:bp(DT[t].price)})),(dk=>({k:'drink',d:dk,price:bp(DRINKS[dk].price)}))(pick(DRINK_KEYS)),...ch.map((c,i)=>{ const under=first&&i===0&&nb.offbook, off=under||Math.random()<offbookP(G); return {k:'charm',c,off,price:bp(CHARMS[c].price+(off&&!under?OFFBOOK_FEE:0)),rare:CHARMS[c].tier==='r'}; })]; };
   const fixed=()=>[{k:'back',price:bp(4)},{k:'heal',price:bp(6)},{k:'remove',price:bp(6)},{k:'file',price:bp(G.filePrice)},{k:'gild',price:bp(G.gildPrice)}];
   const extras=()=>{ const cr=shuffle(Object.keys(CRATES)).slice(0,2).map(c=>({k:'crate',c,price:bp(CRATES[c].price)})); if(nb.crate){ cr.unshift({k:'crate',c:'charm',price:0,free:true}); nb.crate=false; }
       const f=fixOffer(G); return f?[...cr,{k:'fix',f,price:bp(FIXTURES[f].price)}]:cr; };
@@ -1522,12 +1533,12 @@ function renderShop(){
   window.__paint=paint; const tb=$('#tabbox'); if(tb){ const _p=paint; window.__paint=()=>{ _p(); tb.innerHTML=tabText(); }; }
   const buyCard=(c,i,where)=>{
     const el=c.k==='back'?plainCard('Rare','?','Back room','Reveals one rare item.',c.price)
-      :c.k==='die'?dieCard(c.t,c.price):c.k==='charm'?charmCard(c.c,c.price,c.off)
+      :c.k==='die'?dieCard(c.t,c.price):c.k==='drink'?drinkCard(c.d,c.price):c.k==='charm'?charmCard(c.c,c.price,c.off)
       :c.k==='heal'?plainCard('Drink','+','A stiff one','+12 nerve',c.price)
       :c.k==='remove'?plainCard('Service','\u2715','Toss a die',`Bag can\u2019t go under ${HAND}.`,c.price)
       :c.k==='file'?plainCard('Service','1','File a face','Highest face becomes a 1.',c.price)
       :c.k==='crate'?plainCard(c.free?'Chit':'Crate','\u25A3',(c.free?'Free ':'')+CRATES[c.c].name,CRATES[c.c].desc.replace('3',crateSize(G)),c.price)
-      :c.k==='fix'?plainCard('Fixture \u00b7 for good','\u2302',FIXTURES[c.f].name,FIXTURES[c.f].desc,c.price)
+      :c.k==='fix'?(seen('x',c.f),plainCard('Fixture \u00b7 for good','\u2302',FIXTURES[c.f].name,FIXTURES[c.f].desc,c.price))
       :plainCard('Service','<i class="ruby">\u265B</i>','Ruby crown','Highest face: 0 and +1 odds.',c.price);
     if(c.k==='fix') el.classList.add('fixture'); if(c.k==='crate') el.classList.add('crate');
     el.style.animationDelay=(.04+i*.05)+'s';
@@ -1535,6 +1546,7 @@ function renderShop(){
     if(c.sold){ el.dataset.busy=1; el.classList.add('sold'); }
     el.onclick=()=>{ if(el.dataset.busy) return; let onTab=0;
       if(c.k==='remove'&&G.bag.length<=HAND){ toast(`Your bag is already down to <b>${HAND}</b>.`); return; }
+      if(c.k==='drink'&&(G.drinks||[]).length>=DRINK_MAX){ toast('Your coat’s full. Drink something first.'); return; }
       if(c.k==='heal'&&G.hp>=G.maxHp){ toast('You\u2019re steady already.'); return; }
       if(pickMode){ toast('Pick a die below first.'); return; }
       if(G.gold<c.price){ if(!canTab(c.price)){ SFX.unpick(); toast('Not enough cash, and your tab is maxed.'); return; } if(!el.dataset.credit){ el.dataset.credit=1; SFX.ui(); toast(`Click again to put <b>$${c.price-G.gold+2}</b> on your tab.`); return; } onTab=c.price-G.gold; }
@@ -1546,6 +1558,7 @@ function renderShop(){
       if(c.k==='die'){ sold(); G.bag.push(newDie(c.t)); toast(`<b>${DT[c.t].name}</b> goes in the bag.`); refreshTabs(); }
       if(c.k==='back'){ sold(); const onShelf=els.map(e=>e.c&&e.c.c).filter(Boolean); const pool=rarePool().filter(x=>!(x.c&&(onShelf.includes(x.c)||G.charms.includes(x.c)))); const r=pick(pool.length?pool:rarePool().filter(x=>x.k==='die')); const nc={...r,price:r.price+up}; S.stock.push(nc); buyCard(nc,0,'#shelf'); toast('He comes back with something wrapped in a bar towel.'); }
       if(c.k==='heal'){ heal(12,el); }
+      if(c.k==='drink'){ sold(); (G.drinks=G.drinks||[]).push(c.d); refreshCoat(); toast(`<b>${DRINKS[c.d].name}</b> goes in your coat.`); tip('drinks'); }
       if(c.k==='fix'){ sold(); (G.fix=G.fix||[]).push(c.f); if(c.f==='rope'){ G.maxHp+=8; heal(8,el); } SFX.crown(); toast(`<b>${FIXTURES[c.f].name}</b> is yours for the rest of the night.`); G.grow=G.grow||{}; saveRun(); setTimeout(renderShop,500); return; }
       if(c.k==='crate'){ sold(); G.grow=G.grow||{}; if(G.charms.includes('craterat')) G.grow.crates=(G.grow.crates||0)+1; saveRun(); openCrate(c.c,S,()=>{ paint(); saveRun(); }); return; }
       if(c.k==='remove'||c.k==='file'||c.k==='gild'){ pickMode=c.k; toast(PICK[c.k][1]); setTimeout(()=>{ const b=$('#baglbl'); if(b) b.scrollIntoView({behavior:REDUCED?'auto':'smooth',block:'center'}); },60); }
@@ -1568,7 +1581,21 @@ function rackHTML(){ if(!G) return ''; const tok=c=>`<button class="token ${G._n
   for(let i=0;i<charmSlots(G);i++) slots.push(on[i]?tok(on[i]):'<span class="token empty"></span>'); off.forEach(c=>slots.push(tok(c)));
   return `<div class="rack plate pe" id="rack"><div class="sc">Charms</div><div class="tokens">${slots.join('')}</div></div>`; }
 function wireRack(){ document.querySelectorAll('#rack .token[data-c]').forEach(t=>t.onclick=e=>{ e.stopPropagation(); charmPop(t); }); G&&(G._newCharm=null); }
-function refreshRack(){ const r=$('#rack'); if(r){ const n=h(rackHTML()); r.replaceWith(n); wireRack(); } }
+function refreshRack(){ const r=$('#rack'); if(r){ const n=h(rackHTML()); r.replaceWith(n); wireRack(); } refreshCoat(); }
+// your coat: up to two drinks. Drink one on your turn; it lasts the round (Bourbon and a Sidecar work any time)
+function coatHTML(){ if(!G) return ''; const d=G.drinks||[]; let s=''; for(let i=0;i<DRINK_MAX;i++){ const k=d[i]; s+=k?`<button class="drink" data-dk="${k}" data-tip="${DRINKS[k].name}: ${DRINKS[k].desc} Click to drink.">${drinkIco(k)}</button>`:'<span class="drink empty"></span>'; }
+  return `<div class="coat plate pe" id="coat" data-tip="Your coat: room for ${DRINK_MAX} drinks.">${s}</div>`; }
+function drinkIco(k){ const C={gin:'#c8e8ff',absinthe:'#7ad04a',soda:'#e8f4ff',bitters:'#a0402a',bourbon:'#c07a2a',sidecar:'#f0c040'}[k]||'#ccc';
+  return `<svg viewBox="0 0 20 28" width="18" height="26"><rect x="7" y="1" width="6" height="6" rx="1" fill="#3a2a1a"/><path d="M5 9 Q5 7 7 7 H13 Q15 7 15 9 V25 Q15 27 13 27 H7 Q5 27 5 25 Z" fill="${C}" opacity=".9"/><rect x="6" y="14" width="8" height="6" fill="#f4ead2" opacity=".85"/></svg>`; }
+function refreshCoat(){ const c=$('#coat'); if(c){ c.replaceWith(h(coatHTML())); } }
+function drink(k){ if(!G||!(G.drinks||[]).includes(k)) return;
+  const inFight=F&&!busy&&tray().length&&F.target!=null;
+  if(!['bourbon','sidecar'].includes(k)&&!inFight){ toast('Save that for your turn at the table.'); return; }
+  if(inFight&&F.drink&&F.drink[k]){ toast('One of those a round is plenty.'); return; }
+  G.drinks.splice(G.drinks.indexOf(k),1); SFX.coin();
+  if(k==='bourbon') heal(10,$('#hpbar')); else if(k==='sidecar') addGold(6,$('#cash')); else { F.drink[k]=1; updOdds(true); }
+  toast(`<b class="g">${DRINKS[k].name}.</b> ${DRINKS[k].desc}`); refreshCoat(); saveRun(); }
+document.addEventListener('click',e=>{ const b=e.target.closest('.drink[data-dk]'); if(b){ e.stopPropagation(); drink(b.dataset.dk); } });
 function refreshTabs(){ const b=$('#bagbtn .tc'); if(b&&G) b.textContent=G.bag.length; }
 let popEl=null;
 function closePop(){ if(popEl){ popEl.remove(); popEl=null; } hideTip(); }
@@ -1721,6 +1748,7 @@ const TIPS={
   extras:['Crates and fixtures','Crates are a pick of charms, dice or finishes: open one, keep one. A fixture is a permanent upgrade for the rest of the night, and each room offers one. Don’t like the shelf? Restock it (the price climbs each time you do).'],
   finish:['Finishes','A die can wear one finish, shown as a glowing rim and a colored tag in your bag. Polished, Lucky and Chrome raise your odds when you bank that die, Gold Leaf pays, and Featherweight makes its 1s score 0.'],
   chit:['Chits','Chits are small favors. Some pay out on the spot. The rest wait for the next bar or table and sit next to your cash until they do. Beat a shark in 2 rounds or less, or walk past a table, to earn one.'],
+  drinks:['Drinks','Drinks ride in your coat, next to your charms (room for two). On your turn, click one to drink it: it lasts the round. Bourbon and a Sidecar work any time.'],
   offbook:['Off the books','That silver card is off the books. It works like any other charm, but it doesn’t take one of your five slots. They don’t come around often.'],
   rack:['Your charms','Hover a charm up top to read it. Click it to sell it back for half if you need the room. You can hold five.'],
   limit:['The limit went up','You beat the house, so now you can raise the limit. Each one makes the night meaner, and stacks on every limit below it. Click the arrows on Limit to pick. You can always drop back to Penny Ante.'],
@@ -1754,6 +1782,7 @@ function menuPage(tab){
       ${srow('Nerve broken',st.dealt)}${srow('Nerve lost',st.taken)}${srow('Biggest hit',st.best)}${srow('Crowns banked',st.crowns)}${srow('Dice banked',st.banked)}${srow('Cash earned',`$${st.earned}`)}${srow('Cash spent',`$${st.spent}`)}${srow('Time at the tables',fmtTime(Date.now()-st.t0))}
       ${best()?srow('Longest night ever',`${best()} tables`):''}</div>`; }
   if(tab==='bag'){ if(!G) return '<div class="empty">No run in progress.</div>'; return `<div class="secthead">Your Dice<small>${G.bag.length} in the bag. Six come out each round.</small></div><div id="mb1"></div><div class="mrule"></div><div class="secthead">Your Charms<small>Always working. You carry ${slotsUsed(G)} of ${charmSlots(G)}${G.charms.length>slotsUsed(G)?`, plus ${G.charms.length-slotsUsed(G)} off the books`:''}.</small></div><div id="mb2"></div>${(G.fix||[]).length?`<div class="mrule"></div><div class="secthead">Fixtures<small>Yours for the night.</small></div><div class="list">${G.fix.map(f=>`<div class="item"><div><div class="iname">${FIXTURES[f].name}</div><div class="idesc">${kw(FIXTURES[f].desc)}</div></div></div>`).join('')}</div>`:''}${chitsHTML()?`<div class="mrule"></div><div class="secthead">Chits waiting<small>They spend themselves.</small></div><div class="chitrow">${chitsHTML()}</div>`:''}`; }
+  if(tab==='book') return bookHTML();
   if(tab==='settings') return `<div class="secthead">Settings<small>Saved on this device.</small></div>
     <div class="set"><label for="volm">Music</label><input class="dial" id="volm" type="range" min="0" max="10" step="1" value="${Math.round(SET.music*10)}"><span class="sv" id="volmv">${Math.round(SET.music*10)}</span></div>
     <div class="set"><label for="vols">Sound</label><input class="dial" id="vols" type="range" min="0" max="10" step="1" value="${Math.round(SET.sfx*10)}"><span class="sv" id="volsv">${Math.round(SET.sfx*10)}</span></div>
@@ -1764,17 +1793,22 @@ function menuPage(tab){
   return `<div class="secthead">House Rules</div><ol class="hr">
     <li data-i="1"><span>Each round you draw six dice from your bag. Your opponent throws first and sets the number to beat.</span></li>
     <li data-i="2"><span>Throw your dice. Bank at least one, then throw the rest again. Keep going until every die is banked.</span></li>
-    <li data-i="3"><span>Banked dice add up. Lowest total wins the round. A die’s highest face is a crown, and a crown counts for nothing.</span></li>
-    <li data-i="4"><span>Win and you hit for the gap <b>\u00d7 your odds</b>. Your odds start at 1. Charms add to them (+) and a few multiply them (\u00d7). Every boss you beat adds +1 for good.</span></li>
+    <li data-i="3"><span>Banked dice add up. Lowest total wins the round. A <span class="kw crown">\u265B</span> crown counts for nothing.</span></li>
+    <li data-i="4"><span>Win and you hit for the gap <b>\u00d7 your odds</b>. Your odds start at 1. Charms, finishes and drinks add to them (+) or multiply them (\u00d7). Every boss you beat adds +1 for good.</span></li>
     <li data-i="5"><span>Lose and they hit you for the gap \u00d7 <i>their</i> odds, which climb every act.</span></li>
-    <li data-i="6"><span>Charms are always working. Dice only matter when they come out of the bag. The bar can file a face down or set a ruby crown in one.</span></li>
-    <li data-i="7"><span>Each act is a new league. Nerve on the other side of the table grows fast; your build has to grow faster.</span></li></ol>
+    <li data-i="6"><span>Read their tags. Bosses and the sharks upstairs draw a random house rule each night that works against your build.</span></li>
+    <li data-i="7"><span>Charms are always working; you hold five. A silver Off the Books charm doesn’t take a slot.</span></li>
+    <li data-i="8"><span>Dice only matter when they come out of the bag. A die can wear one finish (Polished, Lucky, Chrome, Gold Leaf or Featherweight).</span></li>
+    <li data-i="9"><span>The bar: buy dice, charms and drinks, restock the shelf, crack open crates, and buy one fixture a room for good.</span></li>
+    <li data-i="10"><span>Drinks ride in your coat, two at most. Drink one on your turn; it lasts the round.</span></li>
+    <li data-i="11"><span>Chits are favors: beat a shark in two rounds or walk past a table to earn one.</span></li>
+    <li data-i="12"><span>Each act is a new league, and Stay all night never stops climbing. Your build has to grow faster than they do.</span></li></ol>
     <div class="prose it" style="margin-top:12px;font-size:13px">Esc opens this booklet. Enter banks.</div>`;
 }
 function openMenu(tab){ ac(); if(menuEl){ setMenuTab(tab||menuTab); return; } PAUSED=true; SFX.paper();
   menuEl=h(`<div class="overlay pause pe"><div class="booklet paper">
     <div class="mhead"><div class="sc">Intermission</div><div class="mtitle sm">The Booklet</div></div>
-    <nav class="ptabs">${[['night','Your Night'],['bag','Your Bag'],['settings','Settings'],['rules','House Rules']].map(([k,n])=>`<button class="ptab" data-t="${k}">${n}</button>`).join('')}</nav>
+    <nav class="ptabs">${[['night','Your Night'],['bag','Your Bag'],['book','Collection'],['settings','Settings'],['rules','House Rules']].map(([k,n])=>`<button class="ptab" data-t="${k}">${n}</button>`).join('')}</nav>
     <div class="pbody" id="pbody"></div>
     <div class="row"><button class="btn go" id="resume">Back to the table</button>${G?'<button class="btn ghost" id="quit">Quit the run</button>':''}</div></div></div>`);
   document.body.appendChild(menuEl);

@@ -63,7 +63,10 @@ function fight(G,kind,act,floor,smart,stats){ const def=pickFoe(G,kind,act,floor
     const hand=L.shuffle(G.bag).slice(0,6+(F.heavy?1:0)); F.heavy=false; hand.forEach(d=>{ if(DT[d.type].breaks) d.cracks=(d.cracks||0)+1; });
     // Jinx: one charm sits the round out (the game's has()/live() skip it; afterRound still sees the full set)
     const allCh=G.charms, jx=L.jinxPick(G.charms,o.q); if(jx) G.charms=G.charms.filter(c=>c!==jx);
-    const env={finished:G.bag.filter(d=>d.fin).length,fixOdds:L.hasFix(G,'felt')?1:0,bag:G.bag.length,round:F.rounds,q:o.q,raid:L.isRaid(o,F.rounds,F.p2),gold:G.gold,rep:G.rep,tally:G.tally,wins:F.wins,lossStreak:F.loss,oppHalf:oh<=o.hp/2,grow:G.grow||{},wonOnce:F.won1};
+    const dr={}; G.drinks=G.drinks||[];
+    if(G.drinks.includes('bourbon')&&G.hp<G.maxHp*.4){ G.drinks.splice(G.drinks.indexOf('bourbon'),1); G.hp=Math.min(G.maxHp,G.hp+10); }
+    if(kind!=='F'||G.hp<G.maxHp*.35){ const k=['absinthe','gin','soda','bitters'].find(x=>G.drinks.includes(x)); if(k){ G.drinks.splice(G.drinks.indexOf(k),1); dr[k]=1; } }
+    const env={drink:dr,finished:G.bag.filter(d=>d.fin).length,fixOdds:L.hasFix(G,'felt')?1:0,bag:G.bag.length,round:F.rounds,q:o.q,raid:L.isRaid(o,F.rounds,F.p2),gold:G.gold,rep:G.rep,tally:G.tally,wins:F.wins,lossStreak:F.loss,oppHalf:oh<=o.hp/2,grow:G.grow||{},wonOnce:F.won1};
     const lam=Math.max(.6,Math.min(6,oh/Math.max(8,G.hp)));
     const {p,R,crowns,gl}=playRound(hand,G,o,F,T,env,lam,smart); G.gold+=gl;
     crowns.forEach(t=>{ if(has(G,'hothand')) G.hp=Math.min(G.maxHp,G.hp+1); if(has(G,'goldcrown')) G.gold++; if(t==='gamble') G.gold+=3; if(t==='gilded') G.gold+=2; });
@@ -120,6 +123,9 @@ function openCrateSim(G,kind,act,smart){ const n=L.crateSize(G), tst=L.hasFix(G,
   else if(kind==='dice'){ const ds=L.shopDice(act,n,tst); const t=SKILL==='good'||smart?ds.sort((a,b)=>(DVAL[b]||0)-(DVAL[a]||0))[0]:L.pick(ds); G.bag.push({type:t,fin:Math.random()<.35?L.pick(L.FIN_KEYS):undefined}); }
   else { const fs=L.shuffle(L.FIN_KEYS.slice()).slice(0,n); const f=SKILL==='good'||smart?FINPREF.find(x=>fs.includes(x)):L.pick(fs); const un=G.bag.filter(d=>!d.fin); if(un.length){ const d=un.find(x=>x.type==='d6')||L.pick(un); d.fin=f; } } }
 function barExtras(G,act,smart){ G.act=act; const keen=SKILL==='good'||smart;
+  if(A.drink!=='none'){ const dk=A.drink||L.pick(L.DRINK_KEYS), pr=L.barPrice(G,L.DRINKS[dk].price+LM.price); G.drinks=G.drinks||[];
+    if(dk==='sidecar'){ if(G.gold>=pr){ G.gold+=6-pr; } }
+    else if(G.drinks.length<L.DRINK_MAX&&G.gold>=pr+(keen?8:3)&&Math.random()<(keen?.8:.4)){ G.gold-=pr; G.drinks.push(dk); } }
   if(G.nb&&G.nb.crate){ G.nb.crate=false; openCrateSim(G,'charm',act,smart); }
   const f=A.nofix?null:L.fixOffer(G); if(f){ const pr=L.barPrice(G,L.FIXTURES[f].price+LM.price); const want=keen?FIXPREF.indexOf(f)<6:Math.random()<.4;
     if(want&&G.gold>=pr+(keen?6:0)){ G.gold-=pr; (G.fix=G.fix||[]).push(f); if(f==='rope'){ G.maxHp+=8; G.hp=Math.min(G.maxHp,G.hp+8); } } }
@@ -198,7 +204,7 @@ function choose(G,opts,act,floor,smart){
 
 let tuned=false;
 function run(smart){ if(A.tune&&!tuned){ require(path.resolve(A.tune))(L); tuned=true; } const P=L.pocketStart(POCKET), hp0=P.hp+LM.startHp;
-  const G={hp:hp0,maxHp:hp0,gold:P.gold,lap:0,rep:0,tally:0,filePrice:5,gildPrice:P.gild,bag:P.bag.map(type=>({type})),charms:P.charms.slice(),bossIx:[L.rnd(2),L.rnd(2),L.rnd(2)]}; if(P.ruby) L.gildDie(G.bag[0]);
+  const G={hp:hp0,maxHp:hp0,gold:P.gold,lap:0,rep:0,tally:0,filePrice:5,gildPrice:P.gild,bag:P.bag.map(type=>({type})),charms:P.charms.slice(),bossIx:[L.rnd(2),L.rnd(2),L.rnd(2)],fix:(P.fix||[]).slice(),drinks:(P.drinks||[]).slice()}; if(P.ruby) L.gildDie(G.bag[0]); (P.fins||[]).forEach((f,i)=>{ if(G.bag[i]) G.bag[i].fin=f; });
   // give=charm[,charm] / givedie=type: start every run holding it (to measure a card's power without pick bias)
   if(A.give) A.give.split(',').forEach(c=>{ if(!G.charms.includes(c)) G.charms.push(c); if(c==='liver'){ G.maxHp+=12; G.hp+=12; } });
   if(A.givefix){ G.fix=A.givefix.split(','); if(G.fix.includes('rope')){ G.maxHp+=8; G.hp+=8; } }
