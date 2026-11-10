@@ -120,6 +120,10 @@ button.tabnum.owe{border:0;background:none;padding:0;cursor:pointer;font:inherit
 .rack{display:flex;align-items:center;gap:6px;padding:5px 8px}
 .rack .sc{display:none}
 .tokens{display:flex;gap:6px}
+.card.offbook{border-color:#d8d0ea;box-shadow:0 0 0 2px #d8d0ea,0 0 22px #c8b8f077}
+.card.offbook .k{color:#d8d0ea}
+.obk{color:#d8d0ea;font-weight:800}
+.token.offbook::after{content:'';position:absolute;inset:-3px;border-radius:50%;border:2px dashed #c9c2d8;pointer-events:none}
 .token{position:relative;display:block;flex:none;box-sizing:border-box;width:36px;height:36px;border:0;padding:0;cursor:pointer;background:none;border-radius:50%;transition:transform .22s var(--spring)}
 .token .pchip{width:36px;height:36px} .token .pchip > span{font-size:16px}
 .token:hover{transform:translateY(-3px) scale(1.08)}

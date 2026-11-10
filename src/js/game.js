@@ -903,7 +903,7 @@ function wireChips(root=document){ root.querySelectorAll('[data-q]').forEach(el=
 // One card for every hover and click: hover shows it, clicking a charm adds Sell/Keep. Always straight, never on top of its anchor.
 function tipHTML(el){
   if(el.dataset.q&&QUIRKS[el.dataset.q]){ const q=QUIRKS[el.dataset.q]; return `<div class="pn r">${q.name}</div><div class="pd">${kw(q.desc)}</div>`; }
-  if(el.dataset.c&&CHARMS[el.dataset.c]){ const c=el.dataset.c, d=CHARMS[c]; return `<div class="phead">${chipHTML(c)}<div><span class="tier ${d.tier}">${TIER_NAME[d.tier]}</span><div class="pn">${d.name}</div></div></div><div class="pd">${kw(charmDesc(c))}</div>`; }
+  if(el.dataset.c&&CHARMS[el.dataset.c]){ const c=el.dataset.c, d=CHARMS[c]; return `<div class="phead">${chipHTML(c)}<div><span class="tier ${d.tier}">${TIER_NAME[d.tier]}</span><div class="pn">${d.name}</div></div></div><div class="pd">${kw(charmDesc(c))}${G&&offbook(G,c)?'<br><b class="obk">Off the Books: doesn\u2019t take a charm slot.</b>':''}</div>`; }
   const s=el.dataset.tip||'', i=s.indexOf(': ');
   return i>0&&i<28?`<div class="pn">${s.slice(0,i)}</div><div class="pd">${kw(s.slice(i+2))}</div>`:`<div class="pd" style="margin:0">${kw(s)}</div>`; }
 function placePop(p,anchor){ const r=anchor.getBoundingClientRect(), w=p.offsetWidth, hh=p.offsetHeight;
@@ -1403,21 +1403,21 @@ async function fightWon(){ const F0kind=F.kind;
 
 /* ================= REWARD ================= */
 function dieCard(type,price){ const d=DT[type]; const el=h(`<button class="card k-die t-${d.tier}"><span class="k">${TIER_NAME[d.tier]} die</span><span class="art"><span class="slot"></span></span><span class="mid"><span class="n">${d.name}</span><span class="d">${kw(d.desc)}</span><span class="f">${facesHTML({type})}</span></span>${price!=null?`<span class="p">$${price}</span>`:''}</button>`); el.querySelector('.slot').replaceWith(iconCanvas(type,'C',46)); return el; }
-function charmCard(c,price){ const d=CHARMS[c]; return h(`<button class="card t-${d.tier}"><span class="k">${TIER_NAME[d.tier]}</span><span class="art">${chipHTML(c)}</span><span class="mid"><span class="n">${d.name}</span><span class="d">${kw(d.desc)}</span></span>${price!=null?`<span class="p">$${price}</span>`:''}</button>`); }
+function charmCard(c,price,off){ const d=CHARMS[c]; return h(`<button class="card t-${d.tier}${off?' offbook':''}"><span class="k">${off?'Off the Books \u00b7 ':''}${TIER_NAME[d.tier]}</span><span class="art">${chipHTML(c)}</span><span class="mid"><span class="n">${d.name}</span><span class="d">${kw(d.desc)}${off?'<br><b class="obk">Doesn\u2019t take a charm slot.</b>':''}</span></span>${price!=null?`<span class="p">$${price}</span>`:''}</button>`); }
 const SVC_OF={'?':'back','+':'heal','W':'heal','\u2715':'remove','1':'file','$':'bar','\u263E':'alley'};
 function svcIcon(ico,key){ const k=key||(String(ico).includes('ruby')?'gild':SVC_OF[ico]); return SVC_ICON[k]?`<span class="cicon sv"><img src="${SVC_ICON[k]}" alt=""></span>`:`<span class="pchip plain"><span>${ico}</span></span>`; }
 function plainCard(k,ico,n,d,price){ return h(`<button class="card"><span class="k">${k}</span><span class="art">${svcIcon(ico)}</span><span class="mid"><span class="n">${n}</span><span class="d">${kw(d)}</span></span>${price!=null?`<span class="p">$${price}</span>`:''}</button>`); }
 const charmPool=(tier)=>Object.keys(CHARMS).filter(c=>!G.charms.includes(c)&&(!tier||CHARMS[c].tier===tier));
 const rarePool=()=>[...charmPool('r').map(c=>({k:'charm',c,price:CHARMS[c].price,rare:1})),{k:'die',t:'shaved',price:DT.shaved.price,rare:1}];
 function stockCharms(n){ const out=[]; for(let i=0;i<n;i++){ let t=rollTier(G.act), pool=charmPool(t).filter(c=>!out.includes(c)); if(!pool.length) pool=charmPool().filter(c=>!out.includes(c)); if(pool.length) out.push(pick(pool)); } return out; }
-function gainCharm(c){ if(G.charms.includes(c)) return; G.charms.push(c); G._newCharm=c; setTimeout(refreshRack,0); if(c==='liver'){ G.maxHp+=12; G.hp=Math.min(G.maxHp,G.hp+12); } if(c==='tally') G.tally=0; updTop(); toast(`<b>${CHARMS[c].name}</b><br><i>${kw(CHARMS[c].desc)}</i>`); }
-function loseCharm(c){ G.charms=G.charms.filter(x=>x!==c); setTimeout(refreshRack,0); if(c==='liver'){ G.maxHp-=12; G.hp=Math.min(G.hp,G.maxHp); } updTop(); }
-function offerCharm(c,done,cancel){
-  if(G.charms.length<MAX_CHARMS){ gainCharm(c); done&&done(); return; }
+function gainCharm(c,off){ if(G.charms.includes(c)) return; G.charms.push(c); if(off) (G.offbook=G.offbook||[]).push(c); G._newCharm=c; setTimeout(refreshRack,0); if(c==='liver'){ G.maxHp+=12; G.hp=Math.min(G.maxHp,G.hp+12); } if(c==='tally') G.tally=0; updTop(); toast(`<b>${CHARMS[c].name}</b><br><i>${kw(CHARMS[c].desc)}</i>`); }
+function loseCharm(c){ G.charms=G.charms.filter(x=>x!==c); if(G.offbook) G.offbook=G.offbook.filter(x=>x!==c); setTimeout(refreshRack,0); if(c==='liver'){ G.maxHp-=12; G.hp=Math.min(G.hp,G.maxHp); } updTop(); }
+function offerCharm(c,done,cancel,off){
+  if(off||slotsUsed(G)<MAX_CHARMS){ gainCharm(c,off); done&&done(); return; }
   const ov=h(`<div class="overlay pe"><div class="modal paper"><div class="mhead"><div class="sc">Your pockets are full</div><div class="mtitle sm">Trade for ${CHARMS[c].name}?</div></div>
     <div class="prose it">${kw(CHARMS[c].desc)}</div><div class="mrule"></div><div class="secthead">Give one up</div><div id="swapt" class="list"></div><div class="row"><button class="btn ghost" id="nvm">Keep what I have</button></div></div></div>`);
   document.body.appendChild(ov);
-  G.charms.forEach(x=>{ const d=CHARMS[x]; const el=h(`<div class="item tile">${chipHTML(x)}<div><div class="iname">${d.name}</div><div class="idesc">${kw(d.desc)}</div><button class="btn small sell">Give this up</button></div></div>`);
+  G.charms.filter(x=>!offbook(G,x)).forEach(x=>{ const d=CHARMS[x]; const el=h(`<div class="item tile">${chipHTML(x)}<div><div class="iname">${d.name}</div><div class="idesc">${kw(d.desc)}</div><button class="btn small sell">Give this up</button></div></div>`);
     el.querySelector('button').onclick=()=>{ SFX.bank(0); loseCharm(x); gainCharm(c); ov.remove(); done&&done(); }; ov.querySelector('#swapt').appendChild(el); });
   ov.querySelector('#nvm').onclick=()=>{ SFX.ui(); ov.remove(); cancel&&cancel(); };
 }
@@ -1443,7 +1443,7 @@ function renderReward(kind){
   choices.forEach((c,i)=>{ const el=c.k==='die'?dieCard(c.t):c.k==='charm'?charmCard(c.c):plainCard('A drink','W','Tall glass of water','Restores 12 nerve.');
     el.style.animationDelay=(.15+i*.12)+'s';
     el.onclick=()=>{ if(el.parentElement&&el.parentElement.dataset.busy) return;
-      if(c.k==='charm'&&G.charms.length>=MAX_CHARMS){ offerCharm(c.c,()=>{ G.rw=null; G.at='bar'; G.shop=null; saveRun(); stampCard(el,'Taken',renderShop); }); return; }
+      if(c.k==='charm'&&slotsUsed(G)>=MAX_CHARMS){ offerCharm(c.c,()=>{ G.rw=null; G.at='bar'; G.shop=null; saveRun(); stampCard(el,'Taken',renderShop); }); return; }
       stampCard(el,'Taken',()=>{ if(c.k==='die'){ G.bag.push(newDie(c.t)); toast(`<b>${DT[c.t].name}</b> goes in the bag.`); } else if(c.k==='charm') gainCharm(c.c); else G.hp=Math.min(G.maxHp,G.hp+12); renderShop(); }); };
     $('#cards').appendChild(el); });
   $('#skip').onclick=()=>{ const cs=$('#cards'); if(cs&&cs.dataset.busy) return; if(cs) cs.dataset.busy=1; SFX.ui(); renderShop(); };
@@ -1457,7 +1457,7 @@ const canTab=price=>G&&(price-G.gold+2+G.tab)<=TAB_LIMIT+2&&(price-G.gold)<=TAB_
 function renderShop(){
   F=null; clearLabels();
   let pickMode=null; const els=[];
-  const up=LIM().price; const stockFor=()=>[...shopDice(G.act,2).map(t=>({k:'die',t,price:DT[t].price+up})),...stockCharms(3).map(c=>({k:'charm',c,price:CHARMS[c].price+up,rare:CHARMS[c].tier==='r'}))];
+  const up=LIM().price; const stockFor=()=>[...shopDice(G.act,2).map(t=>({k:'die',t,price:DT[t].price+up})),...stockCharms(3).map(c=>{ const off=Math.random()<OFFBOOK_P; return {k:'charm',c,off,price:CHARMS[c].price+up+(off?OFFBOOK_FEE:0),rare:CHARMS[c].tier==='r'}; })];
   const fixed=()=>[{k:'back',price:4+up},{k:'heal',price:6+up},{k:'remove',price:6+up},{k:'file',price:G.filePrice+up},{k:'gild',price:G.gildPrice+up}];
   const S=G.shop||(G.shop={stock:stockFor(),fixed:fixed(),pick:null}); pickMode=S.pick||null; G.rw=null; G.at='bar'; saveRun();
   screen(`${hud()}<div class="modal wide paper pe">
@@ -1486,7 +1486,7 @@ function renderShop(){
   window.__paint=paint; const tb=$('#tabbox'); if(tb){ const _p=paint; window.__paint=()=>{ _p(); tb.innerHTML=tabText(); }; }
   const buyCard=(c,i,where)=>{
     const el=c.k==='back'?plainCard('Rare','?','Back room','Reveals one rare item.',c.price)
-      :c.k==='die'?dieCard(c.t,c.price):c.k==='charm'?charmCard(c.c,c.price)
+      :c.k==='die'?dieCard(c.t,c.price):c.k==='charm'?charmCard(c.c,c.price,c.off)
       :c.k==='heal'?plainCard('Drink','+','A stiff one','+12 nerve',c.price)
       :c.k==='remove'?plainCard('Service','\u2715','Toss a die',`Bag can\u2019t go under ${HAND}.`,c.price)
       :c.k==='file'?plainCard('Service','1','File a face','Highest face becomes a 1.',c.price)
@@ -1501,7 +1501,7 @@ function renderShop(){
       if(G.gold<c.price){ if(!canTab(c.price)){ SFX.unpick(); toast('Not enough cash, and your tab is maxed.'); return; } if(!el.dataset.credit){ el.dataset.credit=1; SFX.ui(); toast(`Click again to put <b>$${c.price-G.gold+2}</b> on your tab.`); return; } onTab=c.price-G.gold; }
       const pay=()=>{ if(onTab){ G.tab+=onTab+2; G.gold=0; toast(`On the tab. You owe <b>$${G.tab}</b>. It comes out of your next winnings.`); const tb=$('#tabbox'); if(tb) tb.innerHTML=tabText(); } else G.gold-=c.price; G.stats.spent+=c.price; SFX.stamp(); SFX.coin(); };
       const sold=()=>{ c.sold=1; el.dataset.busy=1; el.classList.add('sold'); };
-      if(c.k==='charm'){ offerCharm(c.c,()=>{ pay(); sold(); paint(); saveRun(); }); return; }
+      if(c.k==='charm'){ offerCharm(c.c,()=>{ pay(); sold(); paint(); saveRun(); },null,c.off); return; }
       pay();
       if(c.k==='die'){ sold(); G.bag.push(newDie(c.t)); toast(`<b>${DT[c.t].name}</b> goes in the bag.`); refreshTabs(); }
       if(c.k==='back'){ sold(); const onShelf=els.map(e=>e.c&&e.c.c).filter(Boolean); const pool=rarePool().filter(x=>!(x.c&&(onShelf.includes(x.c)||G.charms.includes(x.c)))); const r=pick(pool.length?pool:rarePool().filter(x=>x.k==='die')); const nc={...r,price:r.price+up}; S.stock.push(nc); buyCard(nc,0,'#shelf'); toast('He comes back with something wrapped in a bar towel.'); }
@@ -1516,7 +1516,9 @@ function renderShop(){
 }
 
 /* ---- the charm rack: always up top, hover to read, tap to sell ---- */
-function rackHTML(){ if(!G) return ''; const slots=[]; for(let i=0;i<MAX_CHARMS;i++){ const c=G.charms[i]; slots.push(c?`<button class="token ${G._newCharm===c?'new':''}" data-c="${c}" data-tip="${CHARMS[c].name}: ${CHARMS[c].desc.replace(/"/g,'&quot;')}" aria-label="${CHARMS[c].name}">${chipHTML(c)}${c==='tally'?`<span class="notch">${G.tally}</span>`:''}</button>`:'<span class="token empty"></span>'); }
+function rackHTML(){ if(!G) return ''; const tok=c=>`<button class="token ${G._newCharm===c?'new':''}${offbook(G,c)?' offbook':''}" data-c="${c}" data-tip="${CHARMS[c].name}: ${CHARMS[c].desc.replace(/"/g,'&quot;')}" aria-label="${CHARMS[c].name}">${chipHTML(c)}${c==='tally'?`<span class="notch">${G.tally}</span>`:''}</button>`;
+  const on=G.charms.filter(c=>!offbook(G,c)), off=G.charms.filter(c=>offbook(G,c)), slots=[];
+  for(let i=0;i<MAX_CHARMS;i++) slots.push(on[i]?tok(on[i]):'<span class="token empty"></span>'); off.forEach(c=>slots.push(tok(c)));
   return `<div class="rack plate pe" id="rack"><div class="sc">Charms</div><div class="tokens">${slots.join('')}</div></div>`; }
 function wireRack(){ document.querySelectorAll('#rack .token[data-c]').forEach(t=>t.onclick=e=>{ e.stopPropagation(); charmPop(t); }); G&&(G._newCharm=null); }
 function refreshRack(){ const r=$('#rack'); if(r){ const n=h(rackHTML()); r.replaceWith(n); wireRack(); } }
@@ -1567,7 +1569,7 @@ const EVENTS=[
   {t:'The Fixer',p:'A little man with a jeweler\u2019s file and no eyebrows. \u201cSeven bucks. I make your worst die behave.\u201d',
    o:[{t:'Pay him seven',d:'Your worst die gets filed: its highest face becomes a 1.',ok:()=>G.gold>=7&&G.bag.some(canFile),go:()=>{ G.gold-=7; const d=G.bag.filter(canFile).sort((a,b)=>facesOf(b).reduce((x,y)=>x+effVal(y),0)-facesOf(a).reduce((x,y)=>x+effVal(y),0))[0]; fileDie(d); return `He works your ${DT[d.type].name} over. It comes back meaner.`; }},{t:'Not today',d:'Nothing happens.',go:()=>'He tips an invisible hat.'}]},
   {t:'The Fortune Teller',p:'A woman with a cracked crystal ball waves you over. \u201cThe cards want something from you. A little of your nerve.\u201d',
-   o:[{t:'Let her read you',d:'Lose 8 nerve. Gain a random Uncommon charm.',ok:()=>G.hp>8&&G.charms.length<MAX_CHARMS&&charmPool('u').length>0,go:()=>{ G.hp-=8; const c=pick(charmPool('u')); gainCharm(c); return `She presses <b>${CHARMS[c].name}</b> into your palm and closes your fingers.`; }},{t:'Ask about love',d:'Heal 8.',go:()=>{ G.hp=Math.min(G.maxHp,G.hp+8); return 'She says somebody\u2019s waiting. It helps more than it should.'; }}]},
+   o:[{t:'Let her read you',d:'Lose 8 nerve. Gain a random Uncommon charm.',ok:()=>G.hp>8&&slotsUsed(G)<MAX_CHARMS&&charmPool('u').length>0,go:()=>{ G.hp-=8; const c=pick(charmPool('u')); gainCharm(c); return `She presses <b>${CHARMS[c].name}</b> into your palm and closes your fingers.`; }},{t:'Ask about love',d:'Heal 8.',go:()=>{ G.hp=Math.min(G.maxHp,G.hp+8); return 'She says somebody\u2019s waiting. It helps more than it should.'; }}]},
   {t:'The Bootlegger',p:'A truck idles in the alley. The driver lifts a tarp: crates of dice, still smelling of the factory.',
    o:[{t:'Buy a crate',d:'Pay $9 for two random dice.',ok:()=>G.gold>=9,go:()=>{ G.gold-=9; const [a,b]=shopDice(G.act,2); G.bag.push(newDie(a),newDie(b)); return `Inside: ${DT[a].name} and ${DT[b].name}.`; }},{t:'Rat him out',d:'+$6 from the bartender.',go:()=>{ G.gold+=6; SFX.coin(); return 'The bartender slides you six and a look. +$6.'; }}]},
   {t:'Arm Wrestle',p:'A dockworker slams his elbow on the bar. \u201cBeat me and the shaved one\u2019s yours.\u201d He has a die you\u2019d kill for.',

@@ -83,6 +83,10 @@ const CHARMS={
 };
 const TIER_NAME={c:'Common',u:'Uncommon',r:'Rare'};
 const MAX_CHARMS=5;
+// "Off the Books": a rare shop tag. The charm works as normal but doesn't take one of your 5 slots.
+const OFFBOOK_P=.015, OFFBOOK_FEE=5;
+function offbook(G,c){ return !!(G.offbook&&G.offbook.includes(c)); }
+function slotsUsed(G){ return G.charms.filter(c=>!offbook(G,c)).length; }
 const QUIRKS={
   cold: {name:'Cold Table',     desc:'Your first throw each round: your crowns score 1 instead of 0.'},
   fuse: {name:'Short Fuse',     desc:'Your first throw each round: you must bank at least 2 dice.'},
@@ -347,4 +351,4 @@ function shopDie(act,not){ const t=rollTier(act,RARITY_DICE), pool=SHOP_DICE.fil
 function shopDice(act,n){ const out=[]; for(let i=0;i<n;i++) out.push(shopDie(act,out)); return out; }
 /*LOGIC-END*/
 
-if(typeof module!=='undefined'&&module.exports) module.exports={afterRound,afterFight,rollTier,shopDie,shopDice,RARITY,RARITY_DICE,ACT_HP,DT,SHOP_DICE,CHARMS,QUIRKS,ACTS,FLOORS,HAND,ACT_ODDS,rnd,pick,shuffle,facesOf,rollInst,rollFace,effVal,aiRound,makeOpp,newRound,bankVals,noteBank,oddsOf,settle,genFloors,fileDie,gildDie,canFile,canGild,LIMITS,limitMods,POCKETS,pocketStart,theirScore,breaksAt,bombDmg,isRaid,bossOf,EXTRA_Q};
+if(typeof module!=='undefined'&&module.exports) module.exports={OFFBOOK_P,OFFBOOK_FEE,offbook,slotsUsed,afterRound,afterFight,rollTier,shopDie,shopDice,RARITY,RARITY_DICE,ACT_HP,DT,SHOP_DICE,CHARMS,QUIRKS,ACTS,FLOORS,HAND,ACT_ODDS,rnd,pick,shuffle,facesOf,rollInst,rollFace,effVal,aiRound,makeOpp,newRound,bankVals,noteBank,oddsOf,settle,genFloors,fileDie,gildDie,canFile,canGild,LIMITS,limitMods,POCKETS,pocketStart,theirScore,breaksAt,bombDmg,isRaid,bossOf,EXTRA_Q};

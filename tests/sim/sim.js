@@ -89,12 +89,13 @@ function evalBuild(G,act,floor){ const save=Math.random; Math.random=seeded(1234
     dealt/=EVALK; taken/=EVALK; const hp=L.ACT_HP[act].F*1.6; // a typical table later in the act
     return taken*(hp/Math.max(.3,dealt)); // nerve this build expects to lose per table
   } finally { Math.random=save; } }
-const cloneG=G=>({...G,bag:G.bag.map(d=>({...d,f:d.f?d.f.slice():undefined})),charms:G.charms.slice()});
+const cloneG=G=>({...G,bag:G.bag.map(d=>({...d,f:d.f?d.f.slice():undefined})),charms:G.charms.slice(),offbook:(G.offbook||[]).slice()});
+function takeOff(G,c){ G.charms.push(c); (G.offbook=G.offbook||[]).push(c); if(c==='liver'){ G.maxHp+=12; G.hp+=12; } if(c==='tally') G.tally=0; }
 function applyCharm(G,c,dropIdx){ if(dropIdx!=null){ const w=G.charms[dropIdx]; G.charms.splice(dropIdx,1); G.gold+=Math.floor(CHARMS[w].price/2); if(w==='liver'){ G.maxHp-=12; G.hp=Math.min(G.hp,G.maxHp); } } G.charms.push(c); if(c==='liver'){ G.maxHp+=12; G.hp+=12; } if(c==='tally') G.tally=0; }
 // best way to take a charm (maybe replacing one); returns {cost,drop}
 function charmOption(G,c,act,floor){ if(G.charms.includes(c)) return null;
-  if(G.charms.length<5){ const g=cloneG(G); applyCharm(g,c); return {cost:evalBuild(g,act,floor)-(c==='liver'?6:0)-(c==='cigar'?4:0),drop:null}; }
-  let best=null; G.charms.forEach((_,i)=>{ const g=cloneG(G); applyCharm(g,c,i); const v=evalBuild(g,act,floor); if(!best||v<best.cost) best={cost:v,drop:i}; }); return best; }
+  if(L.slotsUsed(G)<5){ const g=cloneG(G); applyCharm(g,c); return {cost:evalBuild(g,act,floor)-(c==='liver'?6:0)-(c==='cigar'?4:0),drop:null}; }
+  let best=null; G.charms.forEach((x,i)=>{ if(L.offbook(G,x)) return; const g=cloneG(G); applyCharm(g,c,i); const v=evalBuild(g,act,floor); if(!best||v<best.cost) best={cost:v,drop:i}; }); return best; }
 
 const poolT=(G,t)=>Object.keys(CHARMS).filter(c=>!G.charms.includes(c)&&CHARMS[c].tier===t);
 const remaining=(act,floor)=> (2-act)*6+Math.max(1,(8-floor)*.66);
@@ -103,19 +104,20 @@ function reward(G,kind,fast,act,floor,smart){ G.gold+=PAY(kind,fast);
   let ch=[]; if(kind==='B'){ const r=L.pick([...poolT(G,'r').map(c=>({c})),{t:'shaved'}]); ch.push(r); L.shuffle(poolT(G,'u')).slice(0,2).forEach(c=>ch.push({c})); }
   else if(kind==='E') L.shuffle(poolT(G,'u')).slice(0,3).forEach(c=>ch.push({c}));
   else { ch.push({t:L.shopDie(act)}); L.shuffle(poolT(G,'c')).slice(0,2).forEach(c=>ch.push({c})); }
-  if(!smart){ const c=ch.find(x=>x.c&&!G.charms.includes(x.c)); if(c&&G.charms.length<5) applyCharm(G,c.c); return; }
+  if(!smart){ const c=ch.find(x=>x.c&&!G.charms.includes(x.c)); if(c&&L.slotsUsed(G)<5) applyCharm(G,c.c); return; }
   const base=evalBuild(G,act,floor); let best=null;
   ch.forEach(x=>{ if(x.c){ const o=charmOption(G,x.c,act,floor); if(o&&(!best||o.cost<best.cost)) best={...o,x}; } else { const g=cloneG(G); g.bag.push({type:x.t}); const v=evalBuild(g,act,floor); if(!best||v<best.cost) best={cost:v,x}; } });
   if(best&&best.cost<base){ if(best.x.c) applyCharm(G,best.x.c,best.drop); else G.bag.push({type:best.x.t}); }
   else if(G.hp<G.maxHp) G.hp=Math.min(G.maxHp,G.hp+12); }
 function shop(G,act,floor,smart){
-  const up=LM.price; const stock=L.shopDice(act,2).map(t=>({t,price:DT[t].price+up})); for(let i=0;i<3;i++){ const c=L.pick(poolT(G,L.rollTier(act)).filter(c=>!stock.some(s=>s.c===c))); if(c) stock.push({c,price:CHARMS[c].price+up}); }
-  if(!smart){ stock.filter(s=>s.c).forEach(s=>{ if(G.gold>=s.price&&G.charms.length<5&&Math.random()<.6){ G.gold-=s.price; applyCharm(G,s.c); } }); if(G.hp<G.maxHp*.5&&G.gold>=6){ G.gold-=6; G.hp=Math.min(G.maxHp,G.hp+12); } return; }
+  const up=LM.price; const stock=L.shopDice(act,2).map(t=>({t,price:DT[t].price+up})); for(let i=0;i<3;i++){ const c=L.pick(poolT(G,L.rollTier(act)).filter(c=>!stock.some(s=>s.c===c))); if(c){ const off=Math.random()<L.OFFBOOK_P; stock.push({c,off,price:CHARMS[c].price+up+(off?L.OFFBOOK_FEE:0)}); } }
+  if(!smart){ stock.filter(s=>s.c).forEach(s=>{ if(G.gold>=s.price&&(s.off||L.slotsUsed(G)<5)&&Math.random()<.6){ G.gold-=s.price; s.off?takeOff(G,s.c):applyCharm(G,s.c); } }); if(G.hp<G.maxHp*.5&&G.gold>=6){ G.gold-=6; G.hp=Math.min(G.maxHp,G.hp+12); } return; }
   let backUsed=false;
   for(let guard=0;guard<6;guard++){ const base=evalBuild(G,act,floor), fights=remaining(act,floor); const opts=[];
     // value of nerve: a point now is worth about a point, more when low
     const nerveVal=G.hp<G.maxHp*.4?1.6:G.hp<G.maxHp*.7?1:.5;
-    stock.forEach(s=>{ if(s.sold||G.gold<s.price) return; if(s.c){ const o=charmOption(G,s.c,act,floor); if(o) opts.push({s,gain:(base-o.cost)*fights,price:s.price,do:()=>{ applyCharm(G,s.c,o.drop); s.sold=1; }}); }
+    stock.forEach(s=>{ if(s.sold||G.gold<s.price) return; if(s.c&&s.off&&!G.charms.includes(s.c)){ const g=cloneG(G); takeOff(g,s.c); opts.push({s,gain:(base-evalBuild(g,act,floor))*fights,price:s.price,do:()=>{ takeOff(G,s.c); s.sold=1; }}); }
+      else if(s.c){ const o=charmOption(G,s.c,act,floor); if(o) opts.push({s,gain:(base-o.cost)*fights,price:s.price,do:()=>{ applyCharm(G,s.c,o.drop); s.sold=1; }}); }
       else { const g=cloneG(G); g.bag.push({type:s.t}); opts.push({s,gain:(base-evalBuild(g,act,floor))*fights,price:s.price,do:()=>{ G.bag.push({type:s.t}); s.sold=1; }}); } });
     if(G.gold>=6+up&&G.hp<G.maxHp) opts.push({gain:Math.min(12,G.maxHp-G.hp)*nerveVal,price:6+up,do:()=>{ G.hp=Math.min(G.maxHp,G.hp+12); }});
     if(G.gold>=6&&G.bag.length>6){ let bi=null,bv=1e9; G.bag.forEach((d,i)=>{ const g=cloneG(G); g.bag.splice(i,1); const v=evalBuild(g,act,floor); if(v<bv){bv=v;bi=i;} }); opts.push({gain:(base-bv)*fights,price:6+up,do:()=>{ G.bag.splice(bi,1); }}); }
@@ -128,23 +130,23 @@ function shop(G,act,floor,smart){
 // "good": reads the charms like a decent human (fixed priorities), plays the dice well
 const VAL={opener:5,packed:5,stack:6,allin:3,glassblower:3,nearmiss:5,blood:6,threes:3,regular:6,heckler:6,doubledown:8,tally:6,jewels:6,slowburn:6,cut:4,bouncer:6,thick:4,tip:2,goldcrown:2,hothand:3,liver:3,cigar:3,penny:9,spoon:5,lastcall:7,jacks:6,snake:5,patience:4,barfly:5,rabbit:4,closer:7,kingpin:9,lowball:8,highstakes:8,bookie:4,collection:5,consolation:2,savings:3,shiner:4,evens:3,deuces:6,piggy:7,tommy:6,jackpot:5,longshot:5,finisher:7,moonshine:9,crownroom:7,straight:7,ringer:9,bigshot:9};
 const DVAL={gilded:0,bomb:1,goose:1,boxcar:2,d8:-3,d6:0,pebble:2,glass:2,gamble:-1,ember:1,twin:1,loaded:3,devil:3,coin:4,shaved:6,royal:2,deuce:1,payday:1,trick:0,bubbly:3,viper:4};
-const worstOf=G=>G.charms.reduce((m,x)=>VAL[x]<VAL[m]?x:m);
-const wantC=(G,c)=>!G.charms.includes(c)&&(G.charms.length<5||VAL[c]>VAL[worstOf(G)]+1);
-const takeC=(G,c)=>applyCharm(G,c,G.charms.length>=5?G.charms.indexOf(worstOf(G)):null);
+const worstOf=G=>G.charms.filter(x=>!L.offbook(G,x)).reduce((m,x)=>VAL[x]<VAL[m]?x:m);
+const wantC=(G,c)=>!G.charms.includes(c)&&(L.slotsUsed(G)<5||VAL[c]>VAL[worstOf(G)]+1);
+const takeC=(G,c)=>applyCharm(G,c,L.slotsUsed(G)>=5?G.charms.indexOf(worstOf(G)):null);
 function rewardGood(G,kind,fast,act){ G.gold+=PAY(kind,fast);
   let ch=[]; if(kind==='B'){ ch.push(L.pick([...poolT(G,'r').map(c=>({c})),{t:'shaved'}])); L.shuffle(poolT(G,'u')).slice(0,2).forEach(c=>ch.push({c})); }
   else if(kind==='E') L.shuffle(poolT(G,'u')).slice(0,3).forEach(c=>ch.push({c})); else { ch.push({t:L.shopDie(act)}); L.shuffle(poolT(G,'c')).slice(0,2).forEach(c=>ch.push({c})); }
   const b=ch.filter(x=>x.c&&wantC(G,x.c)).sort((a,b)=>VAL[b.c]-VAL[a.c])[0]; if(b) takeC(G,b.c); else { const d=ch.find(x=>x.t&&DVAL[x.t]>=2); if(d) G.bag.push({type:d.t}); else G.hp=Math.min(G.maxHp,G.hp+12); } }
-function shopGood(G,act){ const up=LM.price; const stock=L.shopDice(act,2).map(t=>({t,price:DT[t].price+up})); for(let i=0;i<3;i++){ const c=L.pick(poolT(G,L.rollTier(act)).filter(c=>!stock.some(s=>s.c===c))); if(c) stock.push({c,price:CHARMS[c].price+up}); }
+function shopGood(G,act){ const up=LM.price; const stock=L.shopDice(act,2).map(t=>({t,price:DT[t].price+up})); for(let i=0;i<3;i++){ const c=L.pick(poolT(G,L.rollTier(act)).filter(c=>!stock.some(s=>s.c===c))); if(c){ const off=Math.random()<L.OFFBOOK_P; stock.push({c,off,price:CHARMS[c].price+up+(off?L.OFFBOOK_FEE:0)}); } }
   if(G.hp<G.maxHp*.5&&G.gold>=6+up){ G.gold-=6+up; G.hp=Math.min(G.maxHp,G.hp+12); }
-  stock.filter(s=>s.c).sort((a,b)=>VAL[b.c]-VAL[a.c]).forEach(s=>{ if(G.gold>=s.price&&wantC(G,s.c)){ G.gold-=s.price; takeC(G,s.c); } });
+  stock.filter(s=>s.c).sort((a,b)=>VAL[b.c]-VAL[a.c]).forEach(s=>{ if(s.off&&G.gold>=s.price&&!G.charms.includes(s.c)){ G.gold-=s.price; takeOff(G,s.c); } else if(!s.off&&G.gold>=s.price&&wantC(G,s.c)){ G.gold-=s.price; takeC(G,s.c); } });
   const w=G.bag.reduce((m,d)=>DVAL[d.type]<DVAL[m.type]?d:m); if(G.bag.length>6&&DVAL[w.type]<0&&G.gold>=6+up){ G.gold-=6+up; G.bag=G.bag.filter(d=>d!==w); }
   stock.filter(s=>s.t).forEach(s=>{ if(G.gold>=s.price&&DVAL[s.t]>=3){ G.gold-=s.price; G.bag.push({type:s.t}); } });
   const gl=G.bag.filter(L.canGild).sort((a,b)=>DVAL[b.type]-DVAL[a.type]); if(G.gold>=G.gildPrice+up+3&&gl.length){ G.gold-=G.gildPrice+up; G.gildPrice+=4; L.gildDie(gl[0]); }
   const fl=G.bag.filter(L.canFile).sort((a,b)=>DVAL[b.type]-DVAL[a.type]); if(G.gold>=G.filePrice+up+3&&fl.length){ G.gold-=G.filePrice+up; G.filePrice+=2; L.fileDie(fl[0]); } }
 function event(G,act){ const e=L.rnd(14);
   if(e===9){ const fl=G.bag.filter(L.canFile); if(G.gold>=7&&fl.length){ G.gold-=7; L.fileDie(fl.sort((a,b)=>(DVAL[a.type]||0)-(DVAL[b.type]||0))[0]); } }
-  if(e===10){ const pool=poolT(G,'u'); if(G.hp>G.maxHp*.5&&G.charms.length<5&&pool.length){ G.hp-=8; applyCharm(G,SKILL==='good'?pool.sort((a,b)=>VAL[b]-VAL[a])[0]:L.pick(pool)); } else G.hp=Math.min(G.maxHp,G.hp+8); }
+  if(e===10){ const pool=poolT(G,'u'); if(G.hp>G.maxHp*.5&&L.slotsUsed(G)<5&&pool.length){ G.hp-=8; applyCharm(G,SKILL==='good'?pool.sort((a,b)=>VAL[b]-VAL[a])[0]:L.pick(pool)); } else G.hp=Math.min(G.maxHp,G.hp+8); }
   if(e===11){ if(G.gold>=9){ G.gold-=9; G.bag.push(...L.shopDice(act,2).map(type=>({type}))); } else G.gold+=6; }
   if(e===12){ if(G.hp>G.maxHp*.6){ if(Math.random()<.5) G.bag.push({type:'shaved'}); else G.hp-=10; } else if(G.gold>=3){ G.gold-=3; G.hp=Math.min(G.maxHp,G.hp+5); } }
   if(e===13){ if(G.gold>=15){ G.gold-=15; G.rep++; } }

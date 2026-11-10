@@ -221,5 +221,9 @@ test('Champagne and Viper multiply per trigger; Payday counts its 1s', () => {
   const R = bank(L.newRound(), ['C', 'C', 1, 1], ['bubbly', 'bubbly', 'viper', 'payday']);
   assert.equal(L.oddsOf(R, [], env({})).odds, 1.5 * 1.5 * 1.5); assert.equal(R.payday, 1);
 });
+test('Off the Books charms don\'t take a slot', () => {
+  const G = { charms: ['tip', 'cut', 'penny'], offbook: ['penny'] };
+  assert.equal(L.slotsUsed(G), 2); assert.ok(L.offbook(G, 'penny')); assert.ok(!L.offbook(G, 'tip'));
+});
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
