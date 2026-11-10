@@ -119,6 +119,7 @@ const QUIRKS={
 // so a build that one-shots one table has to deal with something different at the next.
 const BOSS_RULES=[['armor','regen','bloodlust','snakebit'],['ironjaw','jinx','armor','bloodlust','regen','snakebit','thorns','vig'],['jinx','flat','vig','thorns','bloodlust','regen','snakebit']];
 const SHARK_RULES=['armor','regen','jinx','snakebit','thorns','bloodlust'];
+const RULE_Q=[...new Set(['ironjaw',...BOSS_RULES.flat(),...SHARK_RULES])];
 function rulesFor(kind,act,lap,q){ const add=[], take=pool=>{ const ok=pool.filter(x=>!q.includes(x)&&!add.includes(x)); if(ok.length) add.push(pick(ok)); };
   if(kind==='B'){ if(act===2||lap>0) add.push('ironjaw'); take(BOSS_RULES[act]); for(let k=0;k<lap;k++) take(BOSS_RULES[2]); }
   if(kind==='E'&&(act>0||lap>0)){ take(SHARK_RULES); for(let k=0;k<lap;k++) take(SHARK_RULES); }
@@ -382,4 +383,4 @@ function shopDie(act,not){ const t=rollTier(act,RARITY_DICE), pool=SHOP_DICE.fil
 function shopDice(act,n){ const out=[]; for(let i=0;i<n;i++) out.push(shopDie(act,out)); return out; }
 /*LOGIC-END*/
 
-if(typeof module!=='undefined'&&module.exports) module.exports={BOSS_RULES,SHARK_RULES,jinxPick,regenOf,rulesFor,ENDLESS_GROW,OFFBOOK_P,OFFBOOK_FEE,offbook,slotsUsed,afterRound,afterFight,rollTier,shopDie,shopDice,RARITY,RARITY_DICE,ACT_HP,DT,SHOP_DICE,CHARMS,QUIRKS,ACTS,FLOORS,HAND,ACT_ODDS,rnd,pick,shuffle,facesOf,rollInst,rollFace,effVal,aiRound,makeOpp,newRound,bankVals,noteBank,oddsOf,settle,genFloors,fileDie,gildDie,canFile,canGild,LIMITS,limitMods,POCKETS,pocketStart,theirScore,breaksAt,bombDmg,isRaid,bossOf,EXTRA_Q};
+if(typeof module!=='undefined'&&module.exports) module.exports={RULE_Q,BOSS_RULES,SHARK_RULES,jinxPick,regenOf,rulesFor,ENDLESS_GROW,OFFBOOK_P,OFFBOOK_FEE,offbook,slotsUsed,afterRound,afterFight,rollTier,shopDie,shopDice,RARITY,RARITY_DICE,ACT_HP,DT,SHOP_DICE,CHARMS,QUIRKS,ACTS,FLOORS,HAND,ACT_ODDS,rnd,pick,shuffle,facesOf,rollInst,rollFace,effVal,aiRound,makeOpp,newRound,bankVals,noteBank,oddsOf,settle,genFloors,fileDie,gildDie,canFile,canGild,LIMITS,limitMods,POCKETS,pocketStart,theirScore,breaksAt,bombDmg,isRaid,bossOf,EXTRA_Q};

@@ -1175,7 +1175,7 @@ async function startFight(kind,pre,snap){
   if(GL_OK){ buildFoe({...opp.look,...(LOOKX[opp.n]||{})}); if(kind==='B'&&!snap){ for(const v of [.3,1,.2,1]){ lampDim=v; await sleep(90); } } await foeWalkIn(); }
   if(snap){ if(!F||F.opp!==opp) return; if(snap.end) return resumeEnd(snap.end); return startRound(snap.sim?snap:null); }
   if(kind==='B'){ banner(opp.n,opp.sigT||'Signature: see the bill of fare',true); await foeSlam(); }
-  if(opp.q.length) await tip('quirk'); if(kind==='B'){ await tip('boss'); if(opp!==ACTS[G.act].foes.boss&&ACTS[G.act].foes.bosses.some(b=>b.n===opp.n&&b!==ACTS[G.act].foes.boss)) await tip('altboss'); }
+  if(opp.q.length) await tip('quirk'); if(opp.q.some(q=>RULE_Q.includes(q))) await tip('counter'); if(kind==='B'){ await tip('boss'); if(opp!==ACTS[G.act].foes.boss&&ACTS[G.act].foes.bosses.some(b=>b.n===opp.n&&b!==ACTS[G.act].foes.boss)) await tip('altboss'); }
   startRound();
 }
 const quirkChips=()=>`<span class="stamp odds" data-tip="When the opponent wins a round, they hit you for the gap times this.">Hits \u00d7${fmtOdds(F.opp.odds)}</span>`+F.opp.q.map(q=>`<button class="stamp" data-q="${q}" data-tip="${QUIRKS[q].desc}">${QUIRKS[q].name}</button>`).join('');
@@ -1294,7 +1294,7 @@ function updOdds(bump,sel){ if(!F) return; let R2=null, add=0; if(sel&&sel.lengt
   const r=known?settle(F.pScore+add,F.oScore,R2||F.R||newRound(),live(),F.opp,{...oddsEnv(true),lossStreak:F.streak||0,oppHalf:F.oppHp<=F.oppMax/2}):null;
   eq.classList.toggle('bad',!!r&&r.winner==='them'); eq.classList.toggle('even',!!r&&r.winner==='push');
   if(!known){ set('eqgap','?','Ahead by'); set('odds',fmtOdds(O.odds),'Your odds'); set('pays','?','They lose'); }
-  else if(r.winner==='you'){ set('eqgap',r.margin,has('cut')?'Ahead +2 cut':'Ahead by'); set('odds',fmtOdds(r.odds),r.raid?'Raid odds':'Your odds'); set('pays',r.dmg,'They lose'); }
+  else if(r.winner==='you'){ set('eqgap',r.margin,has('cut')?'Ahead +2 cut':'Ahead by'); set('odds',fmtOdds(r.odds),r.raid?'Raid odds':'Your odds'); set('pays',r.dmg,r.armor?'Vest stops it':r.capped?'Iron Jaw cap':'They lose'); }
   else if(r.winner==='them'){ const free=has('rabbit')&&!F.rabbitUsed; set('eqgap',r.gap,r.house?'House tie':r.sharp?'Sharp tie':'Behind by'); set('odds',fmtOdds(r.odds),'Their odds'); set('pays',free?0:r.dmg,free?'Rabbit\u2019s Foot':'You lose'); }
   else { set('eqgap',r.near?1:0,r.near?'Near miss':'Tied'); set('odds',fmtOdds(O.odds),'Your odds'); set('pays',0,'Push'); }
   if(bump){ const oe=$('#odds'); oe.classList.remove('bump'); void oe.offsetWidth; oe.classList.add('bump'); } }
@@ -1495,7 +1495,7 @@ function renderShop(){
     $(where).appendChild(el); els.push({el,c}); };
   S.stock.forEach((c,i)=>buyCard(c,i,'#shelf')); S.fixed.forEach((c,i)=>buyCard(c,i,'#counter'));
   paint();
-  setTimeout(()=>{ if($('#shelf')) tip('bar').then(()=>{ if(G&&G.charms.length) tip('rack'); }); },900);
+  setTimeout(()=>{ if($('#shelf')) tip('bar').then(()=>{ if(G&&G.shop&&G.shop.stock.some(s=>s.off&&!s.sold)) return tip('offbook'); }).then(()=>{ if(G&&G.charms.length) tip('rack'); }); },900);
   $('#leave').onclick=()=>{ if(pickMode){ pickMode=null; paint(); } window.__paint=null; SFX.ui(); advance(); };
 }
 
@@ -1644,20 +1644,22 @@ function renderVictory(){ clearLabels(); SFX.fanfare(); const lv=G.limit||0, up=
 
 /* ================= THE BARTENDER'S NOTES (first-run tutorial) ================= */
 const TIPS={
-  map:['Pick your seat','Each card is somewhere you can go next: who’s sitting there, their nerve, how hard they hit, and what’s in their bag. Start with a table.'],
-  quirk:['Read their tags','The red tags over their head are their tricks. Click one any time to read it. “Hits ×” is how hard their wins land on you.'],
-  boss:['The owner','Bosses have a signature move. It’s printed on the bill before you sit down, and it gets worse once they’re at half nerve.'],
+  map:['Pick your seat','Each card is a door you can take next. A seat shows who’s sitting there: their nerve, how hard they hit, how they play, their tags and their dice. Hover anything on it to read it. Some floors have a third door.'],
+  quirk:['Read their tags','Their tags are on their nameplate, top right. Hover one (or click it) to read it. “Hits ×” is how hard their wins land on you.'],
+  counter:['House rules','Bosses and the sharks upstairs draw a house rule at random every night. Maybe your × odds don’t count, maybe one of your charms sits out each round. Same face, different trick, so read their tags every time.'],
+  boss:['The owner','Bosses have a signature move, printed on their door before you sit down, and it gets worse once they’re at half nerve. The last boss also has an Iron Jaw: no round takes more than a third of their nerve, so plan on a few rounds.'],
   theirs:['They throw first','Watch their total. Whatever they end on is the number you have to get under.'],
-  yours:['Your throw','Click the dice you want to keep, then press Bank. Low is good. A crown counts for nothing, so a crown is always worth keeping.'],
+  yours:['Your throw','Click the dice you want to keep, then press Bank. Lowest total wins. A crown scores 0, so it’s almost always worth keeping.'],
   again:['Throw again','Whatever you didn’t bank gets thrown again. Each throw you bank at least one, until every die is on your rail.'],
   result:['Who bleeds','Lower total takes the round. The winner hits for how far ahead they finished, times their odds. Your odds start at 1, so finishing 3 under is a 3 hit. Charms raise your odds. The sum on your slip shows the hit live. Click it any time for the breakdown.'],
   odds:['Your odds went up','Every point you finish under them is now worth more. Your slip shows it: ahead by \u00d7 odds = what they lose. Click the sum for where your odds come from.'],
-  reward:['Spoils','Take one. Charms sit in your rack up top and are always working. Gold-edged ones are rare and usually multiply your odds.'],
+  reward:['Spoils','Take one. Charms go on your rack up top and are always working. Dice go in your bag. The rarer the card, the more it tends to multiply your odds.'],
   bar:['The bar','You stop here after every table. Spend now; the next seat is meaner. Short on cash? Click a price twice and he’ll front you the rest for $2. That’s your tab: it comes out of your next winnings automatically.'],
-  rack:['Your charms','Click a charm up top to read it, or to sell it back for half if you need the room.'],
+  offbook:['Off the books','That silver card is off the books. It works like any other charm, but it doesn’t take one of your five slots. They don’t come around often.'],
+  rack:['Your charms','Hover a charm up top to read it. Click it to sell it back for half if you need the room. You can hold five.'],
   limit:['The limit went up','You beat the house, so now you can raise the limit. Each one makes the night meaner, and stacks on every limit below it. Click the arrows on Limit to pick. You can always drop back to Penny Ante.'],
   pocket:['Walk in as someone else','Beating bosses opens new ways to start: more cash, more nerve, different dice. Click the arrows on Walk in as to pick who you are tonight.'],
-  altboss:['Not who you expected','Each room has two possible owners, picked at random every night. Read the signature on the bill before you sit down.'],
+  altboss:['Not who you expected','Each room has two possible owners, picked at random every night. Read the signature on their door before you sit down.'],
 };
 function tipsSeen(){ try{ return JSON.parse(localStorage.getItem('lr-tips')||'{}'); }catch(e){ return {}; } }
 let tipOpen=0;
