@@ -6,7 +6,6 @@
 const path=require('path'); const L=require(process.env.LOGIC||path.join(__dirname,'..','..','src','js','logic.js')); const {DT,CHARMS,ACTS,FLOORS}=L;
 const A=Object.fromEntries(process.argv.slice(2).map(a=>a.split('=')));
 const LV=+(A.lim||0), POCKET=A.pocket||'regular', LM=L.limitMods(LV); const N=+(A.n||300), ROLL=+(A.roll||14), EVALK=+(A.k||120), SKILL=A.skill||'pro';
-const realRandom=Math.random;
 function seeded(seed){ let s=seed>>>0; return ()=>{ s=(s+0x6D2B79F5)>>>0; let t=s; t=Math.imul(t^(t>>>15),t|1); t^=t+Math.imul(t^(t>>>7),t|61); return ((t^(t>>>14))>>>0)/4294967296; }; }
 const has=(G,c)=>G.charms.includes(c);
 
@@ -52,7 +51,7 @@ function playRound(hand,G,o,F,T,env,lam,smart){
 
 // ---------- a table ----------
 function pickFoe(G,kind,act,floor){ const Af=ACTS[act].foes; if(kind==='B') return L.bossOf(act,G.bossIx[act]);
-  const used=G.used=G.used||{}, fresh=pool=>{ const un=pool.filter(p=>!used[act+p.n]); const d=L.pick(un.length?un:pool); used[act+d.n]=1; return d; }; // like chooseFoe: no repeats in a room
+  const used=G.used=G.used||{}, fresh=pool=>{ const un=pool.filter(p=>!used[act+p.n]), nl=pool.filter(p=>p.n!==G.lastFoe); const d=L.pick(un.length?un:nl.length?nl:pool); used[act+d.n]=1; G.lastFoe=d.n; return d; }; // like chooseFoe: no repeats in a room
   if(kind==='E') return fresh(floor<=3?Af.e1:Af.e2);
   let pool=floor<=3?Af.t1:Af.t2; if(floor<2&&act===0&&G.lap===0) pool=pool.filter(p=>!(p.q||[]).some(q=>!L.QUIRKS[q].help)); return fresh(pool); }
 function fight(G,kind,act,floor,smart,stats){ const def=pickFoe(G,kind,act,floor);
@@ -69,7 +68,8 @@ function fight(G,kind,act,floor,smart,stats){ const def=pickFoe(G,kind,act,floor
     if(stats){ stats.rounds++; if(r.winner==='you'){ stats.w++; stats.odds+=r.odds; stats.hit+=r.dmg; stats.best=Math.max(stats.best,r.dmg); } else if(r.winner==='them'){ stats.l++; stats.taken+=r.dmg; } }
     G.gold+=R.payday||0; let free=false;
     if(r.winner==='you'){ oh-=r.dmg; F.wins++; F.loss=0; if(has(G,'tip')) G.gold+=2; if(has(G,'bookie')) G.gold+=Math.min(8,r.margin); }
-    else if(r.winner==='them'){ let d=r.dmg; if(has(G,'rabbit')&&!F.rabbit){F.rabbit=true;d=0;free=true;} G.hp-=d; if(o.sig==='feed') oh=Math.min(o.hp,oh+d); F.wins=0; F.loss++; if(o.q.includes('steal')) G.gold=Math.max(0,G.gold-3); if(o.q.includes('heavy')) F.heavy=true; }
+    else if(r.winner==='them'){ let d=r.dmg; if(has(G,'rabbit')&&!F.rabbit){F.rabbit=true;d=0;free=true;} G.hp-=d; if(o.sig==='feed') oh=Math.min(o.hp,oh+d); if(!free){ F.wins=0; F.loss++; if(o.q.includes('steal')) G.gold=Math.max(0,G.gold-3); if(o.q.includes('heavy')) F.heavy=true; } }
+    else F.wins=0;
     G.gold+=L.afterRound(G,r.winner,free);
     if(o.q.includes('nervous')) oh-=1;
     if(has(G,'blood')&&G.hp>1) G.hp-=1;

@@ -7,7 +7,10 @@
   const oSet = Storage.prototype.setItem, oDel = Storage.prototype.removeItem;
   const isGame = (k) => typeof k === 'string' && k.startsWith('lr-');
   const now = () => Date.now();
-  let ref = null, started = false, timer = null, writing = false, again = false;
+  let ref = null, started = false, timer = null, writing = false, again = false, synced = false;
+  // What this device held before this visit. The first comparison with the cloud uses this, not writes the game made
+  // while the cloud was still answering (a tip, a setting), so a slow connection can't push a stale copy over a newer one.
+  const bootAt = +LS.getItem(AT) || 0;
 
   function snapshot() {
     const kv = {};
@@ -28,14 +31,14 @@
   }
 
   async function push() {
-    if (!ref) return;
+    if (!ref || !synced) return;
     if (writing) { again = true; return; }
     writing = true;
     try { await ref.set({ data: JSON.stringify(snapshot()), at: localAt() }); } catch (e) {}
     writing = false;
     if (again) { again = false; push(); }
   }
-  function schedule() { clearTimeout(timer); timer = setTimeout(push, 1200); }
+  function schedule() { if (!synced) return; clearTimeout(timer); timer = setTimeout(push, 1200); }
 
   // Any game write marks this device as newer and queues a push.
   Storage.prototype.setItem = function (k, v) {
@@ -51,16 +54,17 @@
   async function reconcile() {
     if (!ref) return;
     let snap; try { snap = await ref.get(); } catch (e) { return; }
-    const r = snap.exists ? snap.data() : null, mine = localAt();
+    const first = !synced, r = snap.exists ? snap.data() : null, mine = first ? bootAt : localAt(); synced = true;
     if (r && typeof r.data === 'string' && (r.at || 0) > mine) {
       let kv; try { kv = JSON.parse(r.data); } catch (e) { return; }
       apply(kv, r.at || now());
       if (started) location.reload();               // the running game has the old save in memory
+      return;
     } else if (!r || mine > (r.at || 0)) {
       if (!mine && !Object.keys(snapshot()).length) return;   // nothing here and nothing there
-      if (!mine) oSet.call(LS, AT, String(now()));
+      if (!localAt()) oSet.call(LS, AT, String(now()));
       push();
-    }
+    } else if (first && localAt() > mine) push();   // level at boot, then changed while connecting
   }
 
   async function connect() {

@@ -225,5 +225,9 @@ test('Off the Books charms don\'t take a slot', () => {
   const G = { charms: ['tip', 'cut', 'penny'], offbook: ['penny'] };
   assert.equal(L.slotsUsed(G), 2); assert.ok(L.offbook(G, 'penny')); assert.ok(!L.offbook(G, 'tip'));
 });
+test('Picking dice without banking never leaks into the round (shallow copies)', () => {
+  const R = L.newRound(); L.noteBank(R, [1], ['d6'], []); const R2 = { ...R }; L.noteBank(R2, [2, 3], ['d6', 'd6'], []);
+  assert.equal(L.oddsOf(R, ['straight'], env({})).odds, 1); assert.equal(L.oddsOf(R2, ['straight'], env({})).odds, 3);
+});
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

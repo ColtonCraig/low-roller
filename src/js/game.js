@@ -1,30 +1,12 @@
 // Low Roller — everything that isn't a rule: rendering, UI, fight flow, saves, sound.
 // Uses the globals defined by logic.js, which index.html loads first.
-/* ================= ICONS ================= */
-const IC={
-  die:'<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="9" cy="9" r="1.3" fill="currentColor"/><circle cx="15" cy="15" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/></svg>',
-  fin:'<svg class="i" viewBox="0 0 24 24" fill="currentColor"><path d="M3 18c4-1 6-6 8-13 2 5 5 9 10 13z"/><rect x="2" y="19" width="20" height="2"/></svg>',
-  glass:'<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16l-8 9z"/><path d="M12 13v7M8 20h8"/><circle cx="16" cy="6" r="1.3" fill="currentColor"/></svg>',
-  lamp:'<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3h8l2 6H6z"/><path d="M12 9v12M8 21h8"/></svg>',
-  q:'<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l10 10-10 10L2 12z"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7" /><circle cx="12" cy="16.5" r=".9" fill="currentColor"/></svg>',
-  crown:'<svg class="i" viewBox="0 0 24 24" fill="currentColor"><path d="M3 8l4.5 4L12 4l4.5 8L21 8l-2 10H5z"/><rect x="5" y="19" width="14" height="2"/></svg>',
-  cup:'<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8h12l-1 12H7z"/><path d="M9 4h6"/><path d="M12 8V4"/></svg>',
-  scale:'<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M5 21h14M4 7h16"/><path d="M4 7l-2 6h4zM20 7l-2 6h4z"/></svg>',
-  file:'<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20L18 6"/><path d="M15 3l6 6-3 3-6-6z"/></svg>',
-  check:'<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 12l5 5L20 6"/></svg>',
-  x:'<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 5l14 14M19 5L5 19"/></svg>',
-  drink:'<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12l-1 17H7z"/><path d="M6.5 9h11"/></svg>',
-  note:'<svg class="i" viewBox="0 0 24 24" fill="currentColor"><path d="M9 4v11.5A3 3 0 1 0 11 18V8l8-2v7.5A3 3 0 1 0 21 16V2z"/></svg>',
-  spk:'<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/></svg>',
-};
-
 /* ================= AUDIO ================= */
 let AC=null, master=null, sfxBus=null, musicBus=null;
 const SET={music:.6,sfx:.8,speed:1.6,grain:true,shake:true,tips:true};
 try{ Object.assign(SET,JSON.parse(localStorage.getItem('lr-set')||'{}')); }catch(e){}
-let sfxOn=SET.sfx>0, musicOn=SET.music>0;
+let sfxOn=SET.sfx>0;
 function saveSet(){ try{localStorage.setItem('lr-set',JSON.stringify(SET))}catch(e){} applySet(); }
-function applySet(){ sfxOn=SET.sfx>0; musicOn=SET.music>0; if(AC){ sfxBus.gain.setTargetAtTime(SET.sfx*1.1,AC.currentTime,.05); musicBus.gain.setTargetAtTime(SET.music*.75,AC.currentTime,.1); } document.body.classList.toggle('nograin',!SET.grain); }
+function applySet(){ sfxOn=SET.sfx>0; if(AC){ sfxBus.gain.setTargetAtTime(SET.sfx*1.1,AC.currentTime,.05); musicBus.gain.setTargetAtTime(SET.music*.75,AC.currentTime,.1); } document.body.classList.toggle('nograin',!SET.grain); }
 
 function ac(){
   if(!AC){ try{
@@ -302,12 +284,12 @@ function buildRoom(){
   const floor=new THREE.Mesh(new THREE.PlaneGeometry(40,40),new THREE.MeshLambertMaterial({map:planks})); floor.rotation.x=-Math.PI/2; floor.position.y=-1.65; floor.receiveShadow=true; SCN.add(floor);
   RUG_CV=makeCanvas(128,96,()=>{}); RUG_TEX=texFromCanvas(RUG_CV);
   const rug=new THREE.Mesh(new THREE.PlaneGeometry(15,11.4),new THREE.MeshLambertMaterial({map:RUG_TEX})); rug.rotation.x=-Math.PI/2; rug.position.set(0,-1.64,.3); rug.receiveShadow=true; SCN.add(rug);
-  WALL_CV=makeCanvas(32,32,()=>{}); const wp=texFromCanvas(WALL_CV); WALL_TEX=wp; const wp0=(makeCanvas(4,4,(c,w)=>{ c.fillStyle='#16241d'; c.fillRect(0,0,w,w); c.strokeStyle='#8a6d2e'; c.globalAlpha=.6; for(let r=4;r<=16;r+=4){ c.beginPath(); c.arc(16,32,r,Math.PI,0); c.stroke(); c.beginPath(); c.arc(0,16,r,-Math.PI/2,Math.PI/2); c.stroke(); c.beginPath(); c.arc(32,16,r,Math.PI/2,Math.PI*1.5); c.stroke(); } }));
+  WALL_CV=makeCanvas(32,32,()=>{}); const wp=texFromCanvas(WALL_CV); WALL_TEX=wp;
   wp.wrapS=wp.wrapT=THREE.RepeatWrapping; wp.repeat.set(14,6);
   const wall=new THREE.Mesh(new THREE.PlaneGeometry(34,14),new THREE.MeshLambertMaterial({map:wp})); wall.position.set(0,4,-8.5); SCN.add(wall);
   const wains=new THREE.Mesh(new THREE.BoxGeometry(34,2.2,.3),railM); wains.position.set(0,-.5,-8.4); SCN.add(wains);
   // (the bottle shelves used to sit here; they only ever showed as half-cut bars at the top edge, so they're gone)
-  NEON_CV=makeCanvas(256,64,()=>{}); const nc=NEON_CV; const nc0=makeCanvas(4,4,(c,w,hh)=>{ c.font="40px 'Jersey 15',monospace"; c.textAlign='center'; c.textBaseline='middle'; c.shadowColor='#ff3a6a'; c.shadowBlur=14; c.fillStyle='#ffb3c4'; c.fillText('LOW ROLLER',w/2,hh/2); c.shadowBlur=4; c.fillStyle='#fff0f3'; c.fillText('LOW ROLLER',w/2,hh/2); });
+  NEON_CV=makeCanvas(256,64,()=>{}); const nc=NEON_CV;
   NEON_TEX=texFromCanvas(nc); neon=new THREE.Mesh(new THREE.PlaneGeometry(5.2,1.3),new THREE.MeshBasicMaterial({map:NEON_TEX,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
   neon.position.set(0,6.1,-8.4); SCN.add(neon);
   const neonL=new THREE.PointLight(0xff3a6a,1.1,9,1.5); NEONL=neonL; neonL.position.set(0,5.6,-7.4); SCN.add(neonL);
@@ -555,7 +537,7 @@ const LOOKX={
   'Tony Twice':{body:'avg',outfit:'suit',pat:'pin',double:true,hat:'fedora',tilt:-.1,stache:'thin',toothpick:true,chain:true,rings:true},
   'Inky Lou':   {body:'avg',outfit:'vest',braces:0x1a2a3a,hat:'cap',hatc:0x2a2a30,glasses:'round',pencil:true,hold:'ledger',beard:'stubble'},
   'The Widow':    {coat:0x221c26,body:'slim',outfit:'dress',hat:'veil',neck:'black',gloves:0x0a0a0a,longGloves:true,hold:'holder',headShape:'long',noBlink:true},
-  'Bruno':        {shirt:0x5a5650,coat:0x3a3630,body:'broad',outfit:'tank',shirt:0x2a2a2a,hat:'none',hair:'bald',nose:'broken',brow:'angry',chin:'double',headShape:'square',rings:true},
+  'Bruno':        {coat:0x3a3630,body:'broad',outfit:'tank',shirt:0x2a2a2a,hat:'none',hair:'bald',nose:'broken',brow:'angry',chin:'double',headShape:'square',rings:true},
   'The Enforcer': {coat:0x2e2a26,body:'broad',outfit:'turtle',hat:'cap',hatc:0x1a1a1a,holster:true,scar:true,brow:'angry',knuckles:true,patch:-1,headShape:'square'},
   'The Ledger':   {coat:0x2a2a34,body:'avg',outfit:'suit',hat:'top',band:0x1a1a1a,glasses:'gold',hold:'ledger',cape:0x0e0e12,headShape:'long',stache:'thin',noBlink:true},
   'Sleepy Joe':   {body:'stout',outfit:'vest',braces:0x5a4a3a,notie:true,hat:'cap',hatc:0x5a5048,eyes:'sleepy',brow:'sad',hair:'sides',hairc:0x8a7a6a,hunch:.7,hold:'glass',nose:'big'},
@@ -701,7 +683,6 @@ async function cupRest(){ if(!foe) return; const u=foe.userData; await Promise.a
 /* ---------- 3D dice ---------- */
 const SHAPE={royal:'cube',deuce:'cube',payday:'cube',trick:'cube',bubbly:'cube',viper:'cube',gilded:'cube',bomb:'cube',goose:'cube',boxcar:'cube',devil:'cube',d6:'cube',loaded:'cube',glass:'cube',twin:'cube',d8:'octa',ember:'octa',pebble:'tetra',gamble:'dodeca',coin:'coin'};
 const shapeOf=t=>SHAPE[t]||'cube';
-const SHAPE_NAME={cube:'Cube',octa:'Octahedron',tetra:'Pyramid',dodeca:'Dodecahedron',coin:'Coin'};
 const geoCache={};
 function basisQuat(n,up){ const z=n.clone().normalize(); const y=up.clone().sub(z.clone().multiplyScalar(up.dot(z))); if(y.lengthSq()<1e-6) y.set(0,1,0).sub(z.clone().multiplyScalar(z.y)); y.normalize(); const x=new THREE.Vector3().crossVectors(y,z); return new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(x,y,z)); }
 function polyFaces(geo){ const pos=geo.attributes.position, faces=[], a=new THREE.Vector3(), b=new THREE.Vector3(), c=new THREE.Vector3(); const tri=geo.index?geo.index.count/3:pos.count/3;
@@ -888,7 +869,6 @@ function floorLabel(){ return (G.mode==='endless'?`Lap ${G.lap+1} · `:'')+`Act 
 
 /* ================= UI PIECES ================= */
 const ROMAN=['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'];
-const circleInk='<svg viewBox="0 0 60 30" preserveAspectRatio="none"><path d="M8 17C6 7 22 3 34 4c14 1 23 6 21 13-2 8-18 10-30 9C13 25 4 21 9 12" fill="none" stroke="#7e1d28" stroke-width="2" stroke-linecap="round"/></svg>';
 function soundBtns(){ return `<div class="tabs pe">${G?`<button class="tab" id="bagbtn" aria-label="Your bag">Bag<span class="tc">${G.bag.length}</span></button>`:''}<button class="tab" id="menubtn">Menu</button></div>`; }
 function hud(){ return `<div class="hud pe">
   <div class="tabcard plate"><div class="statb"><span class="sc">Nerve</span><div class="inkbar ${G.hp<=G.maxHp*.25?'low':''}" id="hpw"><i id="hpbar" style="width:${100*G.hp/G.maxHp}%"></i></div><span class="tabnum" id="hptxt">${G.hp}<small>/${G.maxHp}</small></span></div>
@@ -932,7 +912,7 @@ function charmList(sell){ const w=h('<div class="list cols2"></div>'); if(!G.cha
 function charmDesc(c){ const d=CHARMS[c].desc, gr=G&&G.grow||{}; if(!G||!G.charms.includes(c)) return d;
   if(c==='tally') return `${d} <b class="tier u">${G.tally} notch${G.tally===1?'':'es'}</b>`;
   if(c==='piggy') return `${d} <b class="tier u">Now +${gr.piggy||0} odds</b>`;
-  if(c==='moonshine') return `${d} <b class="tier u">Now \u00d7${fmtOdds(1+.1*(gr.moon||0))} odds</b>`;
+  if(c==='moonshine') return `${d} <b class="tier u">Now \u00d7${fmtOdds(1+.05*(gr.moon||0))} odds</b>`;
   return d; }
 
 /* ================= CHARM ICONS: little 3D props, rendered once in the room's own light and pixel grid ================= */
@@ -949,9 +929,6 @@ function buildCharmIcons(){ if(!GL_OK||!R) return; try{
   const add=(g,geo,m,x=0,y=0,z=0,rx=0,ry=0,rz=0,sx=1,sy=1,sz=1)=>{ const o=new THREE.Mesh(geo,m); o.position.set(x,y,z); o.rotation.set(rx,ry,rz); o.scale.set(sx,sy,sz); g.add(o); return o; };
   const Bx=(w,h,d)=>new THREE.BoxGeometry(w,h,d), Cy=(a,b,h,s=10)=>new THREE.CylinderGeometry(a,b,h,s), Sp=(r,s=8)=>new THREE.SphereGeometry(r,s,Math.max(4,s-2)), Co=(r,h,s=8)=>new THREE.ConeGeometry(r,h,s), To=(r,t,s=12)=>new THREE.TorusGeometry(r,t,5,s);
   const GOLD=M(0xf0bd4a,{emissive:0x3a2400}), CREAM=M(0xf4ead2,{emissive:0x2a2418}), RED=M(0xc0303f), BLACK=M(0x1a1414), WOOD=M(0x7a4a24), SILVER=M(0xc8ccd4,{emissive:0x15171a}), BROWN=M(0x6a3a1c), AMBER=new THREE.MeshLambertMaterial({color:0xd08a20,emissive:0x7a3a00});
-  const TIER={c:[0xe8dcc0,0xa3303f],u:[0x2f9e90,0xf2fbf8],r:[0xf0c040,0x2a1a00]};
-  function chipBase(t){ const g=new THREE.Group(), [a,b]=TIER[t]; add(g,Cy(.92,.92,.16,20),M(a),0,0,0); add(g,Cy(.64,.64,.02,20),M(new THREE.Color(a).multiplyScalar(.82).getHex()),0,.09,0);
-    for(let k=0;k<8;k++){ const an=k*Math.PI/4; add(g,Bx(.26,.17,.12),M(b),Math.cos(an)*.87,0,Math.sin(an)*.87,0,-an,0); } return g; }
   const card=(g,x,y,z,rz,ry,pip)=>{ add(g,Bx(.5,.72,.04),CREAM,x,y,z,0,ry,rz); add(g,Bx(.14,.2,.02),pip,x+Math.cos(rz+Math.PI/2)*0+0,y,z+.03,0,ry,rz); };
   const die=(g,x,y,z,ry)=>{ add(g,Bx(.44,.44,.44),CREAM,x,y,z,0,ry,0); add(g,Bx(.15,.03,.15),RED,x,y+.225,z,0,ry,0); };
   const B={
@@ -1098,7 +1075,6 @@ const NODE={
   B:{t:'Big Sal',d:'The owner. Beat her and the Nail is yours.',pay:'the keys'}};
 const STYLE={1:'Tight. Only keeps 1s and crowns.',2:'Loose. Keeps anything 2 or under.'}, STYLE_S={1:'Tight',2:'Loose'};
 function preview(){ G.preview=G.preview||{}; if(!G.preview[G.floor]) G.preview[G.floor]=G.floors[G.floor].map(n=>({n,opp:'FEB'.includes(n)?chooseFoe(n):null})); return G.preview[G.floor]; }
-function theirDice(types){ const w=h('<div class="drow"></div>'); bagCounts(types).forEach(([t,n])=>{ const b=h(`<span class="dchip"><span class="ic"></span>${n>1?`${n} × `:''}${DT[t].name}</span>`); b.querySelector('.ic').replaceWith(iconCanvas(t,null,24)); w.appendChild(b); }); return w; }
 function entry(p,i){
   const boss=p.n==='B', nd=boss?{t:'Boss',pay:G.act===2&&G.mode==='run'?'the whole joint':'$20 + rare'}:NODE[p.n];
   const el=h(`<button class="entry ${boss?'boss':''} ${p.opp?'':'simple'}" style="animation-delay:${.08+i*.09}s"></button>`);
@@ -1119,8 +1095,8 @@ function entry(p,i){
 function routeLine(){ return `<div class="route">${FLOORS.map((_,i)=>{ const done=i<G.floor, now=i===G.floor, boss=i===FLOORS.length-1;
   return `<span class="rn ${done?'done':''} ${now?'now':''} ${boss?'boss':''}" data-tip="${boss?'Boss':'Floor '+(i+1)}"></span>`; }).join('')}</div>`; }
 function renderMap(fresh){
-  F=null; clearLabels(); setActTheme(G.act); G.at='map'; G.fight=G.rw=G.shop=G.ev=null; saveRun();
-  const opts=preview();
+  F=null; clearLabels(); setActTheme(G.act); G.at='map'; G.fight=G.rw=G.shop=G.ev=null;
+  const opts=preview(); saveRun();
   screen(`${hud()}<div class="modal ${opts.length>1?'wide':''} paper pe">
     <div class="mhead"><div class="sc">Act ${ROMAN[G.act]}${G.mode==='endless'?` \u00b7 Lap ${G.lap+1}`:''} \u00b7 Floor ${G.floor+1} of ${FLOORS.length}</div>
       <div class="mtitle">${ACTS[G.act].name}</div>
@@ -1140,7 +1116,7 @@ function resumeRun(){ setActTheme(G.act); const a=G.at;
   if(a==='event') return renderEvent();
   if(a==='victory') return renderVictory();
   renderMap(true); }
-function enterNode(n,opp){ clearDebris(); if(n==='S') return renderShop(); if(n==='R') return renderRest(); if(n==='?') return renderEvent(); startFight(n,opp); }
+function enterNode(n,opp){ clearDebris(); { const pv=G.preview&&G.preview[G.floor]; if(pv) pv.forEach(p=>{ if(p.opp&&p.opp!==opp&&G.used) delete G.used[p.opp.n]; }); } if(n==='S') return renderShop(); if(n==='R') return renderRest(); if(n==='?') return renderEvent(); startFight(n,opp); }
 function advance(){ G.floor++; if(G.floor<FLOORS.length) return renderMap();
   if(G.mode==='run'&&G.act===2) return renderVictory();
   if(G.mode==='endless'&&G.act===2) G.lap++;
@@ -1745,7 +1721,6 @@ addEventListener('keydown',e=>{ if(e.key==='Escape'){ menuEl?closeMenu():openMen
   if(menuEl||tipOpen) return; if(e.key==='Enter'||e.key===' '){ const b=$('#bank:not([disabled])')||$('#again'); if(b){ e.preventDefault(); b.click(); } } });
 
 /* ================= INTERACTION FEEL ================= */
-function inkMark(el){ const svg=h('<svg class="ink" viewBox="0 0 200 60" preserveAspectRatio="none"><path d="M14 36C5 16 58 6 102 6c52 1 88 11 86 27-2 18-62 23-106 21C38 52 3 44 16 22"/></svg>'); el.appendChild(svg); }
 function act(el,fn,delay=300){ const g=el.parentElement; if(el.dataset.busy||(g&&g.dataset.busy)) return; el.dataset.busy=1; if(g) g.dataset.busy=1; el.classList.add('picked'); SFX.punch(); setTimeout(fn,REDUCED?0:delay); }
 function stampCard(el,word,fn){ const g=el.parentElement; if(el.dataset.busy||(g&&g.dataset.busy)) return; el.dataset.busy=1; if(g) g.dataset.busy=1; el.dataset.stamp=word; el.classList.add('taken'); el.parentElement&&el.parentElement.classList.add('decided'); SFX.stamp(); if(SET.shake) shakeAmt=.06; setTimeout(fn,REDUCED?0:560); }
 let lastHover=0, hoverEl=null;

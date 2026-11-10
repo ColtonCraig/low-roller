@@ -65,12 +65,12 @@ const CHARMS={
   bookie:  {name:'The Bookie',    ico:'§', tier:'r', price:15, rare:true, desc:'Win a round: you get $1 per point you won by, up to $8.'},
   // builds: more charms = more odds; streaks that grow; three of a kind; straights; even faces; crowns going negative
   collection:{name:'The Collection',ico:'≡', tier:'c', price:5, desc:'You get +3 odds per charm you hold (this one too).'},
-  consolation:{name:'Consolation',  ico:'♥', tier:'c', price:4, desc:'Lose a round: you get $2.'},
+  consolation:{name:'Consolation',  ico:'♥', tier:'c', price:4, desc:'Lose a round: you get $2 (not when Rabbit’s Foot takes the hit).'},
   savings: {name:'Savings Bond',  ico:'%', tier:'c', price:6, desc:'Win a fight: you get $1 per $10 you’re holding (up to $5).'},
   shiner:  {name:'Shiner',        ico:'○', tier:'c', price:5, desc:'Finish a round without banking a crown: you get +6 odds.'},
   evens:   {name:'Even Money',    ico:'2', tier:'c', price:5, desc:'You get +2 odds per 2, 4 or 6 you bank.'},
   deuces:  {name:'Deuces Wild',   ico:'2', tier:'u', price:9, desc:'Your 2s score 1.'},
-  piggy:   {name:'Piggy Bank',    ico:'P', tier:'u', price:8, desc:'Grows +3 odds every round you win. Loses half when you lose one.'},
+  piggy:   {name:'Piggy Bank',    ico:'P', tier:'u', price:8, desc:'Grows +3 odds every round you win. Loses half when you lose one (unless Rabbit’s Foot takes the hit).'},
   tommy:   {name:'Tommy Gun',     ico:'⁞', tier:'u', price:8, desc:'You get +2 odds per die in your final bank each round.'},
   jackpot: {name:'Jackpot',       ico:'7', tier:'u', price:9, desc:'Bank three of a kind in one go: you get ×2 odds this round.'},
   longshot:{name:'Long Shot',     ico:'1', tier:'u', price:8, desc:'Win a round by 1 or 2: you get ×2.5 odds.'},
@@ -165,7 +165,7 @@ const MORE=[
  {t1:[{n:'Dapper Dan',   s:'Tie straight. Odds straighter.',hp:17, bag:['loaded','d6','d6','d6','pebble','d6'], t:2, q:['sharp'], look:{coat:0x2a3a5a,hat:'top',eye:0x9fd3ff}}],
   t2:[{n:'Miss Fortune', s:'Reads your dice before they land.',hp:20, bag:['loaded','loaded','pebble','d6','d6','glass'], t:1, q:['copycat','haze'], look:{coat:0x3a1a4a,hat:'turban',eye:0xe0a0ff}}],
   e2:[{n:'The Magpie',   s:'Anything shiny.',               hp:26, bag:['loaded','loaded','pebble','pebble','d6','coin'], t:1, q:['steal','copycat'], look:{coat:0x101418,hat:'cloche',eye:0x9ff5d3}}],
-  alt:{n:'Zambini', s:'Pulls your luck out of a hat.', hp:26, bag:['loaded','loaded','loaded','pebble','d6','glass'], t:1, q:[], boss:true, sig:'trick', short:'Zambini',
+  alt:{n:'Zambini', s:'Pulls your luck out of a hat.', hp:26, bag:['loaded','loaded','d6','pebble','d6','glass'], t:1, q:[], boss:true, sig:'trick', short:'Zambini',
    d:'A stage magician. Two of your dice land face-down every throw.', sigT:'Two of your dice land face-down every throw. Three at half nerve.',
    half:{add:['copycat'],t:1,big:'For my next trick',small:'Three dice hidden, and Copycat'}, look:{coat:0x1a0a2a,hat:'top',eye:0xc9a0ff,scale:1.25}}},
  {t1:[{n:'Officer Kelly',s:'On the take. On the clock.',    hp:25, bag:['loaded','loaded','pebble','coin','d6','d6'], t:1, q:['loud','tax'], look:{coat:0x1a2a4a,hat:'cap',eye:0x9fd3ff}}],
@@ -203,13 +203,13 @@ function bossOf(act,i){ return ACTS[act].foes.bosses[i||0]; }
 const LIMITS=[
  {n:'Penny Ante',   d:'House rules. Nothing extra.'},
  {n:'Nickel',       d:'Everyone you face has 10% more nerve.'},
- {n:'Dime',         d:'Sharks and bosses bring an extra quirk.'},
- {n:'Quarter',      d:'Everything at the bar costs $1 more.'},
+ {n:'Dime',         d:'Bosses bring an extra quirk.'},
+ {n:'Quarter',      d:'Everything at the bar costs $2 more.'},
  {n:'Half Dollar',  d:'You walk in with 10 less nerve.'},
  {n:'Silver Dollar',d:'From Act II on, their odds are 1 higher.'},
- {n:'Gold Eagle',   d:'No breather on the stairs. The alley heals less.'},
+ {n:'Gold Eagle',   d:'Sharks bring an extra quirk too. No breather on the stairs.'},
  {n:'The Big Board',d:'Everyone has 18% more nerve. Tables pay $2 less.'}];
-function limitMods(lv){ lv=lv||0; return {hp:lv>=7?1.18:lv>=1?1.1:1, extraQ:lv>=2, price:lv>=3?1:0, startHp:lv>=4?-10:0, odds:lv>=5?1:0, stairs:lv>=6?0:.5, rest:lv>=6?.25:.4, pay:lv>=7?-2:0}; }
+function limitMods(lv){ lv=lv||0; return {hp:lv>=7?1.18:lv>=1?1.1:1, extraQ:lv>=2, extraQE:lv>=6, price:lv>=3?2:0, startHp:lv>=4?-10:0, odds:lv>=5?1:0, stairs:lv>=6?0:.5, rest:.4, pay:lv>=7?-2:0}; }
 const EXTRA_Q=['cold','fuse','haze','steal','grudge','hot','copycat','sharp','loud'];
 // ---- who you walk in as ----
 const POCKETS=[
@@ -250,7 +250,7 @@ function tierRef(act,kind){ const f=ACTS[act].foes, L=kind==='E'?[...f.e1,...f.e
 function oppHP(def,kind,act,floor,lap,easy){ const w=def.hp/tierRef(act,kind);
   return Math.max(4,Math.round(ACT_HP[act][kind]*w*(kind==='B'?1:1+.08*floor)*(easy?.72:1)*Math.pow(LAP_HP,lap))); }
 function makeOpp(def,kind,act,floor,lap,easy,lv){ let bag=def.bag.slice(); for(let k=0;k<lap;k++){const i=bag.findIndex(b=>b==='d6'||b==='d8'); if(i>=0) bag[i]=k%2?'pebble':'loaded';}
-  const LM=limitMods(lv), q=(def.q||[]).slice(); if(LM.extraQ&&(kind==='E'||kind==='B')){ const ex=EXTRA_Q.filter(x=>!q.includes(x)); if(ex.length) q.push(pick(ex)); }
+  const LM=limitMods(lv), q=(def.q||[]).slice(); if((LM.extraQ&&kind==='B')||(LM.extraQE&&kind==='E')){ const ex=EXTRA_Q.filter(x=>!q.includes(x)); if(ex.length) q.push(pick(ex)); }
   return {...def, hp:Math.round(oppHP(def,kind,act,floor,lap,easy)*LM.hp), odds:ACT_ODDS[act]+(kind==='B'?1:0)+lap+(act>=1?LM.odds:0), bag, q}; }
 // ---- a round's running record; everything that pays is computed from this ----
 function newRound(){ return {crowns:0,gilt:0,ember:0,roller:0,ones:0,threes:0,glass:0,gold:0,bomb:0,snake:false,singles:true,throws:0,evens:0,trips:false,lastBank:0,bubbly:0,viper:0,cnt:{}}; }
@@ -263,7 +263,7 @@ function noteBank(R,faces,types,charms){ R.throws++; if(faces.length!==1) R.sing
   R.ones+=faces.filter(f=>f===1).length; if(faces.filter(f=>f===1).length>=2) R.snake=true;
   R.threes+=faces.filter(f=>f===3).length; R.glass+=types.filter(t=>t==='glass').length;
   faces.forEach((f,i)=>{ if(f==='C'&&types[i]==='gilded') R.gold++; if(f==='C'&&types[i]==='bomb') R.bomb++; });
-  R.cnt=R.cnt||{}; const here={}; faces.forEach((f,i)=>{ R.cnt[f]=(R.cnt[f]||0)+1; here[f]=(here[f]||0)+1;
+  R.cnt={...(R.cnt||{})}; const here={}; faces.forEach((f,i)=>{ R.cnt[f]=(R.cnt[f]||0)+1; here[f]=(here[f]||0)+1;
     if(f===2||f===4||f===6) R.evens=(R.evens||0)+1; if(f==='C'&&types[i]==='bubbly') R.bubbly=(R.bubbly||0)+1; if(f===1&&types[i]==='viper') R.viper=(R.viper||0)+1; if(f===1&&types[i]==='payday') R.payday=(R.payday||0)+1; });
   if(Object.values(here).some(n=>n>=3)) R.trips=true; R.lastBank=faces.length; }
 // After every round: growing charms and round money. Returns $ to pay out. (game endRound and the sim both call this)
