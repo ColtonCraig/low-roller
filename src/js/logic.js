@@ -103,7 +103,26 @@ const QUIRKS={
   sloppy:{name:'Three Sheets',  help:true, desc:'The opponent’s score counts 1 higher every round.'},
   pair: {name:'Two Heads',      desc:'Both twins throw. The opponent keeps the lower total.'},
   loud: {name:'Loudmouth',      desc:'Your odds count 2 lower (never under 1).'},
+  // counters: what bosses and sharks bring to stop a build that's gotten out of hand
+  ironjaw:{name:'Iron Jaw',     desc:'No single round can take more than a third of the opponent’s max nerve.'},
+  flat: {name:'Flat Rate',      desc:'Your × odds don’t count here. Only + odds.'},
+  vig:  {name:'The Vig',        desc:'Your odds are cut in half (rounded down, never under 1).'},
+  jinx: {name:'Jinx',           desc:'Each round, one of your charms is switched off.'},
+  armor:{name:'Bulletproof Vest',desc:'The first round you win at this table does no damage.'},
+  bloodlust:{name:'Bloodlust',  desc:'The opponent’s odds go up by 1 every other round of the fight.'},
+  regen:{name:'Second Wind',    desc:'The opponent gets back 3% of their max nerve after every round.'},
+  crownless:{name:'No Royals',  desc:'Your crowns score 1 instead of 0.'},
+  snakebit:{name:'Snakebit',    desc:'Your first throw each round: your 1s score 2.'},
+  thorns:{name:'Brass Knuckles',desc:'Every round you win, a tenth of the damage comes back at you (1 to 5).'},
 };
+// Balatro-style boss blinds / Spire-style elites: every boss and most sharks draw a counter at random each run,
+// so a build that one-shots one table has to deal with something different at the next.
+const BOSS_RULES=[['armor','regen','bloodlust','snakebit'],['ironjaw','jinx','armor','bloodlust','regen','snakebit','thorns','vig'],['jinx','flat','vig','thorns','bloodlust','regen','snakebit']];
+const SHARK_RULES=['armor','regen','jinx','snakebit','thorns','bloodlust'];
+function rulesFor(kind,act,lap,q){ const add=[], take=pool=>{ const ok=pool.filter(x=>!q.includes(x)&&!add.includes(x)); if(ok.length) add.push(pick(ok)); };
+  if(kind==='B'){ if(act===2||lap>0) add.push('ironjaw'); take(BOSS_RULES[act]); for(let k=0;k<lap;k++) take(BOSS_RULES[2]); }
+  if(kind==='E'&&(act>0||lap>0)){ take(SHARK_RULES); for(let k=0;k<lap;k++) take(SHARK_RULES); }
+  return add; }
 // Three rooms, each with its own regulars, sharks and a boss with a signature move.
 const ACTS=[
  {name:'The Rusty Nail', boss:'Big Sal', short:'Sal', bossD:'The owner. Beat her and the Nail is yours.', est:'EST. 1926',
@@ -165,7 +184,7 @@ const MORE=[
  {t1:[{n:'Dapper Dan',   s:'Tie straight. Odds straighter.',hp:17, bag:['loaded','d6','d6','d6','pebble','d6'], t:2, q:['sharp'], look:{coat:0x2a3a5a,hat:'top',eye:0x9fd3ff}}],
   t2:[{n:'Miss Fortune', s:'Reads your dice before they land.',hp:20, bag:['loaded','loaded','pebble','d6','d6','glass'], t:1, q:['copycat','haze'], look:{coat:0x3a1a4a,hat:'turban',eye:0xe0a0ff}}],
   e2:[{n:'The Magpie',   s:'Anything shiny.',               hp:26, bag:['loaded','loaded','pebble','pebble','d6','coin'], t:1, q:['steal','copycat'], look:{coat:0x101418,hat:'cloche',eye:0x9ff5d3}}],
-  alt:{n:'Zambini', s:'Pulls your luck out of a hat.', hp:24, bag:['loaded','loaded','d6','pebble','d6','glass'], t:1, q:[], boss:true, sig:'trick', short:'Zambini',
+  alt:{n:'Zambini', s:'Pulls your luck out of a hat.', hp:21, bag:['loaded','loaded','d6','pebble','d6','glass'], t:1, q:[], boss:true, sig:'trick', short:'Zambini',
    d:'A stage magician. Two of your dice land face-down every throw.', sigT:'Two of your dice land face-down every throw. Three at half nerve.',
    half:{add:['copycat'],t:1,big:'For my next trick',small:'Three dice hidden, and Copycat'}, look:{coat:0x1a0a2a,hat:'top',eye:0xc9a0ff,scale:1.25}}},
  {t1:[{n:'Officer Kelly',s:'On the take. On the clock.',    hp:25, bag:['loaded','loaded','pebble','coin','d6','d6'], t:1, q:['loud','tax'], look:{coat:0x1a2a4a,hat:'cap',eye:0x9fd3ff}}],
@@ -232,26 +251,28 @@ const FLOORS=[['F'],['F','?'],['F','E','?'],['R','?'],['F','E','?'],['F','E'],['
 const HAND=6;
 // ---- scaling: each act is a new tier, like a new ante. HP grows geometrically, their odds climb. ----
 // nerve at the top of each act for a regular / shark / boss. Regulars and sharks ramp up floor by floor.
-const ACT_HP=[{F:13,E:30,B:52},{F:50,E:70,B:95},{F:125,E:154,B:280}];
+// sharks and bosses carry a random counter (rulesFor), so they run lighter on nerve than they used to
+const ACT_HP=[{F:13,E:26,B:44},{F:50,E:48,B:68},{F:125,E:105,B:165}];
 const ACT_ODDS=[1,2,2.5];           // how hard their wins hit you
-const LAP_HP=3;                     // endless: every lap triples nerve
+const ENDLESS_GROW=2;              // endless: every room past Act III doubles nerve (and adds +1 to their odds)
 function rnd(n){return Math.floor(Math.random()*n)}
 function pick(a){return a[rnd(a.length)]}
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a}
 function facesOf(d){ return (d&&d.f)||DT[typeof d==='string'?d:d.type].faces; }
 function rollFace(type){return pick(DT[type].faces)}
 function rollInst(d){ return pick(facesOf(d)); }
-function effVal(face,ctx){ if(face==='C'||face==='G') return ctx&&ctx.cold?1:ctx&&ctx.ringer?-1:0; if(face===1&&ctx&&ctx.penny) return 0; if(face===1&&ctx&&ctx.ringer) return 3; if(face===2&&ctx&&ctx.deuces) return 1; return face; }
+function effVal(face,ctx){ if(face==='C'||face==='G') return ctx&&ctx.crownless?1:ctx&&ctx.cold?1:ctx&&ctx.ringer?-1:0; if(face===1&&ctx&&ctx.ringer) return 3; if(face===1&&ctx&&ctx.snakebit) return 2; if(face===1&&ctx&&ctx.penny) return 0; if(face===2&&ctx&&ctx.deuces) return 1; return face; }
 function aiKeep(faces,t){ const e=faces.map(f=>effVal(f)); let k=e.map((v,i)=>v<=t?i:-1).filter(i=>i>=0); if(!k.length){let m=0;e.forEach((v,i)=>{if(v<e[m])m=i});k=[m]} return k; }
 function aiRound(bag,t){ let left=bag.map((_,i)=>i), throws=[], total=0;
   while(left.length){ const faces=left.map(i=>rollFace(bag[i])); const kl=aiKeep(faces,t); const kept=kl.map(k=>left[k]); kl.forEach(k=>total+=effVal(faces[k])); throws.push({left:left.slice(),faces,kept}); left=left.filter(i=>!kept.includes(i)); }
   return {throws,total}; }
 function tierRef(act,kind){ const f=ACTS[act].foes, L=kind==='E'?[...f.e1,...f.e2]:kind==='B'?[f.boss]:[...f.t1,...f.t2]; return L.reduce((a,d)=>a+d.hp,0)/L.length; }
-function oppHP(def,kind,act,floor,lap,easy){ const w=def.hp/tierRef(act,kind);
-  return Math.max(4,Math.round(ACT_HP[act][kind]*w*(kind==='B'?1:1+.08*floor)*(easy?.72:1)*Math.pow(LAP_HP,lap))); }
+function oppHP(def,kind,act,floor,lap,easy){ const w=def.hp/tierRef(act,kind), base=lap?ACT_HP[2][kind]*Math.pow(ENDLESS_GROW,3*lap+act-2):ACT_HP[act][kind];
+  return Math.max(4,Math.round(base*w*(kind==='B'?1:1+.08*floor)*(easy?.72:1))); }
 function makeOpp(def,kind,act,floor,lap,easy,lv){ let bag=def.bag.slice(); for(let k=0;k<lap;k++){const i=bag.findIndex(b=>b==='d6'||b==='d8'); if(i>=0) bag[i]=k%2?'pebble':'loaded';}
   const LM=limitMods(lv), q=(def.q||[]).slice(); if((LM.extraQ&&kind==='B')||(LM.extraQE&&kind==='E')){ const ex=EXTRA_Q.filter(x=>!q.includes(x)); if(ex.length) q.push(pick(ex)); }
-  return {...def, hp:Math.round(oppHP(def,kind,act,floor,lap,easy)*LM.hp), odds:ACT_ODDS[act]+(kind==='B'?1:0)+lap+(act>=1?LM.odds:0), bag, q}; }
+  q.push(...rulesFor(kind,act,lap||0,q));
+  return {...def, hp:Math.round(oppHP(def,kind,act,floor,lap,easy)*LM.hp), odds:(lap?ACT_ODDS[2]+3*lap+act-2:ACT_ODDS[act])+(kind==='B'&&q.indexOf('ironjaw')<0?1:0)+(act>=1||lap?LM.odds:0), bag, q}; }
 // ---- a round's running record; everything that pays is computed from this ----
 function newRound(){ return {crowns:0,gilt:0,ember:0,roller:0,ones:0,threes:0,glass:0,gold:0,bomb:0,snake:false,singles:true,throws:0,evens:0,trips:false,lastBank:0,bubbly:0,viper:0,cnt:{}}; }
 function bankVals(faces,ctx,charms,final){ let v=faces.map(f=>effVal(f,ctx));
@@ -271,6 +292,9 @@ function afterRound(G,winner,free){ const has=c=>G.charms.includes(c); G.grow=G.
   if(winner==='you'){ if(has('piggy')) G.grow.piggy=(G.grow.piggy||0)+3; if(has('moonshine')) G.grow.moon=(G.grow.moon||0)+1; }
   if(winner==='them'&&!free){ if(has('piggy')) G.grow.piggy=Math.floor((G.grow.piggy||0)/2); if(has('consolation')) pay+=2; }
   return pay; }
+// Jinx: which charm sits out this round (game and sim both call this at round start)
+function jinxPick(charms,q){ return q.includes('jinx')&&charms.length?pick(charms):null; }
+function regenOf(opp){ return opp.q.includes('regen')?Math.max(1,Math.ceil(opp.hp*.03)):0; }
 // After a fight you win: interest. Returns $.
 function afterFight(G){ return G.charms.includes('savings')?Math.min(5,Math.floor(Math.max(0,G.gold)/10)):0; }
 // env: {gold, wins (rounds won in a row before this one), margin, score, done}
@@ -316,20 +340,27 @@ function oddsOf(R,charms,env){ const P=[]; let add=0, mul=1; const has=c=>charms
   if(has('straight')&&cnt[1]&&cnt[2]&&cnt[3]) M('Straight Shooter',4);
   if(has('bigshot')) M('Big Shot',Math.pow(1.2,charms.length));
   if(env.raid) return {odds:1, add:0, mul:1, parts:[['Raid! Odds forced to','=1']], raid:true};
-  return {odds:Math.max(1,Math.max(1,1+add)*mul), add, mul, parts:P}; }
+  let odds=Math.max(1,Math.max(1,1+add)*mul); const oq=env.q||[];
+  if(oq.includes('flat')&&mul!==1){ odds=Math.max(1,1+add); P.push(['Flat Rate','× off']); }
+  if(oq.includes('vig')){ odds=Math.max(1,Math.floor(odds/2)); P.push(['The Vig','÷2']); }
+  return {odds, add, mul, parts:P}; }
 const fmtOdds=x=>(Math.round(x*10)/10).toString();
 // final reckoning of a round
 function settle(p,oRaw,R,charms,opp,env){ const q=opp.q, has=c=>charms.includes(c);
   const o=theirScore(oRaw,R,charms,q);
   if(p<o){ const margin=Math.max(1,o-p-(has('bouncer')?1:0))+(has('cut')?2:0); const O=oddsOf(R,charms,{...env,margin:o-p-(has('bouncer')?1:0),score:p,done:true});
-    return {winner:'you',gap:o-p,margin,odds:O.odds,parts:O.parts,dmg:Math.max(1,Math.round(margin*O.odds)),oFinal:o,raid:O.raid}; }
+    let dmg=Math.max(1,Math.round(margin*O.odds)), armor=false, capped=false;
+    if(q.includes('ironjaw')){ const cap=Math.ceil((opp.hp||1)/3); if(dmg>cap){ dmg=cap; capped=true; } }
+    if(q.includes('armor')&&!env.wonOnce){ dmg=0; armor=true; }
+    const recoil=q.includes('thorns')&&dmg>0?Math.min(5,Math.max(1,Math.ceil(dmg*.1))):0;
+    return {winner:'you',gap:o-p,margin,odds:O.odds,parts:O.parts,dmg,armor,capped,recoil,oFinal:o,raid:O.raid}; }
   if(p===o+1&&has('nearmiss')) return {winner:'push',dmg:0,oFinal:o,near:true};
   const house=p===o&&opp.sig==='house', sharp=p===o&&!house&&q.includes('sharp');
-  if(p>o||house||sharp){ const gap=house?2:sharp?1:p-o; let dmg=Math.ceil(gap*opp.odds);
+  if(p>o||house||sharp){ const gap=house?2:sharp?1:p-o, tOdds=opp.odds+(q.includes('bloodlust')?Math.floor(Math.max(0,(env.round||1)-1)/2):0); let dmg=Math.ceil(gap*tOdds);
     if(q.includes('hot')&&env.lossStreak>0) dmg+=env.lossStreak;
     if(q.includes('grudge')&&env.oppHalf) dmg+=2;
     if(has('thick')) dmg-=3; dmg=Math.max(1,dmg); if(has('highstakes')) dmg+=1;
-    return {winner:'them',gap,dmg,odds:opp.odds,oFinal:o,house,sharp}; }
+    return {winner:'them',gap,dmg,odds:tOdds,oFinal:o,house,sharp}; }
   return {winner:'push',dmg:0,oFinal:o}; }
 // bar services that change a die for good
 function fileDie(d){ const f=facesOf(d).slice(); let m=-1; f.forEach((x,i)=>{ if(typeof x==='number'&&(m<0||x>f[m])) m=i; }); if(m>=0&&f[m]>1) f[m]=1; d.f=f; return d; }
@@ -351,4 +382,4 @@ function shopDie(act,not){ const t=rollTier(act,RARITY_DICE), pool=SHOP_DICE.fil
 function shopDice(act,n){ const out=[]; for(let i=0;i<n;i++) out.push(shopDie(act,out)); return out; }
 /*LOGIC-END*/
 
-if(typeof module!=='undefined'&&module.exports) module.exports={OFFBOOK_P,OFFBOOK_FEE,offbook,slotsUsed,afterRound,afterFight,rollTier,shopDie,shopDice,RARITY,RARITY_DICE,ACT_HP,DT,SHOP_DICE,CHARMS,QUIRKS,ACTS,FLOORS,HAND,ACT_ODDS,rnd,pick,shuffle,facesOf,rollInst,rollFace,effVal,aiRound,makeOpp,newRound,bankVals,noteBank,oddsOf,settle,genFloors,fileDie,gildDie,canFile,canGild,LIMITS,limitMods,POCKETS,pocketStart,theirScore,breaksAt,bombDmg,isRaid,bossOf,EXTRA_Q};
+if(typeof module!=='undefined'&&module.exports) module.exports={BOSS_RULES,SHARK_RULES,jinxPick,regenOf,rulesFor,ENDLESS_GROW,OFFBOOK_P,OFFBOOK_FEE,offbook,slotsUsed,afterRound,afterFight,rollTier,shopDie,shopDice,RARITY,RARITY_DICE,ACT_HP,DT,SHOP_DICE,CHARMS,QUIRKS,ACTS,FLOORS,HAND,ACT_ODDS,rnd,pick,shuffle,facesOf,rollInst,rollFace,effVal,aiRound,makeOpp,newRound,bankVals,noteBank,oddsOf,settle,genFloors,fileDie,gildDie,canFile,canGild,LIMITS,limitMods,POCKETS,pocketStart,theirScore,breaksAt,bombDmg,isRaid,bossOf,EXTRA_Q};

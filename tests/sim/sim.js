@@ -23,7 +23,7 @@ function finishRound(left,p,R,G,o,first,ctxOf,policy){ while(left.length){ const
 function playRound(hand,G,o,F,T,env,lam,smart){
   let left=hand.slice(), p=0, R=L.newRound(), first=true, spoon=has(G,'spoon');
   if(o.sig==='gift'){ const n=F.p2?2:1; for(let i=0;i<n&&i<left.length;i++) left[i]={type:'d8'}; }
-  const ctxOf=fst=>({cold:o.q.includes('cold')&&fst,penny:has(G,'penny')&&fst,deuces:has(G,'deuces'),ringer:has(G,'ringer')});
+  const ctxOf=fst=>({cold:o.q.includes('cold')&&fst,penny:has(G,'penny')&&fst,deuces:has(G,'deuces'),ringer:has(G,'ringer'),crownless:o.q.includes('crownless'),snakebit:o.q.includes('snakebit')&&fst});
   const crowns=[];
   while(left.length){ const ctx=ctxOf(first); let faces=faceSet(left,ctx);
     if(o.sig==='slam'&&F.p2&&first&&left.length>2){ const ord=faces.map((f,i)=>[L.effVal(f,ctx),i]).sort((a,b)=>a[0]-b[0]); ord.slice(0,2).forEach(([,i])=>faces[i]=L.rollInst(left[i])); }
@@ -54,12 +54,15 @@ function pickFoe(G,kind,act,floor){ const Af=ACTS[act].foes; if(kind==='B') retu
   const used=G.used=G.used||{}, fresh=pool=>{ const un=pool.filter(p=>!used[act+p.n]), nl=pool.filter(p=>p.n!==G.lastFoe); const d=L.pick(un.length?un:nl.length?nl:pool); used[act+d.n]=1; G.lastFoe=d.n; return d; }; // like chooseFoe: no repeats in a room
   if(kind==='E') return fresh(floor<=3?Af.e1:Af.e2);
   let pool=floor<=3?Af.t1:Af.t2; if(floor<2&&act===0&&G.lap===0) pool=pool.filter(p=>!(p.q||[]).some(q=>!L.QUIRKS[q].help)); return fresh(pool); }
+if(A.rule){ const r=A.rule==='none'?[]:[A.rule]; L.BOSS_RULES.forEach(p=>p.splice(0,p.length,...r)); L.SHARK_RULES.splice(0,L.SHARK_RULES.length,...r); }
 function fight(G,kind,act,floor,smart,stats){ const def=pickFoe(G,kind,act,floor);
   const o=L.makeOpp(def,kind,act,floor,G.lap,kind==='F'&&act===0&&floor<2&&G.lap===0,LV); let oh=o.hp; const F={p2:false,wins:0,loss:0,rabbit:false,heavy:false,rounds:0};
   while(G.hp>0&&oh>0&&F.rounds<80){ F.rounds++; const T=o.q.includes('pair')?Math.min(L.aiRound(o.bag,o.t).total,L.aiRound(o.bag,o.t).total):L.aiRound(o.bag,o.t).total;
     if(o.q.includes('tax')) G.gold=Math.max(0,G.gold-1);
     const hand=L.shuffle(G.bag).slice(0,6+(F.heavy?1:0)); F.heavy=false; hand.forEach(d=>{ if(DT[d.type].breaks) d.cracks=(d.cracks||0)+1; });
-    const env={bag:G.bag.length,round:F.rounds,q:o.q,raid:L.isRaid(o,F.rounds,F.p2),gold:G.gold,rep:G.rep,tally:G.tally,wins:F.wins,lossStreak:F.loss,oppHalf:oh<=o.hp/2,grow:G.grow||{}};
+    // Jinx: one charm sits the round out (the game's has()/live() skip it; afterRound still sees the full set)
+    const allCh=G.charms, jx=L.jinxPick(G.charms,o.q); if(jx) G.charms=G.charms.filter(c=>c!==jx);
+    const env={bag:G.bag.length,round:F.rounds,q:o.q,raid:L.isRaid(o,F.rounds,F.p2),gold:G.gold,rep:G.rep,tally:G.tally,wins:F.wins,lossStreak:F.loss,oppHalf:oh<=o.hp/2,grow:G.grow||{},wonOnce:F.won1};
     const lam=Math.max(.6,Math.min(6,oh/Math.max(8,G.hp)));
     const {p,R,crowns}=playRound(hand,G,o,F,T,env,lam,smart);
     crowns.forEach(t=>{ if(has(G,'hothand')) G.hp=Math.min(G.maxHp,G.hp+1); if(has(G,'goldcrown')) G.gold++; if(t==='gamble') G.gold+=3; if(t==='gilded') G.gold+=2; });
@@ -67,12 +70,13 @@ function fight(G,kind,act,floor,smart,stats){ const def=pickFoe(G,kind,act,floor
     const r=L.settle(p,T,R,G.charms,o,env);
     if(stats){ stats.rounds++; if(r.winner==='you'){ stats.w++; stats.odds+=r.odds; stats.hit+=r.dmg; stats.best=Math.max(stats.best,r.dmg); } else if(r.winner==='them'){ stats.l++; stats.taken+=r.dmg; } }
     G.gold+=R.payday||0; let free=false;
-    if(r.winner==='you'){ oh-=r.dmg; F.wins++; F.loss=0; if(has(G,'tip')) G.gold+=2; if(has(G,'bookie')) G.gold+=Math.min(8,r.margin); }
+    if(r.winner==='you'){ oh-=r.dmg; F.wins++; F.loss=0; F.won1=true; if(has(G,'tip')) G.gold+=2; if(has(G,'bookie')) G.gold+=Math.min(8,r.margin); if(r.recoil&&G.hp>1) G.hp-=Math.min(r.recoil,G.hp-1); }
     else if(r.winner==='them'){ let d=r.dmg; if(has(G,'rabbit')&&!F.rabbit){F.rabbit=true;d=0;free=true;} G.hp-=d; if(o.sig==='feed') oh=Math.min(o.hp,oh+d); if(!free){ F.wins=0; F.loss++; if(o.q.includes('steal')) G.gold=Math.max(0,G.gold-3); if(o.q.includes('heavy')) F.heavy=true; } }
     else F.wins=0;
-    G.gold+=L.afterRound(G,r.winner,free);
+    const blood=has(G,'blood'); G.charms=allCh; G.gold+=L.afterRound(G,r.winner,free);
+    if(oh>0) oh=Math.min(o.hp,oh+L.regenOf(o));
     if(o.q.includes('nervous')) oh-=1;
-    if(has(G,'blood')&&G.hp>1) G.hp-=1;
+    if(blood&&G.hp>1) G.hp-=1;
     G.bag=G.bag.filter(d=>!(DT[d.type].breaks&&d.cracks>=L.breaksAt(d.type,G.charms)));
     if(def.boss&&!F.p2&&oh<=o.hp/2){ F.p2=true; const H=def.half||ACTS[act].half; H.add.forEach(q=>{ if(!o.q.includes(q)) o.q.push(q); }); o.t=H.t; } }
   if(oh<=0) G.gold+=L.afterFight(G);

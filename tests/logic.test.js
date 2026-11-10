@@ -230,5 +230,35 @@ test('Picking dice without banking never leaks into the round (shallow copies)',
   const R = L.newRound(); L.noteBank(R, [1], ['d6'], []); const R2 = { ...R }; L.noteBank(R2, [2, 3], ['d6', 'd6'], []);
   assert.equal(L.oddsOf(R, ['straight'], env({})).odds, 1); assert.equal(L.oddsOf(R2, ['straight'], env({})).odds, 4);
 });
+// ---- counters ----
+const O = (q, hp = 100, odds = 1) => ({ q, hp, odds });
+test('Iron Jaw caps a round at a third of max nerve', () => {
+  const r = L.settle(0, 30, L.newRound(), ['highstakes'], O(['ironjaw'], 90), env({}));
+  assert.equal(r.dmg, 30); assert.ok(r.capped);
+});
+test('Bulletproof Vest: the first win does nothing, later wins hit', () => {
+  assert.equal(L.settle(1, 5, L.newRound(), [], O(['armor']), env({})).dmg, 0);
+  assert.equal(L.settle(1, 5, L.newRound(), [], O(['armor']), env({ wonOnce: true })).dmg, 4);
+});
+test('Flat Rate drops x odds; The Vig halves odds', () => {
+  const R = L.newRound(); R.crowns = 2;
+  assert.equal(L.oddsOf(R, ['jewels', 'kingpin'], env({ q: ['flat'] })).odds, 3);
+  assert.equal(L.oddsOf(R, ['jewels'], env({ q: ['vig'] })).odds, 1);
+});
+test('Bloodlust: +1 to their odds every other round', () => {
+  assert.equal(L.settle(5, 3, L.newRound(), [], O(['bloodlust'], 100, 1), env({ round: 5 })).dmg, 6);
+});
+test('Brass Knuckles sends back a tenth, 1 to 5', () => {
+  assert.equal(L.settle(0, 4, L.newRound(), [], O(['thorns']), env({})).recoil, 1);
+  assert.equal(L.settle(0, 20, L.newRound(), ['highstakes'], O(['thorns']), env({})).recoil, 4);
+  assert.equal(L.settle(0, 90, L.newRound(), ['highstakes'], O(['thorns']), env({})).recoil, 5);
+});
+test('Second Wind heals 3% of max; Snakebit 1s score 2', () => {
+  assert.equal(L.regenOf(O(['regen'], 200)), 6); assert.equal(L.effVal(1, { snakebit: true }), 2);
+});
+test('Endless keeps climbing: lap 1 is harder than Act III', () => {
+  const a3 = L.makeOpp(L.ACTS[2].foes.t1[0], 'F', 2, 2, 0, false, 0), l1 = L.makeOpp(L.ACTS[0].foes.t1[0], 'F', 0, 2, 1, false, 0);
+  assert.ok(l1.hp > a3.hp && l1.odds > a3.odds);
+});
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

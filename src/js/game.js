@@ -859,7 +859,9 @@ let G=null, F=null, busy=false;
 function best(){ try{return +localStorage.getItem('lr-best')||0}catch(e){return 0} }
 function saveBest(n){ try{ if(n>best()) localStorage.setItem('lr-best',n);}catch(e){} }
 function newRun(mode,lv,pk){ lv=lv||0; pk=pk||'regular'; const P=pocketStart(pk), hp0=P.hp+limitMods(lv).startHp; G={grow:{},mode,limit:lv,pocket:pk,bossIx:[rnd(2),rnd(2),rnd(2)],act:0,tab:0,lap:0,floor:0,path:[],floors:genFloors(),hp:hp0,maxHp:hp0,gold:P.gold,rep:0,tally:0,filePrice:5,gildPrice:P.gild,bag:P.bag.map(newDie),charms:P.charms.slice(),won:0,used:{},stats:{rounds:0,won:0,lost:0,push:0,dealt:0,taken:0,best:0,bestWho:'',low:50,rich:10,bosses:[],crowns:0,banked:0,earned:0,spent:0,t0:Date.now()}}; if(P.ruby) gildDie(G.bag[0]); }
-const has=c=>G.charms.includes(c);
+// a Jinx switches one charm off for the round: has() and live() both skip it
+const has=c=>G.charms.includes(c)&&!(F&&F.jinx===c);
+const live=()=>F&&F.jinx?G.charms.filter(c=>c!==F.jinx):G.charms;
 const LIM=()=>limitMods(G&&G.limit);
 const BOSS=()=>bossOf(G.act,(G.bossIx||[])[G.act]||0);
 function store(k,v){ try{ if(v===undefined) return JSON.parse(localStorage.getItem(k)||'null'); localStorage.setItem(k,JSON.stringify(v)); }catch(e){ return null; } }
@@ -1137,7 +1139,7 @@ let _fightAt=0;
 // what a fight carries from round to round (startRound resets everything else). Saved as G.fight:
 // at the fight's start and between rounds (no sim), at each round start (+ their pre-rolled throw and
 // the seed for your draw and throws), and when the round ends (+ end: the result, replayed on reload)
-const FIGHT_KEYS=['oppHp','oppMax','round','wins','streak','heavy','phase2','rabbitUsed'];
+const FIGHT_KEYS=['oppHp','oppMax','round','wins','streak','heavy','phase2','rabbitUsed','wonOnce'];
 function saveFight(x){ if(!G||!F) return; const s={kind:F.kind,opp:F.opp}; FIGHT_KEYS.forEach(k=>{ if(F[k]!==undefined) s[k]=F[k]; }); G.at='fight'; G.fight={...s,...(x||{})}; saveRun(); }
 // your draw and throws come off a per-round seeded stream, so reloading can't reroll them
 function mkRng(a){ a=a>>>0; return ()=>{ a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
@@ -1182,7 +1184,7 @@ function acts(x){ const a=$('#acts'); if(a) a.innerHTML=x; }
 function setP(v){ const e=$('#pscore'); if(e) e.innerHTML=`${v<0?'\u2212'+(-v):v}<small>You</small>`; }
 function setVs(v){ const e=$('#vs'); if(e) e.innerHTML=`${v}<small>Them</small>`; }
 function updOpp(){ const b=$('#obar'); if(!b) return; b.style.width=Math.max(0,100*F.oppHp/F.oppMax)+'%'; $('#otxt').textContent=`${Math.max(0,F.oppHp)}`; }
-function ctx(){ return {cold:F.opp.q.includes('cold')&&F.throwNo<=1,penny:has('penny')&&F.throwNo<=1,deuces:has('deuces'),ringer:has('ringer')}; }
+function ctx(){ const q=F.opp.q; return {cold:q.includes('cold')&&F.throwNo<=1,penny:has('penny')&&F.throwNo<=1,deuces:has('deuces'),ringer:has('ringer'),crownless:q.includes('crownless'),snakebit:q.includes('snakebit')&&F.throwNo<=1}; }
 const tray=()=>F.you.filter(o=>!o.banked);
 function minBank(){ return F.opp.q.includes('fuse')&&F.throwNo===1?Math.min(2,tray().length):1; }
 
@@ -1190,7 +1192,8 @@ async function startRound(pre){
   if(!F) return; const myF=F; sweepDice(); fitCam(); busy=true; if(!pre) F.round++; F.pScore=0; F.oScore=0; F.target=null; F._shownT=null; F._prevR=null; F.R=newRound(); F.spoonUsed=false; F.throwNo=0; F.railN={you:0,them:0}; F.labelsOn=false;
   setP(0); setVs('–'); acts(''); updOdds(); $('#sitting').innerHTML='<span>Shaking the cup</span>';
   msg(`Round ${F.round}. <b>${F.opp.n}</b> throws first.`);
-  if(!pre) pre={sim:aiRound(F.opp.bag,F.opp.t),simB:F.opp.q.includes('pair')?aiRound(F.opp.bag,F.opp.t):null,seed:(Math.random()*4294967296)>>>0};
+  if(!pre) pre={sim:aiRound(F.opp.bag,F.opp.t),simB:F.opp.q.includes('pair')?aiRound(F.opp.bag,F.opp.t):null,seed:(Math.random()*4294967296)>>>0,jinx:jinxPick(G.charms,F.opp.q)};
+  F.jinx=pre.jinx||null; refreshRack(); if(F.jinx) toast(`<b class="r">Jinx.</b> ${CHARMS[F.jinx].name} sits this round out.`);
   F.pre={sim:pre.sim,simB:pre.simB||null,seed:pre.seed>>>0}; F.rng=mkRng(F.pre.seed); saveFight(F.pre);
   let sim=F.pre.sim;
   await tip('theirs');
@@ -1247,7 +1250,7 @@ async function hopDice(list){ F.labelsOn=false; await Promise.all(list.map((o,i)
 function toggleSel(o){ if(busy||o.banked||o.flying) return; setSel(o,!o.sel); if(o.sel){ dustAt(toScreen(o.mesh.position)); const m=o.mesh; let last=0; anim(320,k=>{ const e=ease.out(k); m.rotateOnWorldAxis(new THREE.Vector3(0,1,0),(e-last)*Math.PI*2); last=e; }); } o.pop=1; o.sel?SFX.pick():SFX.unpick(); refreshActs(); }
 function refreshActs(){
   if(!F) return; const sel=tray().filter(o=>o.sel), need=minBank();
-  const proj=bankVals(sel.map(o=>o.face),ctx(),G.charms,sel.length===tray().length).reduce((a,b)=>a+b,0), spoon=has('spoon')&&!F.spoonUsed; updOdds(false,sel);
+  const proj=bankVals(sel.map(o=>o.face),ctx(),live(),sel.length===tray().length).reduce((a,b)=>a+b,0), spoon=has('spoon')&&!F.spoonUsed; updOdds(false,sel);
   acts(`${spoon?`<button class="btn ghost small" id="spoon" ${sel.length===1?'':'disabled'}>Bent Spoon</button>`:''}<button class="btn go" id="bank" ${sel.length>=need?'':'disabled'}>${sel.length?`Bank ${sel.length}${sel.some(o=>o.hidden)?'':` · +${proj}`}`:need>1?'Pick two':'Pick dice'}</button>`);
   $('#bank').onclick=bank;
   if(spoon) $('#spoon').onclick=async()=>{ if(busy) return; const o=tray().find(x=>x.sel); if(!o) return; F.spoonUsed=true; busy=true; acts(''); setSel(o,false); await throwDice([o],[seeded(()=>rollInst(o.inst))],'you',-1,{slots:[o.home.clone()]}); if(o.face==='C') sparksAt(dieScreen(o)); busy=false; refreshActs(); };
@@ -1256,8 +1259,8 @@ async function bank(){
   if(busy||!F) return; const sel=tray().filter(o=>o.sel); if(sel.length<minBank()) return;
   busy=true; acts('');
   const faces=sel.map(o=>o.face), oddsBefore=curOdds().odds;
-  const vals=bankVals(faces,ctx(),G.charms,sel.length===tray().length);
-  noteBank(F.R,faces,sel.map(o=>o.inst.type),G.charms);
+  const vals=bankVals(faces,ctx(),live(),sel.length===tray().length);
+  noteBank(F.R,faces,sel.map(o=>o.inst.type),live());
   for(let i=0;i<sel.length;i++){ const o=sel[i]; o.banked=true; setSel(o,false); if(o.label) o.label.style.opacity=0;
     if(o.hidden) setFaces(o,o.face,false);
     SFX.bank(i); floatAt(dieScreen(o),vals[i]<0?'\u2212'+(-vals[i]):vals[i]===0?'0':'+'+vals[i],vals[i]<=0?'zero':'pts');
@@ -1281,14 +1284,14 @@ function crownFx(o){ const p=dieScreen(o); sparksAt(p, o.face==='G'?'#ff5c6f':nu
   if(has('hothand')) heal(1,$('#hpbar'));
   if(has('goldcrown')) addGold(1,$('#cash')); }
 // what you'd be paid right now, if the round ended on your current score
-const tgt=(R)=>F.target==null?null:theirScore(F.oScore,R||F.R||newRound(),G.charms,F.opp.q);
-function oddsEnv(done){ return {bag:G.bag.length,round:F.round,q:F.opp.q,raid:isRaid(F.opp,F.round,F.phase2),gold:G.gold,rep:G.rep,tally:G.tally,wins:F.wins||0,margin:F.target!=null?tgt()-F.pScore-(has('bouncer')?1:0):0,score:F.pScore,done,grow:G.grow||{},oppHalf:F.oppHp<=F.oppMax/2}; }
-function curOdds(done,R){ return oddsOf(R||F.R||newRound(),G.charms,oddsEnv(done)); }
-function updOdds(bump,sel){ if(!F) return; let R2=null, add=0; if(sel&&sel.length&&!sel.some(o=>o.hidden)){ R2={...(F.R||newRound())}; noteBank(R2,sel.map(o=>o.face),sel.map(o=>o.inst.type),G.charms); add=bankVals(sel.map(o=>o.face),ctx(),G.charms,sel.length===tray().length).reduce((a,b)=>a+b,0); }
+const tgt=(R)=>F.target==null?null:theirScore(F.oScore,R||F.R||newRound(),live(),F.opp.q);
+function oddsEnv(done){ return {bag:G.bag.length,round:F.round,q:F.opp.q,raid:isRaid(F.opp,F.round,F.phase2),gold:G.gold,rep:G.rep,tally:G.tally,wins:F.wins||0,margin:F.target!=null?tgt()-F.pScore-(has('bouncer')?1:0):0,score:F.pScore,done,grow:G.grow||{},oppHalf:F.oppHp<=F.oppMax/2,wonOnce:!!F.wonOnce}; }
+function curOdds(done,R){ return oddsOf(R||F.R||newRound(),live(),oddsEnv(done)); }
+function updOdds(bump,sel){ if(!F) return; let R2=null, add=0; if(sel&&sel.length&&!sel.some(o=>o.hidden)){ R2={...(F.R||newRound())}; noteBank(R2,sel.map(o=>o.face),sel.map(o=>o.inst.type),live()); add=bankVals(sel.map(o=>o.face),ctx(),live(),sel.length===tray().length).reduce((a,b)=>a+b,0); }
   const full=!!(sel&&sel.length&&sel.length===tray().length); F._prevR=R2; const O=curOdds(full,R2), eq=$('#eq'); if(!eq) return;
   const set=(id,v,l)=>{ const e=$('#'+id); e.innerHTML=`<b>${v}</b><small>${l}</small>`; };
   const known=F.target!=null&&F.target!=='–';
-  const r=known?settle(F.pScore+add,F.oScore,R2||F.R||newRound(),G.charms,F.opp,{...oddsEnv(true),lossStreak:F.streak||0,oppHalf:F.oppHp<=F.oppMax/2}):null;
+  const r=known?settle(F.pScore+add,F.oScore,R2||F.R||newRound(),live(),F.opp,{...oddsEnv(true),lossStreak:F.streak||0,oppHalf:F.oppHp<=F.oppMax/2}):null;
   eq.classList.toggle('bad',!!r&&r.winner==='them'); eq.classList.toggle('even',!!r&&r.winner==='push');
   if(!known){ set('eqgap','?','Ahead by'); set('odds',fmtOdds(O.odds),'Your odds'); set('pays','?','They lose'); }
   else if(r.winner==='you'){ set('eqgap',r.margin,has('cut')?'Ahead +2 cut':'Ahead by'); set('odds',fmtOdds(r.odds),r.raid?'Raid odds':'Your odds'); set('pays',r.dmg,'They lose'); }
@@ -1324,11 +1327,14 @@ async function resumeEnd(e){ sweepDice(); fitCam(); busy=true;
 async function endRound(){
   busy=true; F.labelsOn=false;
   saveFight({end:{pScore:F.pScore,oScore:F.oScore,target:F.target,R:F.R,throwNo:F.throwNo,hand:F.hand.map(d=>G.bag.indexOf(d)).filter(i=>i>=0)}});
-  const r=settle(F.pScore,F.oScore,F.R,G.charms,F.opp,{...oddsEnv(true),lossStreak:F.streak||0,oppHalf:F.oppHp<=F.oppMax/2});
+  const r=settle(F.pScore,F.oScore,F.R,live(),F.opp,{...oddsEnv(true),lossStreak:F.streak||0,oppHalf:F.oppHp<=F.oppMax/2});
   if(r.house) toast('<b class="r">Ties go to the house.</b>');
   if(r.sharp) toast('<b class="r">Sharp.</b> Ties go to them.');
   if(r.near) toast('<b>Near Miss.</b> Lost by one. Nobody bleeds.');
   if(r.raid) toast('<b class="r">Raid.</b> Your odds were 1 this round.');
+  if(r.armor) toast('<b class="r">Bulletproof Vest.</b> Your first win here bounced off.');
+  else if(r.capped) toast('<b class="r">Iron Jaw.</b> No round takes more than a quarter of their nerve.');
+  if(r.winner==='you') F.wonOnce=true;
   if(r.winner==='you'&&has('bookie')) addGold(Math.min(8,r.margin),$('#cash'));
   if(r.winner==='them'&&has('rabbit')&&!F.rabbitUsed){ F.rabbitUsed=true; r.dmg=0; r.free=true; toast('<b>Rabbit\u2019s Foot</b> takes the hit.'); }
   if(r.winner==='them'&&!r.free){ F.streak=(F.streak||0)+1; F.wins=0; if(F.opp.q.includes('heavy')) F.heavy=true; }
@@ -1339,6 +1345,7 @@ async function endRound(){
     await payOut(r);
     F.oppHp-=r.dmg; updOpp(); floatEl($('#obar'),'−'+r.dmg,'dmg'+(r.dmg>=F.oppMax*.5?' big':'')); shake(Math.min(.4,.1+.3*r.dmg/F.oppMax)); foeRecoil();
     if(has('tip')) addGold(2,$('#cash'));
+    if(r.recoil&&G.hp>1){ const k=Math.min(r.recoil,G.hp-1); G.hp-=k; G.stats.taken+=k; updTop(); setTimeout(()=>floatEl($('#hpbar'),'\u2212'+k,'dmg'),400); toast(`<b class="r">Brass Knuckles.</b> ${k} came back at you.`); }
   } else if(r.winner==='them'){ G.stats.lost++; G.stats.taken+=r.dmg;
     msg(`<span class="big lose">Took ${r.dmg}</span><span class="math">over by ${r.gap} \u00d7 their odds ${fmtOdds(r.odds)}${F.opp.q.includes('hot')&&F.streak>1?' + hot streak':''}</span>`); SFX.lose(); setTimeout(SFX.hurt,130);
     G.hp-=r.dmg; G.stats.low=Math.min(G.stats.low??50,G.hp); updTop(); floatEl($('#hpbar'),'−'+r.dmg,'dmg'); shake(.3); if(PMAT) PMAT.uniforms.hurt.value=.6; foeLaugh();
@@ -1347,6 +1354,7 @@ async function endRound(){
   } else { G.stats.push++; F.wins=0; msg(`<span class="big push">Push</span>Both on ${F.pScore}. Nobody bleeds.`); SFX.push(); }
   updOdds();
   if(has('blood')&&G.hp>1){ G.hp-=1; G.stats.taken+=1; updTop(); floatEl($('#hpbar'),'\u22121','dmg'); }
+  { const rg=regenOf(F.opp); if(rg&&F.oppHp>0&&F.oppHp<F.oppMax){ const hl=Math.min(rg,F.oppMax-F.oppHp); F.oppHp+=hl; updOpp(); floatEl($('#obar'),'+'+hl,'heal'); } }
   if(F.opp.q.includes('nervous')&&F.oppHp>0){ await sleep(500); F.oppHp-=1; G.stats.dealt+=1; updOpp(); floatEl($('#obar'),'−1','dmg'); toast('<b>Nervous Wreck.</b> Their hands are shaking.'); }
   await sleep(1100); await tip('result');
   const broke=F.hand.filter(d=>DT[d.type].breaks&&d.cracks>=breaksAt(d.type,G.charms));
@@ -1492,7 +1500,7 @@ function renderShop(){
 }
 
 /* ---- the charm rack: always up top, hover to read, tap to sell ---- */
-function rackHTML(){ if(!G) return ''; const tok=c=>`<button class="token ${G._newCharm===c?'new':''}${offbook(G,c)?' offbook':''}" data-c="${c}" data-tip="${CHARMS[c].name}: ${CHARMS[c].desc.replace(/"/g,'&quot;')}" aria-label="${CHARMS[c].name}">${chipHTML(c)}${c==='tally'?`<span class="notch">${G.tally}</span>`:''}</button>`;
+function rackHTML(){ if(!G) return ''; const tok=c=>`<button class="token ${G._newCharm===c?'new':''}${offbook(G,c)?' offbook':''}${F&&F.jinx===c?' jinxed':''}" data-c="${c}" data-tip="${CHARMS[c].name}: ${CHARMS[c].desc.replace(/"/g,'&quot;')}" aria-label="${CHARMS[c].name}">${chipHTML(c)}${c==='tally'?`<span class="notch">${G.tally}</span>`:''}</button>`;
   const on=G.charms.filter(c=>!offbook(G,c)), off=G.charms.filter(c=>offbook(G,c)), slots=[];
   for(let i=0;i<MAX_CHARMS;i++) slots.push(on[i]?tok(on[i]):'<span class="token empty"></span>'); off.forEach(c=>slots.push(tok(c)));
   return `<div class="rack plate pe" id="rack"><div class="sc">Charms</div><div class="tokens">${slots.join('')}</div></div>`; }
