@@ -1459,7 +1459,7 @@ async function endRound(){
   if(r.winner==='them'&&has('rabbit')&&!F.rabbitUsed){ F.rabbitUsed=true; r.dmg=0; r.free=true; toast('<b>Rabbit\u2019s Foot</b> takes the hit.'); }
   if(r.winner==='them'&&F.wall&&r.dmg>0){ const sk=soak(F.wall,r.dmg); r.dmg=sk.dmg; F.wall=sk.guard; toast(`<b>Guard</b> soaks ${sk.soaked}.${F.wall?` ${F.wall} left.`:''}`); updGuard(); refreshRack(); }
   if(r.winner==='you'&&has('bodyguard')){ F.wall=(F.wall||0)+3; trigFx('The Bodyguard','+3',0); updGuard(); refreshRack(); }
-  if(!r.fold){ const up=notePlays(G,F.R,{...oddsEnv(true),score:F.pScore}); up.forEach((k,i)=>setTimeout(()=>toast(`<b>${PLAYS[k].name}</b> is level ${playLv(G.plays,k)} now. Word gets around.`),1400+i*700)); if(up.length) tip('plays'); }
+  { const up=notePlays(G,F.R,{...oddsEnv(true),score:F.pScore}); up.forEach((k,i)=>setTimeout(()=>toast(`<b>${PLAYS[k].name}</b> is level ${playLv(G.plays,k)} now. Word gets around.`),1400+i*700)); if(up.length) tip('plays'); }
   if(r.winner==='them'&&!r.free){ F.streak=(F.streak||0)+1; F.wins=0; if(F.opp.q.includes('heavy')) F.heavy=true; }
   else if(r.winner==='you'){ F.streak=0; F.wins=(F.wins||0)+1; }
   G.stats.rounds++;
