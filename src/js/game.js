@@ -5,7 +5,7 @@ let AC=null, master=null, sfxBus=null, musicBus=null;
 const SET={music:.6,sfx:.8,speed:1.6,grain:true,shake:true,tips:true,deal:'quick',auto:true};
 try{ Object.assign(SET,JSON.parse(localStorage.getItem('lr-set')||'{}')); }catch(e){}
 let sfxOn=SET.sfx>0;
-function saveSet(){ try{localStorage.setItem('lr-set',JSON.stringify(SET))}catch(e){} applySet(); }
+function saveSet(){ SET._t=Date.now(); try{localStorage.setItem('lr-set',JSON.stringify(SET))}catch(e){} applySet(); }
 function applySet(){ sfxOn=SET.sfx>0; if(AC){ sfxBus.gain.setTargetAtTime(SET.sfx*1.1,AC.currentTime,.05); musicBus.gain.setTargetAtTime(SET.music*.75,AC.currentTime,.1); } document.body.classList.toggle('nograin',!SET.grain); }
 
 function ac(){
@@ -2016,7 +2016,7 @@ function menuPage(tab){
   if(tab==='night'){ if(!G) return '<div class="empty">No run in progress. Take a seat first.</div>'; return nightHTML(); }
   if(tab==='bag'){ if(!G) return '<div class="empty">No run in progress.</div>'; return `<div class="secthead">Your Dice<small>${G.bag.length} in the bag. Six come out each round.</small></div><div id="mb1"></div><div class="mrule"></div><div class="secthead">Your Charms<small>Always working. You carry ${slotsUsed(G)} of ${charmSlots(G)}${G.charms.length>slotsUsed(G)?`, plus ${G.charms.length-slotsUsed(G)} off the books`:''}.</small></div><div id="mb2"></div>${(G.fix||[]).length?`<div class="mrule"></div><div class="secthead">Fixtures<small>Yours for the night.</small></div><div class="list">${G.fix.map(f=>`<div class="item"><div><div class="iname">${FIXTURES[f].name}</div><div class="idesc">${kw(FIXTURES[f].desc)}</div></div></div>`).join('')}</div>`:''}${chitsHTML()?`<div class="mrule"></div><div class="secthead">Chits waiting<small>They spend themselves.</small></div><div class="chitrow">${chitsHTML()}</div>`:''}`; }
   if(tab==='book') return bookHTML();
-  if(tab==='settings') return `<div class="secthead">Settings<small>Saved on this device.</small></div>
+  if(tab==='settings') return `<div class="secthead">Settings<small>Saved with your game, on every device.</small></div>
     <div class="set"><label for="volm">Music</label><input class="dial" id="volm" type="range" min="0" max="10" step="1" value="${Math.round(SET.music*10)}"><span class="sv" id="volmv">${Math.round(SET.music*10)}</span></div>
     <div class="set"><label for="vols">Sound</label><input class="dial" id="vols" type="range" min="0" max="10" step="1" value="${Math.round(SET.sfx*10)}"><span class="sv" id="volsv">${Math.round(SET.sfx*10)}</span></div>
     <div class="set"><span class="lab">Their turn</span><div class="opts" data-k="speed">${SPEEDS.map(([v,n])=>`<button class="opt ${SET.speed===v?'on':''}" data-v="${v}">${n}</button>`).join('')}</div></div>

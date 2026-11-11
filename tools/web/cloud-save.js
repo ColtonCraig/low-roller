@@ -24,7 +24,12 @@
   const parse = (v) => { try { return JSON.parse(v); } catch (e) { return null; } };
   function union(a, b) { if (!a || typeof a !== 'object') return b; if (!b || typeof b !== 'object') return a; const o = { ...a };
     Object.keys(b).forEach((k) => { o[k] = (o[k] && typeof o[k] === 'object' && typeof b[k] === 'object') ? union(o[k], b[k]) : (o[k] || b[k]); }); return o; }
+  // Settings and your last loadout pick belong to you, not to one copy of the save: a copy that never touched them can't
+  // wipe them, and when both have them the most recently changed one wins (settings carry their own _t stamp).
+  const KEEPK = ['lr-set', 'lr-pick'];
+  const stamp = (v) => (parse(v) || {})._t || 0;
   function mergeKV(win, other) { const o = { ...win }; if (!other) return o;
+    KEEPK.forEach((k) => { if (other[k] == null) return; if (o[k] == null || stamp(other[k]) > stamp(o[k])) o[k] = other[k]; });
     MAXK.forEach((k) => { const a = +parse(o[k]) || 0, b = +parse(other[k]) || 0; if (a || b) o[k] = JSON.stringify(Math.max(a, b)); });
     UNIONK.forEach((k) => { const a = parse(o[k]), b = parse(other[k]); if (a || b) o[k] = JSON.stringify(union(a || {}, b || {})); });
     return o; }
@@ -102,6 +107,9 @@
     if (document.visibilityState === 'hidden') { clearTimeout(timer); push(); }
     else reconcile();
   });
+
+  // Settings lost to the old sync (a copy without them used to replace this device's): bring back the newest backed-up ones.
+  try { if (LS.getItem('lr-set') == null) { const bk = parse(LS.getItem('_lrBak')) || [], hit = bk.find((b) => b && b.kv && b.kv['lr-set']); if (hit) oSet.call(LS, 'lr-set', hit.kv['lr-set']); } } catch (e) {}
 
   // Start the game once synced, or after 4 s with whatever is on this device (it catches up when the cloud answers).
   setTimeout(startGame, 4000);
