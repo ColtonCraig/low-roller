@@ -18,7 +18,20 @@
     return kv;
   }
   function localAt() { return +LS.getItem(AT) || 0; }
+  // Progress only ever goes up: unlocked limits, owners beaten, best nights, the Collection and seen tips are merged
+  // (max / union) whichever copy wins, so an older device or an update can never take them away.
+  const MAXK = ['lr-limit', 'lr-bossn', 'lr-best', 'lr-bestscore'], UNIONK = ['lr-book', 'lr-tips'];
+  const parse = (v) => { try { return JSON.parse(v); } catch (e) { return null; } };
+  function union(a, b) { if (!a || typeof a !== 'object') return b; if (!b || typeof b !== 'object') return a; const o = { ...a };
+    Object.keys(b).forEach((k) => { o[k] = (o[k] && typeof o[k] === 'object' && typeof b[k] === 'object') ? union(o[k], b[k]) : (o[k] || b[k]); }); return o; }
+  function mergeKV(win, other) { const o = { ...win }; if (!other) return o;
+    MAXK.forEach((k) => { const a = +parse(o[k]) || 0, b = +parse(other[k]) || 0; if (a || b) o[k] = JSON.stringify(Math.max(a, b)); });
+    UNIONK.forEach((k) => { const a = parse(o[k]), b = parse(other[k]); if (a || b) o[k] = JSON.stringify(union(a || {}, b || {})); });
+    return o; }
+  // the last three copies of this device's data, kept outside the synced keys, before anything replaces them
+  function backup() { try { const bk = parse(LS.getItem('_lrBak')) || []; bk.unshift({ t: now(), kv: snapshot() }); oSet.call(LS, '_lrBak', JSON.stringify(bk.slice(0, 3))); } catch (e) {} }
   function apply(kv, at) {
+    backup(); kv = mergeKV(kv, snapshot());
     Object.keys(snapshot()).forEach((k) => oDel.call(LS, k));
     Object.keys(kv).forEach((k) => { if (isGame(k)) oSet.call(LS, k, kv[k]); });
     oSet.call(LS, AT, String(at));
@@ -34,7 +47,13 @@
     if (!ref || !synced) return;
     if (writing) { again = true; return; }
     writing = true;
-    try { await ref.set({ data: JSON.stringify(snapshot()), at: localAt() }); } catch (e) {}
+    try {
+      // never overwrite a newer copy (another device played since): take theirs instead, keeping our progress
+      const snap = await ref.get(), r = snap.exists ? snap.data() : null, rkv = r && typeof r.data === 'string' ? parse(r.data) : null;
+      if (r && rkv && (r.at || 0) > localAt()) { apply(rkv, r.at); writing = false; if (started) location.reload(); return; }
+      const kv = mergeKV(snapshot(), rkv); [...MAXK, ...UNIONK].forEach((k) => { if (kv[k] != null && kv[k] !== LS.getItem(k)) oSet.call(LS, k, kv[k]); });
+      await ref.set({ data: JSON.stringify(kv), at: localAt() });
+    } catch (e) {}
     writing = false;
     if (again) { again = false; push(); }
   }
@@ -57,6 +76,7 @@
     const first = !synced, r = snap.exists ? snap.data() : null, mine = first ? bootAt : localAt(); synced = true;
     if (r && typeof r.data === 'string' && (r.at || 0) > mine) {
       let kv; try { kv = JSON.parse(r.data); } catch (e) { return; }
+      if (!kv || typeof kv !== 'object') return;
       apply(kv, r.at || now());
       if (started) location.reload();               // the running game has the old save in memory
       return;

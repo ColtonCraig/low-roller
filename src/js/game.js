@@ -883,7 +883,7 @@ const BOSS=()=>bossOf(G.act,(G.bossIx||[])[G.act]||0);
 function store(k,v){ try{ if(v===undefined) return JSON.parse(localStorage.getItem(k)||'null'); localStorage.setItem(k,JSON.stringify(v)); }catch(e){ return null; } }
 // the limit ladder grew from 8 rungs to 12: move saved progress to the same rung on the new ladder, once
 (function(){ try{ const v=localStorage.getItem('lr-limv'); if(v==='3') return; const map=x=>{ x=x||0; return v?LIMIT_V2[Math.min(11,x)]:LIMIT_V1[Math.min(7,x)]; };
-  const t=store('lr-limit'); if(t) store('lr-limit',map(t)); const pk=store('lr-pick'); if(pk&&pk.lim) store('lr-pick',{...pk,lim:map(pk.lim)});
+  const t=store('lr-limit'); if(t){ let top=0; for(let i=0;i<=t;i++) top=Math.max(top,map(i)); store('lr-limit',top); } // keep every rung you'd unlocked const pk=store('lr-pick'); if(pk&&pk.lim) store('lr-pick',{...pk,lim:map(pk.lim)});
   const sv=JSON.parse(localStorage.getItem('lr-save')||'null'); if(sv&&sv.limit){ sv.limit=map(sv.limit); localStorage.setItem('lr-save',JSON.stringify(sv)); } localStorage.setItem('lr-limv','3'); }catch(e){} })();
 const limitTop=()=>Math.min(LIMITS.length-1,store('lr-limit')||0);
 const bossTotal=()=>store('lr-bossn')||0;
@@ -1266,7 +1266,7 @@ async function startRound(pre){
   setP(0); setVs('–'); acts(''); updOdds(); $('#sitting').innerHTML='<span>Shaking the cup</span>';
   msg(`Round ${F.round}. <b>${F.opp.n}</b> throws first.`);
   if(!pre){ const intent=F.next||rollIntent(F.kind), next=rollIntent(F.kind), tt=intentT(F.opp,intent); pre={intent,next,sim:aiRound(F.opp.bag,tt),simB:F.opp.q.includes('pair')?aiRound(F.opp.bag,tt):null,seed:(Math.random()*4294967296)>>>0,jinx:jinxPick(G.charms,F.opp.q)}; }
-  F.intent=pre.intent||'steady'; F.next=pre.next||'steady'; F.spoonUsed=false;
+  F.intent=INTENTS[pre.intent]?pre.intent:'steady'; F.next=INTENTS[pre.next]?pre.next:'steady'; // saves from older builds may name intents that are gone F.spoonUsed=false;
   { const qz=$('#quirks'); if(qz){ qz.innerHTML=quirkChips(); wireChips(qz); } } if(F.intent!=='steady') tip('intent');
   F.jinx=pre.jinx||null; F.drink={}; refreshRack(); if(F.jinx) toast(`<b class="r">Jinx.</b> ${CHARMS[F.jinx].name} sits this round out.`);
   F.pre={sim:pre.sim,simB:pre.simB||null,seed:pre.seed>>>0,intent:F.intent,next:F.next}; F.rng=mkRng(F.pre.seed); saveFight(F.pre);
@@ -1440,7 +1440,7 @@ async function payOut(r){ const big=r.dmg>=40||r.odds>=5; document.body.classLis
   setTimeout(()=>el.remove(),900); }
 // reloaded after the last bank: the result is already decided, so skip straight to settling it
 async function resumeEnd(e){ sweepDice(); fitCam(); busy=true;
-  Object.assign(F,{intent:e.intent||'steady',next:e.next||'steady',pScore:e.pScore,oScore:e.oScore,target:e.target,R:e.R,throwNo:e.throwNo||1,_shownT:null,_prevR:null,spoonUsed:true,railN:{you:0,them:0},labelsOn:false,you:[],them:[],hand:(e.hand||[]).map(i=>G.bag[i]).filter(Boolean)});
+  Object.assign(F,{intent:INTENTS[e.intent]?e.intent:'steady',next:INTENTS[e.next]?e.next:'steady',pScore:e.pScore,oScore:e.oScore,target:e.target,R:e.R,throwNo:e.throwNo||1,_shownT:null,_prevR:null,spoonUsed:true,railN:{you:0,them:0},labelsOn:false,you:[],them:[],hand:(e.hand||[]).map(i=>G.bag[i]).filter(Boolean)});
   setP(F.pScore); setVs(F.target); updOdds(); $('#sitting').innerHTML=`<span>Sitting on</span><b>${F.target}</b>`;
   msg(`Round ${F.round}. You finished on <b>${F.pScore}</b> against <b>${F.target}</b>.`);
   await sleep(500); if(F) await endRound(); }
@@ -1871,7 +1871,7 @@ async function renderOver(){
   for(const v of [.5,1,.2,.6,.15]){ lampDim=v; await sleep(140); }
   await sleep(500); renderPaper(false,shot); busy=false;
 }
-function renderVictory(){ clearLabels(); SFX.fanfare(); const lv=G.limit||0, up=lv>=limitTop()&&lv<LIMITS.length-1; if(up) store('lr-limit',lv+1); renderPaper(true);
+function renderVictory(){ clearLabels(); SFX.fanfare(); const lv=G.limit||0, up=lv>=limitTop()&&lv<LIMITS.length-1; if(up) store('lr-limit',Math.max(limitTop(),lv+1)); renderPaper(true);
   if(up) setTimeout(()=>toast(`<b>The limit goes up.</b><br><i>${LIMITS[lv+1].n} is open: ${LIMITS[lv+1].d}</i>`),1400); }
 
 /* ================= THE BARTENDER'S NOTES (first-run tutorial) ================= */
@@ -2000,8 +2000,11 @@ document.addEventListener('pointerout',e=>{ const c=e.target.closest&&e.target.c
 function dustAt(p){ if(REDUCED) return; for(let i=0;i<10;i++){ const s=h('<i class="dust"></i>'); s.style.left=p.x+'px'; s.style.top=p.y+'px'; fx.appendChild(s); const a=Math.PI+Math.random()*Math.PI, r=20+Math.random()*30;
   s.animate([{transform:'translate(-50%,-50%) scale(1)',opacity:.8},{transform:`translate(${Math.cos(a)*r}px,${Math.sin(a)*r*.5-10}px) scale(2.2)`,opacity:0}],{duration:500+Math.random()*300,easing:'cubic-bezier(.2,.8,.2,1)'}).onfinish=()=>s.remove(); } }
 
-function saveRun(){ if(!G) return; try{ const o={...G,bag:G.bag.map(d=>({type:d.type,cracks:d.cracks,f:d.f})),stats:{...G.stats,el:Date.now()-G.stats.t0}}; delete o._newCharm; localStorage.setItem('lr-save',JSON.stringify(o)); }catch(e){} }
-function loadRun(){ try{ const o=JSON.parse(localStorage.getItem('lr-save')||'null'); if(!o||!o.bag) return null; o.bag=o.bag.map(d=>({uid:uidN++,type:d.type,cracks:d.cracks||0,...(d.f?{f:d.f}:{})})); o.rep=o.rep||0; o.tally=o.tally||0; o.tab=o.tab||0; o.limit=o.limit||0; o.pocket=o.pocket||'regular'; o.filePrice=o.filePrice||5; o.gildPrice=o.gildPrice||8; o.stats.t0=Date.now()-(o.stats.el||0); return o; }catch(e){ return null; } }
+function saveRun(){ if(!G) return; try{ const o={...G,bag:G.bag.map(d=>({type:d.type,cracks:d.cracks,f:d.f,fin:d.fin})),stats:{...G.stats,el:Date.now()-G.stats.t0}}; delete o._newCharm; localStorage.setItem('lr-save',JSON.stringify(o)); }catch(e){} }
+function loadRun(){ try{ const o=JSON.parse(localStorage.getItem('lr-save')||'null'); if(!o||!o.bag) return null; o.bag=o.bag.filter(d=>DT[d.type]).map(d=>({uid:uidN++,type:d.type,cracks:d.cracks||0,...(d.f?{f:d.f}:{}),...(d.fin&&FINISHES[d.fin]?{fin:d.fin}:{})}));
+  // anything a later update removed or renamed is dropped (or swapped) instead of crashing the run
+  o.charms=(o.charms||[]).filter(c=>CHARMS[c]); o.offbook=(o.offbook||[]).filter(c=>o.charms.includes(c)); o.deeds=(o.deeds||[]).map(k=>k==='loadedcup'?'racket':k).filter(k=>DEEDS[k]);
+  o.drinks=(o.drinks||[]).filter(k=>DRINKS[k]); o.fix=(o.fix||[]).filter(k=>FIXTURES[k]); if(o.nb) Object.keys(o.nb).forEach(k=>{ if(!CHITS[k]) delete o.nb[k]; }); o.rep=o.rep||0; o.tally=o.tally||0; o.tab=o.tab||0; o.limit=o.limit||0; o.pocket=o.pocket||'regular'; o.filePrice=o.filePrice||5; o.gildPrice=o.gildPrice||8; o.stats.t0=Date.now()-(o.stats.el||0); return o; }catch(e){ return null; } }
 function clearSave(){ try{ localStorage.removeItem('lr-save'); }catch(e){} }
 /* ================= BOOT ================= */
 applySet();
