@@ -898,12 +898,16 @@ function floorLabel(){ return (G.mode==='endless'?`Lap ${G.lap+1} · `:'')+`Act 
 
 /* ================= UI PIECES ================= */
 const ROMAN=['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'];
-function soundBtns(){ return `<div class="tabs pe">${G?`<button class="tab" id="bagbtn" aria-label="Your bag">Bag<span class="tc">${G.bag.length}</span></button>`:''}<button class="tab" id="menubtn">Menu</button></div>`; }
+function soundBtns(){ return `<div class="tabs pe">${G?`<button class="tab" id="playsbtn" aria-label="Your Plays">Plays</button><button class="tab" id="bagbtn" aria-label="Your bag">Bag<span class="tc">${G.bag.length}</span></button>`:''}<button class="tab" id="menubtn">Menu</button></div>`; }
 function hud(){ return `<div class="hud pe">
   <div class="tabcard plate"><div class="statb"><span class="sc">Nerve</span><div class="inkbar ${G.hp<=G.maxHp*.25?'low':''}" id="hpw"><i id="hpbar" style="width:${100*G.hp/G.maxHp}%"></i></div><span class="tabnum" id="hptxt">${G.hp}<small>/${G.maxHp}</small></span></div>
     <div class="statb"><span class="cash" id="cash">$${G.gold}</span><span class="chits" id="chits">${chitsHTML()}</span><button class="tabnum owe" id="owe" aria-label="What is the tab?">${G.tab?`tab $${G.tab}`:''}</button></div></div>
   ${rackHTML()}${coatHTML()}<div class="spacer"></div><div class="where">${floorLabel()}</div>${soundBtns()}</div>`; }
-function wireSound(){ const m=$('#menubtn'), b=$('#bagbtn'); if(m) m.onclick=()=>openMenu(); if(b) b.onclick=()=>openMenu('bag'); }
+function wireSound(){ const m=$('#menubtn'), b=$('#bagbtn'), pl=$('#playsbtn'); if(m) m.onclick=()=>openMenu(); if(b) b.onclick=()=>openMenu('bag'); if(pl) pl.onclick=e=>{ e.stopPropagation(); if(popEl&&popEl._for===pl){ closePop(); return; } anchorPop(pl,playsPopHTML()); }; }
+// the Plays card off the top bar: level, what it pays, progress to the next level, and which you've made this round
+function playsPopHTML(){ const now=F&&F.R?playsHit(F.R,{}):[], bb=hasDeed(G,'blackbook');
+  return `<div class="pn">Your Plays</div><div class="pd" style="margin-bottom:8px">Make one and it pays extra that round. Every 4th time, it levels up.</div><div class="plist">${PLAY_KEYS.map(k=>{ const P=PLAYS[k], lv=playLv(G.plays,k), made=(G.playHits||{})[k]||0, n=made%PLAY_EVERY;
+    return `<div class="prow ${now.includes(k)?'hit':''}"><div class="prt"><b>${P.name}</b><span class="nlv">Lv ${lv}</span></div><div class="prd">${P.desc} <span class="pay">+${lv} margin, ${bb?'\u00d71.5':'+'+P.per*lv} odds</span></div><div class="pdots">${[0,1,2,3].map(i=>`<i class="${i<n?'on':''}"></i>`).join('')}<span>${now.includes(k)?'Made this round!':`${PLAY_EVERY-n} to Lv ${lv+1}`}</span></div></div>`; }).join('')}</div>`; }
 function updTop(){ if(G&&G.stats) G.stats.rich=Math.max(G.stats.rich||0,G.gold); const b=$('#hpbar'); if(b){ b.style.width=Math.max(0,100*G.hp/G.maxHp)+'%'; $('#hptxt').innerHTML=`${Math.max(0,G.hp)}<small>/${G.maxHp}</small>`; const w=$('#hpw'); if(w) w.classList.toggle('low',G.hp<=G.maxHp*.25); } const c=$('#cash'); if(c) c.textContent='$'+G.gold; const o=$('#owe'); if(o) o.textContent=G.tab?`tab $${G.tab}`:''; }
 function heal(n,el){ const b=G.hp; G.hp=Math.min(G.maxHp,G.hp+n); if(G.hp>b&&el) floatEl(el,'+'+(G.hp-b),'heal'); updTop(); }
 function addGold(n,el){ G.gold=Math.max(0,G.gold+n); if(n>0) G.stats.earned+=n; if(el&&n) floatEl(el,(n>0?'+$':'−$')+Math.abs(n),'gold'); if(n>0) SFX.coin(); updTop(); }
@@ -946,8 +950,16 @@ function charmList(sell){ const w=h('<div class="list cols2"></div>'); if(!G.cha
 function charmDesc(c){ const d=CHARMS[c].desc, gr=G&&G.grow||{}; if(!G||!G.charms.includes(c)) return d;
   if(c==='tally') return `${d} <b class="tier u">${G.tally} notch${G.tally===1?'':'es'}</b>`;
   if(c==='piggy') return `${d} <b class="tier u">Now +${gr.piggy||0} odds</b>`;
-  if(c==='moonshine') return `${d} <b class="tier u">Now \u00d7${fmtOdds(1+.05*(gr.moon||0))} odds</b>`;
-  return d; }
+  return d+charmNow(c); }
+// what an odds charm is giving you right now: this round so far at the table, or what it'd give at the start of a round
+const ODDSY=c=>/odds/.test(CHARMS[c].desc)||c==='mimic';
+function charmNow(c){ if(!G||!G.charms.includes(c)) return ''; const tgtK=c==='mimic'?mimicOf(G.charms,rackOf(G)):c;
+  if(c==='mimic'&&!tgtK) return ''; if(!ODDSY(tgtK)) return c==='mimic'?`<span class="cnow">Right now: doubling <b>${CHARMS[tgtK].name}</b></span>`:'';
+  let parts; try{ parts=F&&F.R&&F.target!=null?curOdds(false).parts:oddsOf(newRound(),G.charms,{rack:rackOf(G),deeds:G.deeds||[],plays:G.plays||{},drink:{},finished:G.bag.filter(d=>d.fin).length,fixOdds:0,bag:G.bag.length,round:1,q:[],gold:G.gold,rep:0,tally:G.tally,wins:0,grow:G.grow||{}}).parts; }catch(e){ return ''; }
+  const pt=parts.find(p=>p[0]===CHARMS[c].name), live=F&&F.R&&F.target!=null, lab=c==='mimic'?`Right now, as ${CHARMS[tgtK].name}`:'Right now';
+  if(F&&F.jinx===c) return '<span class="cnow off">Jinxed this round: off</span>';
+  if(pt) return `<span class="cnow">${lab}: <b class="${pt[1][0]==='\u00d7'?'m':''}">${pt[1]} odds</b>${live?' this round':''}</span>`;
+  return `<span class="cnow off">${lab}: nothing${live?' yet this round':''}</span>`; }
 
 /* ================= CHARM ICONS: little 3D props, rendered once in the room's own light and pixel grid ================= */
 const CHARM_ICON={}, SVC_ICON={}, DIE_ICON={}, DRINK_ICON={}; const ICON_PX=36;
@@ -1393,7 +1405,7 @@ async function bank(){
   const ph0=playsHit(F.R,{}), ones0=F.R.ones||0, cr0=F.R.crowns||0; noteBank(F.R,faces,sel.map(o=>o.inst.type),live(),fins,rackOf(G));
   { const nc=faces.filter(f=>f==='C'||f==='G').length; if(nc&&F.R.throws===1&&(F.R.crowns-cr0)>nc) fire('echo','+'+nc+' crown'+(nc>1?'s':''),1); const n1=faces.filter(f=>f===1).length; if(n1) fire('doubletake','+'+n1+' one'+(n1>1?'s':''),1); }
   if(nC('bulldog')&&(F.R.ones||0)>ones0){ const g=(F.R.ones-ones0); F.wall=(F.wall||0)+g*nC('bulldog'); updGuard(); fire('bulldog','+'+g+' Guard'); }
-  playsHit(F.R,{}).filter(k=>!ph0.includes(k)).forEach((k,i)=>setTimeout(()=>{ const lv=playLv(G.plays,k); floatEl($('#eq'),`${PLAYS[k].name}!`,'odds play'); SFX.ding(4+i); tip('plays'); },350+i*300));
+  playsHit(F.R,{}).filter(k=>!ph0.includes(k)).forEach((k,i)=>setTimeout(()=>{ const lv=playLv(G.plays,k); floatEl($('#eq'),`${PLAYS[k].name}!`,'odds play'); SFX.ding(4+i); { const pb=$('#playsbtn'); if(pb){ pb.classList.remove('ping'); void pb.offsetWidth; pb.classList.add('ping'); setTimeout(()=>pb.classList.remove('ping'),2600); } } tip('plays'); },350+i*300));
   { const gl=sel.filter(o=>o.inst.fin==='goldleaf'&&(o.face===1||o.face==='C'||o.face==='G')).length; if(gl) setTimeout(()=>addGold(gl,$('#cash')),300); if(fins.includes('lucky')) setTimeout(()=>toast('<b class="g">Lucky.</b> +4 odds.'),200); }
   for(let i=0;i<sel.length;i++){ const o=sel[i]; o.banked=true; setSel(o,false); if(o.label) o.label.style.opacity=0;
     if(o.hidden) setFaces(o,o.face,false);
@@ -1420,7 +1432,7 @@ function crownFx(o){ const p=dieScreen(o); sparksAt(p, o.face==='G'?'#ff5c6f':nu
   if(nC('goldcrown')){ addGold(nC('goldcrown'),$('#cash')); fire('goldcrown','+$1',3); } }
 // what you'd be paid right now, if the round ended on your current score
 const tgt=(R)=>F.target==null?null:targetOf(F.oScore,R||F.R||newRound(),live(),F.opp.q,{drink:F.drink,intent:F.intent,rack:rackOf(G)});
-function oddsEnv(done){ return {rack:rackOf(G),guard:F.wall||0,deeds:G.deeds||[],intent:F.intent,plays:G.plays||{},drink:F.drink||{},finished:G.bag.filter(d=>d.fin).length,fixOdds:hasFix(G,'felt')?1:0,bag:G.bag.length,round:F.round,q:F.opp.q,raid:isRaid(F.opp,F.round,F.phase2),gold:G.gold,rep:G.rep,tally:G.tally,wins:F.wins||0,margin:F.target!=null?tgt()-F.pScore-(has('bouncer')?1:0):0,score:F.pScore,done,grow:G.grow||{},oppHalf:F.oppHp<=F.oppMax/2,wonOnce:!!F.wonOnce}; }
+function oddsEnv(done){ return {rack:rackOf(G),guard:F.wall||0,deeds:G.deeds||[],intent:F.intent,plays:G.plays||{},drink:F.drink||{},finished:G.bag.filter(d=>d.fin).length,fixOdds:hasFix(G,'felt')?1:0,bag:G.bag.length,round:F.round,q:F.opp.q,raid:isRaid(F.opp,F.round,F.phase2),gold:G.gold,rep:G.rep,tally:G.tally,wins:F.wins||0,margin:F.target!=null?tgt()-F.pScore-nC('bouncer'):0,score:F.pScore,done,grow:G.grow||{},oppHalf:F.oppHp<=F.oppMax/2,wonOnce:!!F.wonOnce}; }
 function curOdds(done,R){ return oddsOf(R||F.R||newRound(),live(),oddsEnv(done)); }
 function updOdds(bump,sel){ if(!F) return; let R2=null, add=0; if(sel&&sel.length&&!sel.some(o=>o.hidden)){ R2={...(F.R||newRound())}; noteBank(R2,sel.map(o=>o.face),sel.map(o=>o.inst.type),live(),finsOf(sel),rackOf(G)); add=bankVals(sel.map(o=>o.face),ctx(),live(),sel.length===tray().length,sel.map(o=>o.inst.fin),rackOf(G)).reduce((a,b)=>a+b,0); }
   const full=!!(sel&&sel.length&&sel.length===tray().length); F._prevR=R2; const O=curOdds(full,R2), eq=$('#eq'); if(!eq) return;

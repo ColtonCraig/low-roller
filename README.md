@@ -76,7 +76,7 @@ Some banks are **Plays**. Each one you make in a round **adds its level to your 
 | Clean Hands | Finish a round on 3 or less. | +2 |
 
 Every Play starts at level 1. **Every 4th time you make one it levels up** for the rest of the night. The back alley's
-*Run the numbers* also levels your most-made Play. Your levels, and how close each Play is to its next level, are in Menu → Your Night.
+*Run the numbers* also levels your most-made Play. Tap **Plays** in the top bar any time to see each Play's level, what it pays, and how close it is to the next level (it lights up when you make one). They're also in Menu → Your Night.
 
 ## Guard
 **Guard** soaks hits before your nerve does, and unlike a drink it **stays between rounds** at a table (it resets when you
@@ -139,7 +139,7 @@ for a chit instead of fighting. **Tap a stop to see which card it is; tap again 
 
 ## Charms
 Charms sit in your rack at the top and are **always working**. You hold **five** (six with the Back Booth fixture or The Still deed).
-Tap a charm to read it or sell it for half. **Drag a charm to any slot** to move it. Order only matters for **The Mimic**: it copies whatever charm sits right of it, so that charm works twice (a little purple arrow on The Mimic and a purple ring on the copied charm show it, and both pulse when it fires). A few charms don't do more twice: Pair of Jacks, Lucky Penny, Deuces Wild, Sleight of Hand and Near Miss.
+Hover or tap a charm to read it, see what it's giving you **right now** (like *+14 odds*), or sell it for half. **Drag a charm to any slot** to move it. Order only matters for **The Mimic**: it copies whatever charm sits right of it, so that charm works twice (a little purple arrow on The Mimic and a purple ring on the copied charm show it, and both pulse when it fires). A few charms don't do more twice: Pair of Jacks, Lucky Penny, Deuces Wild, Sleight of Hand and Near Miss.
 Rarer charms tend to multiply. The full list is in [Everything, listed](#everything-listed).
 
 ## Dice

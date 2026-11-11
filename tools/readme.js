@@ -90,7 +90,7 @@ Some banks are **Plays**. Each one you make in a round **adds its level to your 
 
 ${table(['Play', 'How to make it', 'Odds per level'], L.PLAY_KEYS.map((k) => [L.PLAYS[k].name, L.PLAYS[k].desc, '+' + L.PLAYS[k].per]))}
 Every Play starts at level 1. **Every ${L.PLAY_EVERY}th time you make one it levels up** for the rest of the night. The back alley's
-*Run the numbers* also levels your most-made Play. Your levels, and how close each Play is to its next level, are in Menu → Your Night.
+*Run the numbers* also levels your most-made Play. Tap **Plays** in the top bar any time to see each Play's level, what it pays, and how close it is to the next level (it lights up when you make one). They're also in Menu → Your Night.
 
 ## Guard
 **Guard** soaks hits before your nerve does, and unlike a drink it **stays between rounds** at a table (it resets when you
@@ -136,7 +136,7 @@ ${img('bar.png', 'The bar')}
 
 ## Charms
 Charms sit in your rack at the top and are **always working**. You hold **five** (six with the Back Booth fixture or The Still deed).
-Tap a charm to read it or sell it for half. **Drag a charm to any slot** to move it. Order only matters for **The Mimic**: it copies whatever charm sits right of it, so that charm works twice (a little purple arrow on The Mimic and a purple ring on the copied charm show it, and both pulse when it fires). A few charms don't do more twice: Pair of Jacks, Lucky Penny, Deuces Wild, Sleight of Hand and Near Miss.
+Hover or tap a charm to read it, see what it's giving you **right now** (like *+14 odds*), or sell it for half. **Drag a charm to any slot** to move it. Order only matters for **The Mimic**: it copies whatever charm sits right of it, so that charm works twice (a little purple arrow on The Mimic and a purple ring on the copied charm show it, and both pulse when it fires). A few charms don't do more twice: Pair of Jacks, Lucky Penny, Deuces Wild, Sleight of Hand and Near Miss.
 Rarer charms tend to multiply. The full list is in [Everything, listed](#everything-listed).
 
 ## Dice

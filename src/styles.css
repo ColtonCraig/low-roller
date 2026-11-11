@@ -753,3 +753,16 @@ body.dragging,body.dragging *{cursor:grabbing}
 .bkl{font-family:'Limelight',serif;font-size:22px;color:var(--brass)} .bkart.big .bkl{font-size:30px}
 .bkn{font-size:11px;font-weight:800;line-height:1.15;text-align:center;max-width:100%;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 @media (max-width:1180px){ .ntiles{grid-template-columns:repeat(2,1fr)} }
+/* charm popups: what it gives you right now */
+.cnow{display:block;margin-top:7px;padding:5px 8px;border-radius:7px;background:#ffcf4a14;box-shadow:inset 3px 0 0 var(--odds);font-size:13px;color:var(--cream-2)}
+.cnow b{font-family:var(--f-ui);font-weight:400;color:var(--odds);font-size:14px} .cnow b.m{color:var(--mult)}
+.cnow.off{background:#0000002a;box-shadow:inset 3px 0 0 #ffffff33;color:var(--dim)}
+/* the Plays card off the top bar */
+.plist{display:flex;flex-direction:column;gap:5px;width:100%;box-sizing:border-box}
+.prow{padding:7px 9px;border-radius:8px;background:#0000003a}
+.prow.hit{box-shadow:inset 0 0 0 2px var(--odds);background:#ffcf4a1a}
+.prt{display:flex;justify-content:space-between;align-items:center;gap:8px} .prt b{font-family:var(--f-ui);font-weight:400;font-size:15px;color:var(--cream)}
+.prd{font-size:12px;color:var(--cream-2);line-height:1.3;margin-top:2px} .prd .pay{display:block;color:var(--odds);font-weight:800}
+.pdots{display:flex;align-items:center;gap:4px;margin-top:5px} .pdots i{width:9px;height:9px;border-radius:50%;background:#0007;box-shadow:inset 0 0 0 1px #ffffff22} .pdots i.on{background:var(--odds);box-shadow:none}
+.pdots span{margin-left:6px;font-size:11px;font-weight:800;color:var(--dim)} .prow.hit .pdots span{color:var(--odds)}
+#playsbtn.ping{animation:trig .5s var(--spring);box-shadow:0 0 0 2px var(--odds),0 0 14px #ffcf4a99}
