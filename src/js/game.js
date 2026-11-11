@@ -112,9 +112,14 @@ function floatAt(p,text,cls){ const f=h(`<div class="float ${cls}">${text}</div>
 function floatEl(el,text,cls){ if(!el) return; const r=el.getBoundingClientRect(); floatAt({x:r.left+r.width/2,y:r.top+r.height/2},text,cls); }
 function sparksAt(p,color){ if(REDUCED) return; for(let i=0;i<14;i++){ const s=h('<i class="spark"></i>'); if(color){s.style.background=color;s.style.boxShadow='0 0 8px '+color} s.style.left=p.x+'px'; s.style.top=p.y+'px'; fx.appendChild(s); const a=Math.PI*2*i/14+Math.random()*.4, r=30+Math.random()*44;
   s.animate([{transform:'translate(-50%,-50%) rotate(45deg)',opacity:1},{transform:`translate(${Math.cos(a)*r}px,${Math.sin(a)*r}px) rotate(45deg) scale(.2)`,opacity:0}],{duration:650+Math.random()*300,easing:'cubic-bezier(.2,.8,.2,1)'}).onfinish=()=>s.remove(); } }
-function toast(t){ const el=h(`<div class="toast paper">${t}</div>`); document.body.appendChild(el); placeToast(el); setTimeout(()=>el.remove(),3100); }
+function toast(t){
+  // at the table: a neat stack under the top-left of the bar, never over the payout, banners, nameplate or slip
+  if(F&&document.querySelector('.yourtab')){ let st=document.getElementById('toasts'); if(!st){ st=h('<div id="toasts"></div>'); document.body.appendChild(st); }
+    const hud=document.querySelector('#ui .hud'); st.style.top=Math.round((hud?Math.max(...[...hud.querySelectorAll('.plate,.rack,.coat')].map(e=>e.getBoundingClientRect().bottom),40):40)+10)+'px';
+    const el=h(`<div class="toast side paper">${t}</div>`); st.appendChild(el); while(st.children.length>3) st.firstChild.remove(); setTimeout(()=>el.remove(),3400); return; }
+  const el=h(`<div class="toast paper">${t}</div>`); document.body.appendChild(el); placeToast(el); setTimeout(()=>el.remove(),3100); }
 // try under the top bar, then the middle of the table, then just above the slip; skip any spot that would cover something you need to read
-function placeToast(el){ const keep=[...document.querySelectorAll('#plate,.mhead,.picker,.yourtab,.msg,.napkin,.qpop,.toast')].filter(e=>e!==el&&e.getBoundingClientRect().height>0).map(e=>e.getBoundingClientRect());
+function placeToast(el){ const keep=[...document.querySelectorAll('#plate,.mhead,.picker,.yourtab,.msg,.napkin,.qpop,.toast,.payout,.banner .in,.pop')].filter(e=>e!==el&&e.getBoundingClientRect().height>0).map(e=>e.getBoundingClientRect());
   const hud=document.querySelector('#ui .hud'), hb=hud?hud.getBoundingClientRect().bottom:40, H=el.offsetHeight, W=el.offsetWidth, L=(innerWidth-W)/2;
   const yt=document.querySelector('.yourtab'), st=yt&&yt.getBoundingClientRect().height?yt.getBoundingClientRect().top:innerHeight;
   const cover=y=>keep.reduce((a,b)=>{ const x=Math.min(b.right,L+W)-Math.max(b.left,L), yy=Math.min(b.bottom+8,y+H)-Math.max(b.top-8,y); return a+(x>0&&yy>0?x*yy:0); },0);
@@ -895,7 +900,7 @@ function wireSound(){ const m=$('#menubtn'), b=$('#bagbtn'); if(m) m.onclick=()=
 function updTop(){ if(G&&G.stats) G.stats.rich=Math.max(G.stats.rich||0,G.gold); const b=$('#hpbar'); if(b){ b.style.width=Math.max(0,100*G.hp/G.maxHp)+'%'; $('#hptxt').innerHTML=`${Math.max(0,G.hp)}<small>/${G.maxHp}</small>`; const w=$('#hpw'); if(w) w.classList.toggle('low',G.hp<=G.maxHp*.25); } const c=$('#cash'); if(c) c.textContent='$'+G.gold; const o=$('#owe'); if(o) o.textContent=G.tab?`tab $${G.tab}`:''; }
 function heal(n,el){ const b=G.hp; G.hp=Math.min(G.maxHp,G.hp+n); if(G.hp>b&&el) floatEl(el,'+'+(G.hp-b),'heal'); updTop(); }
 function addGold(n,el){ G.gold=Math.max(0,G.gold+n); if(n>0) G.stats.earned+=n; if(el&&n) floatEl(el,(n>0?'+$':'−$')+Math.abs(n),'gold'); if(n>0) SFX.coin(); updTop(); }
-function wireChips(root=document){ root.querySelectorAll('[data-q]').forEach(el=>el.onclick=(e)=>{ e.stopPropagation(); SFX.pick(); if(popEl&&popEl._for===el){ closePop(); return; } anchorPop(el,tipHTML(el)); }); }
+function wireChips(root=document){ root.querySelectorAll(root.id==='quirks'||root.id==='plate'?'[data-q],.stamp[data-tip]':'[data-q]').forEach(el=>el.onclick=(e)=>{ e.stopPropagation(); SFX.pick(); if(popEl&&popEl._for===el){ closePop(); return; } anchorPop(el,tipHTML(el)); }); }
 // a small card pinned to whatever you tapped: below it if there's room, otherwise above, always on screen
 // One card for every hover and click: hover shows it, clicking a charm adds Sell/Keep. Always straight, never on top of its anchor.
 function tipHTML(el){
@@ -914,7 +919,7 @@ document.addEventListener('pointerover',e=>{ if(e.pointerType!=='mouse') return;
   if(!t){ hideTip(); return; } if(tipEl&&tipEl._for===t) return; hideTip(); if(popEl) return;
   tipEl=h(`<div class="pop paper qpop htip">${tipHTML(t)}</div>`); tipEl._for=t; document.body.appendChild(tipEl); placePop(tipEl,t); });
 document.addEventListener('pointerdown',hideTip,true);
-function screen(html){ if(CAMF&&(CAMF.zoom!==1||camGoal)){ CAMF.zoom=1; camGoal=new THREE.Vector3(0,camLook.y+Math.sin(CAMF.el)*CAMF.dist,camLook.z+Math.cos(CAMF.el)*CAMF.dist); fogNow=SCN.fog.near-1.4; fogGoal=CAMF.dist; } document.querySelectorAll('.toast').forEach(t=>t.remove()); closePop&&closePop(); const old=ui.querySelector('.modal,.title,.newspaper'); if(old&&!REDUCED){ const r=old.getBoundingClientRect(); const c=old.cloneNode(true); c.removeAttribute('id'); Object.assign(c.style,{position:'fixed',left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',margin:'0',zIndex:30,pointerEvents:'none',boxSizing:'border-box'}); c.classList.add('leaving'); document.body.appendChild(c); setTimeout(()=>c.remove(),420); SFX.paper(); } ui.innerHTML=html; ui.className=html.includes('id="plate"')?'':'page'; ui.scrollTop=0; wireSound(); wireRack(); closePop(); }
+function screen(html){ { const st=document.getElementById('toasts'); if(st) st.innerHTML=''; } if(CAMF&&(CAMF.zoom!==1||camGoal)){ CAMF.zoom=1; camGoal=new THREE.Vector3(0,camLook.y+Math.sin(CAMF.el)*CAMF.dist,camLook.z+Math.cos(CAMF.el)*CAMF.dist); fogNow=SCN.fog.near-1.4; fogGoal=CAMF.dist; } document.querySelectorAll('.toast').forEach(t=>t.remove()); closePop&&closePop(); const old=ui.querySelector('.modal,.title,.newspaper'); if(old&&!REDUCED){ const r=old.getBoundingClientRect(); const c=old.cloneNode(true); c.removeAttribute('id'); Object.assign(c.style,{position:'fixed',left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',margin:'0',zIndex:30,pointerEvents:'none',boxSizing:'border-box'}); c.classList.add('leaving'); document.body.appendChild(c); setTimeout(()=>c.remove(),420); SFX.paper(); } ui.innerHTML=html; ui.className=html.includes('id="plate"')?'':'page'; ui.scrollTop=0; wireSound(); wireRack(); closePop(); }
 function clearLabels(){ labels.innerHTML=''; }
 function bagCounts(arr){ const m=new Map(); arr.forEach(t=>m.set(t,(m.get(t)||0)+1)); return [...m.entries()]; }
 function dieKey(d){ return d.type+'|'+facesOf(d).join(',')+'|'+(d.fin||''); }
@@ -1215,7 +1220,7 @@ async function startFight(kind,pre,snap){
   if(!snap&&performance.now()-_fightAt<1500) return; _fightAt=performance.now();
   clearDeco(); ALLDICE.forEach(o=>disposeDie(o));
   const opp=snap?snap.opp:(pre||chooseFoe(kind)); if(G) G.lastFoe=opp.n;
-  F={kind,opp,oppHp:opp.hp,oppMax:opp.hp,round:0,you:[],them:[],phase2:false,labelsOn:false,thumb:2,wall:(G.charms.includes('flask')?6:0)+(G.charms.includes('haymaker')?4:0)};
+  F={kind,opp,oppHp:opp.hp,oppMax:opp.hp,round:0,you:[],them:[],phase2:false,labelsOn:false,thumb:2,wall:(G.charms.includes('flask')?6:0)+(G.charms.includes('haymaker')?4:0)+(hasDeed(G,'racket')?10:0)};
   if(snap) FIGHT_KEYS.forEach(k=>{ if(snap[k]!==undefined) F[k]=snap[k]; }); else saveFight();
   screen(`${hud()}
     <div class="nameplate paper pe" id="plate">
@@ -1237,7 +1242,7 @@ async function startFight(kind,pre,snap){
         <div class="acts" id="acts"></div>
       </div></div>
     </div>`);
-  wireChips(ui); F.target=null; updOpp(); updOdds(); updGuard(); $('#eq').onclick=()=>{ SFX.ui(); oddsHelp(); };
+  wireChips(ui); wireChips($('#quirks')); F.target=null; updOpp(); updOdds(); updGuard(); $('#eq').onclick=()=>{ SFX.ui(); oddsHelp(); };
   busy=true;
   if(GL_OK){ buildFoe({...opp.look,...(LOOKX[opp.n]||{})}); if(kind==='B'&&!snap){ for(const v of [.3,1,.2,1]){ lampDim=v; await sleep(90); } } await foeWalkIn(); }
   if(snap){ if(!F||F.opp!==opp) return; if(snap.end) return resumeEnd(snap.end); return startRound(snap.sim?snap:null); }
@@ -1245,7 +1250,7 @@ async function startFight(kind,pre,snap){
   seen('o',opp.n); opp.q.forEach(q=>seen('q',q)); if(opp.q.length) await tip('quirk'); if(opp.q.some(q=>RULE_Q.includes(q))) await tip('counter'); if(kind==='B'){ await tip('boss'); if(opp!==ACTS[G.act].foes.boss&&ACTS[G.act].foes.bosses.some(b=>b.n===opp.n&&b!==ACTS[G.act].foes.boss)) await tip('altboss'); }
   startRound();
 }
-const quirkChips=()=>`<span class="stamp odds" data-tip="When the opponent wins a round, they hit you for the gap times this.">Hits \u00d7${fmtOdds(theirOdds(F.opp,{intent:F.intent,round:F.round||1}))}</span>`+(F.intent?`<span class="stamp intent i-${F.intent}" data-tip="This round: ${INTENTS[F.intent].desc}">${INTENTS[F.intent].name}</span><span class="stamp next" data-tip="Next round: ${INTENTS[F.next].desc}">Next: ${INTENTS[F.next].name}</span>`:'')+F.opp.q.map(q=>`<button class="stamp" data-q="${q}" data-tip="${QUIRKS[q].desc}">${QUIRKS[q].name}</button>`).join('');
+const quirkChips=()=>`<button class="stamp odds" data-tip="Hits: When the opponent wins a round, they hit you for the gap times this.">Hits \u00d7${fmtOdds(theirOdds(F.opp,{intent:F.intent,round:F.round||1}))}</button>`+(F.intent?`<button class="stamp intent i-${F.intent}" data-tip="${INTENTS[F.intent].name}: ${INTENTS[F.intent].desc}">${INTENTS[F.intent].name}</button><button class="stamp next" data-tip="${INTENTS[F.next].name}: Next round. ${INTENTS[F.next].desc}">Next: ${INTENTS[F.next].name}</button>`:'')+F.opp.q.map(q=>`<button class="stamp" data-q="${q}" data-tip="${QUIRKS[q].desc}">${QUIRKS[q].name}</button>`).join('');
 function msg(x){ const m=$('#msg'); if(m) m.innerHTML=x; }
 function acts(x){ const a=$('#acts'); if(a) a.innerHTML=x; }
 function setP(v){ const e=$('#pscore'); if(e) e.innerHTML=`${v<0?'\u2212'+(-v):v}<small>You</small>`; }
@@ -1261,7 +1266,7 @@ async function startRound(pre){
   setP(0); setVs('–'); acts(''); updOdds(); $('#sitting').innerHTML='<span>Shaking the cup</span>';
   msg(`Round ${F.round}. <b>${F.opp.n}</b> throws first.`);
   if(!pre){ const intent=F.next||rollIntent(F.kind), next=rollIntent(F.kind), tt=intentT(F.opp,intent); pre={intent,next,sim:aiRound(F.opp.bag,tt),simB:F.opp.q.includes('pair')?aiRound(F.opp.bag,tt):null,seed:(Math.random()*4294967296)>>>0,jinx:jinxPick(G.charms,F.opp.q)}; }
-  F.intent=pre.intent||'steady'; F.next=pre.next||'steady'; F.raise=false; F.folded=false; F.shakes=shakesFor(G.charms,G); F.shook=0; F.freeShake=has('spoon');
+  F.intent=pre.intent||'steady'; F.next=pre.next||'steady'; F.spoonUsed=false;
   { const qz=$('#quirks'); if(qz){ qz.innerHTML=quirkChips(); wireChips(qz); } } if(F.intent!=='steady') tip('intent');
   F.jinx=pre.jinx||null; F.drink={}; refreshRack(); if(F.jinx) toast(`<b class="r">Jinx.</b> ${CHARMS[F.jinx].name} sits this round out.`);
   F.pre={sim:pre.sim,simB:pre.simB||null,seed:pre.seed>>>0,intent:F.intent,next:F.next}; F.rng=mkRng(F.pre.seed); saveFight(F.pre);
@@ -1327,7 +1332,7 @@ async function playerThrow(){
   F.labelsOn=true;
   list.forEach((o,i)=>{ if(finals[i]==='C'&&!hid.includes(i)) sparksAt(dieScreen(o)); });
   if(foe) foe.userData.lookX=0;
-  if(F.throwNo===1&&has('sleight')){ const hi=tray().filter(o=>!o.hidden&&typeof o.face==='number'&&effVal(o.face,ctx())>=4); if(hi.length){ msg('<b>Sleight of Hand.</b> The high ones go again.'); trigFx('Sleight of Hand','\u21bb',0); await hopDice(hi); } }
+  if(F.throwNo===1&&has('sleight')){ const hi=tray().filter(o=>!o.hidden&&typeof o.face==='number'&&effVal(o.face,ctx())>=5); if(hi.length){ msg('<b>Sleight of Hand.</b> The high ones go again.'); trigFx('Sleight of Hand','\u21bb',0); await hopDice(hi); } }
   if(F.opp.sig==='slam'&&F.phase2&&F.throwNo===1&&foe){ await foeSlam(); const best=tray().filter(o=>!o.hidden).sort((a,b)=>effVal(a.face,ctx())-effVal(b.face,ctx())).slice(0,2); if(best.length){ msg('Sal slams the table. Your two best dice jump.'); await hopDice(best); } }
   busy=false; refreshActs(); if(F.throwNo===1) tip('yours');
 }
@@ -1337,23 +1342,19 @@ function toggleSel(o){ if(busy||o.banked||o.flying) return; setSel(o,!o.sel); if
 function refreshActs(){
   if(!F) return; const sel=tray().filter(o=>o.sel), need=minBank();
   const proj=bankVals(sel.map(o=>o.face),ctx(),live(),sel.length===tray().length,sel.map(o=>o.inst.fin)).reduce((a,b)=>a+b,0); updOdds(false,sel);
-  const pre1=F.throwNo===1&&F.R.throws===0&&!F.folded, B=[], fd=foldDmg(F.opp,F.intent);
-  if(F.shakes>0){ const cup=hasDeed(G,'loadedcup'), free=F.freeShake; B.push(`<button class="btn ghost small" id="shake" ${sel.length?'':'disabled'} data-tip="Rethrow the dice you picked without banking them. ${free?'This one is free (Bent Spoon).':'Costs you: their score counts 1 lower this round.'}${cup?' Loaded Cup: also costs 1 nerve.':` ${F.shakes} left this round.`}">Shake${cup||F.shakes<2?'':` \u00d7${F.shakes}`}</button>`); }
+  const B=[];
+  if(has('spoon')&&!F.spoonUsed) B.push(`<button class="btn ghost small" id="spoon" ${sel.length===1?'':'disabled'} data-tip="Bent Spoon: pick one die, reroll it. Once a round.">Bent Spoon</button>`);
   if(has('thumb')&&F.thumb>0) B.push(`<button class="btn ghost small" id="nudge" ${sel.length===1&&typeof sel[0].face==='number'&&sel[0].face>=2&&!sel[0].hidden?'':'disabled'} data-tip="Turn the one die you picked down by 1. ${F.thumb} left at this table.">Nudge \u00b7 ${F.thumb}</button>`);
   if(has('bump')&&!F.bumped&&F.R.throws===0&&!F.opp.q.includes('pair')) B.push(`<button class="btn ghost small" id="bump" data-tip="Once per table: their lowest die gets thrown again.">Bump</button>`);
-  if(pre1&&!F.raise) B.push(`<button class="btn ghost small raise" id="raise" data-tip="Before your first bank: double the stakes. Whoever wins this round hits twice as hard.">Raise</button>`,`<button class="btn ghost small fold" id="fold" data-tip="Before your first bank: give up the round and take ${fd} instead of whatever you'd lose.">Fold \u00b7 ${fd}</button>`);
   acts(`${B.length?`<div class="minis">${B.join('')}</div>`:''}<button class="btn go" id="bank" ${sel.length>=need?'':'disabled'}>${sel.length?`Bank ${sel.length}${sel.some(o=>o.hidden)?'':` \u00b7 +${proj}`}`:need>1?'Pick two':'Pick dice'}</button>`);
   $('#bank').onclick=bank;
-  const sh=$('#shake'); if(sh) sh.onclick=async()=>{ if(busy) return; const s=tray().filter(x=>x.sel); if(!s.length) return; F.shakes--; if(F.freeShake) F.freeShake=false; else { F.shook=(F.shook||0)+1; const T=tgt(); setVs(T); F._shownT=T; floatEl($('#vs'),'\u22121','dmg'); const sb=$('#sitting b'); if(sb&&!F.tHid) sb.textContent=T; const se=$('#sitting em'); if(se) se.remove(); if(!F.R.throws) msg(`Get under <b>${T}</b>. Click the dice you want to keep, then bank them.`); } if(hasDeed(G,'loadedcup')&&G.hp>1){ G.hp--; G.stats.taken++; updTop(); floatEl($('#hpbar'),'\u22121','dmg'); } busy=true; acts(''); s.forEach(o=>setSel(o,false)); SFX.rattle(350);
-    const fin=seeded(()=>s.map(o=>rollInst(o.inst))); await throwDice(s,fin,'you',s.map((o,i)=>o.hidden?i:-1).filter(i=>i>=0),{slots:s.map(o=>o.home.clone())}); s.forEach(o=>{ if(o.face==='C') sparksAt(dieScreen(o)); }); busy=false; refreshActs(); tip('shake'); };
+  const sp=$('#spoon'); if(sp) sp.onclick=async()=>{ if(busy) return; const o=tray().find(x=>x.sel); if(!o) return; F.spoonUsed=true; busy=true; acts(''); setSel(o,false); trigFx('Bent Spoon','\u21bb',0); await throwDice([o],[seeded(()=>rollInst(o.inst))],'you',o.hidden?0:-1,{slots:[o.home.clone()]}); if(o.face==='C') sparksAt(dieScreen(o)); busy=false; refreshActs(); };
   const nu=$('#nudge'); if(nu) nu.onclick=()=>{ if(busy) return; const o=tray().find(x=>x.sel); if(!o||typeof o.face!=='number'||o.face<2) return; F.thumb--; setFaces(o,o.face-1,false); uprightTop(o); setSel(o,false); SFX.tok(); floatAt(dieScreen(o),'\u22121','zero'); trigFx('Loaded Thumb','\u22121',0); refreshActs(); };
   const bu=$('#bump'); if(bu) bu.onclick=async()=>{ if(busy) return; F.bumped=true; const b=seeded(()=>bumpLowest(F.pre.sim,F.opp.bag)); if(!b){ refreshActs(); return; } busy=true; acts(''); const o=F.them[b.i];
     SFX.slam(); shake(.12); trigFx('Bump the Table','!',0); if(o){ const y0=o.mesh.position.y; await anim(380,k=>{ o.mesh.position.y=y0+Math.sin(k*Math.PI)*.9; o.mesh.rotation.x+=.35; o.mesh.rotation.z+=.2; }); setFaces(o,b.face,false); o.mesh.position.y=y0; uprightTop(o); SFX.land(.7); floatAt(dieScreen(o),(b.delta>=0?'+':'\u2212')+Math.abs(b.delta),b.delta>0?'pts':'zero'); }
     F.oScore+=b.delta; const adj=tAdj(); F.target=Math.max(0,F.oScore+adj); F._shownT=null;
     $('#sitting').innerHTML=`<span>Sitting on</span><b>${F.target}</b>${adj?`<em>(${F.oScore} ${adj>0?'+':'\u2212'} ${Math.abs(adj)})</em>`:''}`; setVs(F.target);
     msg(b.delta>0?`The table jumps. They're sitting on <b>${F.target}</b> now.`:b.delta<0?`Bad luck: it landed lower. <b>${F.target}</b>.`:'The table jumps. Same number.'); busy=false; refreshActs(); };
-  const ra=$('#raise'); if(ra) ra.onclick=()=>{ if(busy) return; F.raise=true; SFX.stamp(); shake(.08); banner('Raise','Stakes \u00d72 this round'); refreshActs(); tip('raise'); };
-  const fo=$('#fold'); if(fo) fo.onclick=()=>{ if(busy) return; if(!fo.dataset.sure){ fo.dataset.sure=1; fo.textContent='Sure? Fold'; SFX.ui(); return; } F.folded=true; busy=true; acts(''); endRound(); };
 }
 async function bank(){
   if(busy||!F) return; const sel=tray().filter(o=>o.sel); if(sel.length<minBank()) return;
@@ -1389,20 +1390,19 @@ function crownFx(o){ const p=dieScreen(o); sparksAt(p, o.face==='G'?'#ff5c6f':nu
   if(has('hothand')) heal(1,$('#hpbar'));
   if(has('goldcrown')) addGold(1,$('#cash')); }
 // what you'd be paid right now, if the round ended on your current score
-const tgt=(R)=>F.target==null?null:targetOf(F.oScore,R||F.R||newRound(),live(),F.opp.q,{drink:F.drink,intent:F.intent,shook:F.shook||0});
-function oddsEnv(done){ return {rack:G.charms,shook:F.shook||0,guard:F.wall||0,deeds:G.deeds||[],intent:F.intent,raise:F.raise?1:0,plays:G.plays||{},drink:F.drink||{},finished:G.bag.filter(d=>d.fin).length,fixOdds:hasFix(G,'felt')?1:0,bag:G.bag.length,round:F.round,q:F.opp.q,raid:isRaid(F.opp,F.round,F.phase2),gold:G.gold,rep:G.rep,tally:G.tally,wins:F.wins||0,margin:F.target!=null?tgt()-F.pScore-(has('bouncer')?1:0):0,score:F.pScore,done,grow:G.grow||{},oppHalf:F.oppHp<=F.oppMax/2,wonOnce:!!F.wonOnce}; }
+const tgt=(R)=>F.target==null?null:targetOf(F.oScore,R||F.R||newRound(),live(),F.opp.q,{drink:F.drink,intent:F.intent});
+function oddsEnv(done){ return {rack:G.charms,guard:F.wall||0,deeds:G.deeds||[],intent:F.intent,plays:G.plays||{},drink:F.drink||{},finished:G.bag.filter(d=>d.fin).length,fixOdds:hasFix(G,'felt')?1:0,bag:G.bag.length,round:F.round,q:F.opp.q,raid:isRaid(F.opp,F.round,F.phase2),gold:G.gold,rep:G.rep,tally:G.tally,wins:F.wins||0,margin:F.target!=null?tgt()-F.pScore-(has('bouncer')?1:0):0,score:F.pScore,done,grow:G.grow||{},oppHalf:F.oppHp<=F.oppMax/2,wonOnce:!!F.wonOnce}; }
 function curOdds(done,R){ return oddsOf(R||F.R||newRound(),live(),oddsEnv(done)); }
 function updOdds(bump,sel){ if(!F) return; let R2=null, add=0; if(sel&&sel.length&&!sel.some(o=>o.hidden)){ R2={...(F.R||newRound())}; noteBank(R2,sel.map(o=>o.face),sel.map(o=>o.inst.type),live(),finsOf(sel)); add=bankVals(sel.map(o=>o.face),ctx(),live(),sel.length===tray().length,sel.map(o=>o.inst.fin)).reduce((a,b)=>a+b,0); }
   const full=!!(sel&&sel.length&&sel.length===tray().length); F._prevR=R2; const O=curOdds(full,R2), eq=$('#eq'); if(!eq) return;
   const set=(id,v,l)=>{ const e=$('#'+id); e.innerHTML=`<b>${v}</b><small>${l}</small>`; };
   const known=F.target!=null&&F.target!=='–'&&!F.tHid;
-  const r=known?settle(F.pScore+add,F.oScore,R2||F.R||newRound(),live(),F.opp,{...oddsEnv(true),preview:!full,lossStreak:F.streak||0,oppHalf:F.oppHp<=F.oppMax/2}):null, st=stakesOf(oddsEnv(true));
-  eq.classList.toggle('raised',st>1);
+  const r=known?settle(F.pScore+add,F.oScore,R2||F.R||newRound(),live(),F.opp,{...oddsEnv(true),preview:!full,lossStreak:F.streak||0,oppHalf:F.oppHp<=F.oppMax/2}):null;
   eq.classList.toggle('bad',!!r&&r.winner==='them'); eq.classList.toggle('even',!!r&&r.winner==='push');
   if(known&&!F.R.throws&&!(sel&&sel.length)){ set('eqgap',Math.max(0,tgt()-F.pScore),'To beat'); set('odds',fmtOdds(O.odds),'Your odds'); set('pays','?','They lose'); }
   else if(!known){ set('eqgap','?','Ahead by'); set('odds',fmtOdds(O.odds),'Your odds'); set('pays','?','They lose'); }
-  else if(r&&r.winner==='you'){ set('eqgap',r.margin,has('cut')?'Ahead +2 cut':'Ahead by'); set('odds',fmtOdds(r.odds),r.raid?'Raid odds':'Your odds'); set('pays',r.dmg,r.armor?'Vest stops it':r.capped?'Iron Jaw cap':st>1?`They lose \u00d7${st}`:r.pot?`They lose (+${r.pot} margin)`:'They lose'); }
-  else if(r.winner==='them'){ const free=has('rabbit')&&!F.rabbitUsed; set('eqgap',r.gap,r.house?'House tie':r.sharp?'Sharp tie':'Behind by'); set('odds',fmtOdds(r.odds),'Their odds'); set('pays',free?0:r.dmg,free?'Rabbit\u2019s Foot':st>1?`You lose \u00d7${st}`:'You lose'); }
+  else if(r&&r.winner==='you'){ set('eqgap',r.margin,has('cut')?'Ahead +2 cut':'Ahead by'); set('odds',fmtOdds(r.odds),r.raid?'Raid odds':'Your odds'); set('pays',r.dmg,r.armor?'Vest stops it':r.capped?'Iron Jaw cap':r.pot?`They lose (+${r.pot} margin)`:'They lose'); }
+  else if(r.winner==='them'){ const free=has('rabbit')&&!F.rabbitUsed; set('eqgap',r.gap,r.house?'House tie':r.sharp?'Sharp tie':'Behind by'); set('odds',fmtOdds(r.odds),'Their odds'); set('pays',free?0:r.dmg,free?'Rabbit\u2019s Foot':'You lose'); }
   else { set('eqgap',r.near?1:0,r.near?'Near miss':'Tied'); set('odds',fmtOdds(O.odds),'Your odds'); set('pays',0,'Push'); }
   if(bump){ const oe=$('#odds'); oe.classList.remove('bump'); void oe.offsetWidth; oe.classList.add('bump'); } }
 // "how does this work?" — your odds, piece by piece, with the real numbers
@@ -1435,19 +1435,19 @@ async function payOut(r){ const big=r.dmg>=40||r.odds>=5; document.body.classLis
     ov.textContent=fmtOdds(r.odds); pm.textContent=`\u00d7 ${fmtOdds(r.odds)} odds`; SFX.odds(); await sleep(380);
     const steps=Math.min(14,Math.max(4,Math.round(Math.log2(r.dmg+1)*2))); for(let i=1;i<=steps;i++){ pv.textContent=Math.round(r.dmg*i/steps); SFX.tick(i); await sleep(40); } }
   { const set=(id,v,l)=>{ const e=$('#'+id); if(e) e.innerHTML=`<b>${v}</b><small>${l}</small>`; }; set('eqgap',r.margin,'Ahead by'); set('odds',fmtOdds(r.odds),'Your odds'); set('pays',r.dmg,'They lose'); }
-  pv.textContent=r.dmg; el.classList.add('hit'); pm.textContent=r.capped?'Iron Jaw cap':stakesOf(oddsEnv(true))>1?`hit \u00d7${stakesOf(oddsEnv(true))} stakes`:r.pot?`hit \u00b7 +${r.pot} margin`:'hit'; SFX.ching(big); setTimeout(SFX.hit,120);
-  { const st=stakesOf(oddsEnv(true)); msg(`<span class="big win">Hit for ${r.dmg}</span><span class="math">${r.margin}${r.odds!==1?` \u00d7 ${fmtOdds(r.odds)} odds`:''}${st>1?` \u00d7 ${st} stakes`:''} \u00b7 you ${F.pScore} vs ${r.oFinal}</span>`); }
+  pv.textContent=r.dmg; el.classList.add('hit'); pm.textContent=r.capped?'Iron Jaw cap':r.pot?`hit \u00b7 +${r.pot} margin`:'hit'; SFX.ching(big); setTimeout(SFX.hit,120);
+  { msg(`<span class="big win">Hit for ${r.dmg}</span><span class="math">${r.margin}${r.odds!==1?` \u00d7 ${fmtOdds(r.odds)} odds`:''} \u00b7 you ${F.pScore} vs ${r.oFinal}</span>`); }
   setTimeout(()=>el.remove(),900); }
 // reloaded after the last bank: the result is already decided, so skip straight to settling it
 async function resumeEnd(e){ sweepDice(); fitCam(); busy=true;
-  Object.assign(F,{raise:!!e.raise,folded:!!e.folded,intent:e.intent||'steady',next:e.next||'steady',pScore:e.pScore,oScore:e.oScore,target:e.target,R:e.R,throwNo:e.throwNo||1,_shownT:null,_prevR:null,spoonUsed:true,railN:{you:0,them:0},labelsOn:false,you:[],them:[],hand:(e.hand||[]).map(i=>G.bag[i]).filter(Boolean)});
+  Object.assign(F,{intent:e.intent||'steady',next:e.next||'steady',pScore:e.pScore,oScore:e.oScore,target:e.target,R:e.R,throwNo:e.throwNo||1,_shownT:null,_prevR:null,spoonUsed:true,railN:{you:0,them:0},labelsOn:false,you:[],them:[],hand:(e.hand||[]).map(i=>G.bag[i]).filter(Boolean)});
   setP(F.pScore); setVs(F.target); updOdds(); $('#sitting').innerHTML=`<span>Sitting on</span><b>${F.target}</b>`;
   msg(`Round ${F.round}. You finished on <b>${F.pScore}</b> against <b>${F.target}</b>.`);
   await sleep(500); if(F) await endRound(); }
 async function endRound(){
   busy=true; F.labelsOn=false;
-  saveFight({end:{pScore:F.pScore,oScore:F.oScore,target:F.target,R:F.R,throwNo:F.throwNo,raise:F.raise,folded:F.folded,intent:F.intent,next:F.next,hand:F.hand.map(d=>G.bag.indexOf(d)).filter(i=>i>=0)}});
-  const r=F.folded?{winner:'them',dmg:foldDmg(F.opp,F.intent),gap:0,odds:theirOdds(F.opp,{intent:F.intent}),oFinal:F.target,fold:true}:settle(F.pScore,F.oScore,F.R,live(),F.opp,{...oddsEnv(true),lossStreak:F.streak||0,oppHalf:F.oppHp<=F.oppMax/2});
+  saveFight({end:{pScore:F.pScore,oScore:F.oScore,target:F.target,R:F.R,throwNo:F.throwNo,intent:F.intent,next:F.next,hand:F.hand.map(d=>G.bag.indexOf(d)).filter(i=>i>=0)}});
+  const r=settle(F.pScore,F.oScore,F.R,live(),F.opp,{...oddsEnv(true),lossStreak:F.streak||0,oppHalf:F.oppHp<=F.oppMax/2});
   if(r.house) toast('<b class="r">Ties go to the house.</b>');
   if(r.sharp) toast('<b class="r">Sharp.</b> Ties go to them.');
   if(r.near) toast('<b>Near Miss.</b> Lost by one. Nobody bleeds.');
@@ -1473,7 +1473,7 @@ async function endRound(){
     if(has('tip')) addGold(2,$('#cash'));
     if(r.recoil&&G.hp>1){ const k=Math.min(r.recoil,G.hp-1); G.hp-=k; G.stats.taken+=k; updTop(); setTimeout(()=>floatEl($('#hpbar'),'\u2212'+k,'dmg'),400); toast(`<b class="r">Brass Knuckles.</b> ${k} came back at you.`); }
   } else if(r.winner==='them'){ G.stats.lost++; G.stats.taken+=r.dmg;
-    msg(r.fold?`<span class="big lose">Folded. Took ${r.dmg}</span><span class="math">2 \u00d7 their odds ${fmtOdds(r.odds)}</span>`:`<span class="big lose">Took ${r.dmg}</span><span class="math">over by ${r.gap} \u00d7 their odds ${fmtOdds(r.odds)}${stakesOf(oddsEnv(true))>1?' \u00d7 '+stakesOf(oddsEnv(true))+' stakes':''}${F.opp.q.includes('hot')&&F.streak>1?' + hot streak':''}</span>`); SFX.lose(); setTimeout(SFX.hurt,130);
+    msg(`<span class="big lose">Took ${r.dmg}</span><span class="math">over by ${r.gap} \u00d7 their odds ${fmtOdds(r.odds)}${F.opp.q.includes('hot')&&F.streak>1?' + hot streak':''}</span>`); SFX.lose(); setTimeout(SFX.hurt,130);
     G.hp-=r.dmg; G.stats.low=Math.min(G.stats.low??50,G.hp); updTop(); floatEl($('#hpbar'),'−'+r.dmg,'dmg'); shake(.3); if(PMAT) PMAT.uniforms.hurt.value=.6; foeLaugh();
     if(!r.free&&F.opp.q.includes('steal')&&G.gold>0) addGold(-Math.min(3,G.gold),$('#cash'));
     if(F.opp.sig==='feed'&&r.dmg>0&&F.oppHp<F.oppMax){ const hl=Math.min(F.oppMax-F.oppHp,r.dmg); F.oppHp+=hl; setTimeout(()=>{ if(!F) return; updOpp(); floatEl($('#obar'),'+'+hl,'heal'); toast(`<b class="r">Mama Rosa</b> eats well. +${hl} nerve.`); },500); }
@@ -1557,7 +1557,7 @@ function renderReward(kind){
   F=null; clearLabels(); clearDebris();
   let W=G.rw&&G.rw.choices?G.rw:null;
   if(W) kind=W.kind; else {
-  const quick=kind==='F'&&G._quick, hotW=kind==='E'&&G._hot; G._hot=false; let gold=kind==='B'?20:hotW?15:kind==='E'?10:Math.max(1,5+(quick?3:0)+LIM().pay); if(G.nb&&G.nb.double){ gold*=2; G.nb.double=false; } G.gold+=gold; G.stats.earned+=gold;
+  const quick=kind==='F'&&G._quick, hotW=kind==='E'&&G._hot; G._hot=false; let gold=kind==='B'?20:hotW?15:kind==='E'?10:Math.max(1,5+(quick?3:0)+LIM().pay-(hasDeed(G,'racket')?2:0)); if(G.nb&&G.nb.double){ gold*=2; G.nb.double=false; } G.gold+=gold; G.stats.earned+=gold;
   if(kind==='E'&&G._quick) setTimeout(()=>{ if(!G) return; gainChit(pick(CHIT_KEYS)); saveRun(); },700);
   if(G.tab>0){ const pay=Math.min(G.gold,G.tab); G.gold-=pay; G.tab-=pay; setTimeout(()=>toast(`The bartender takes <b>$${pay}</b> off your tab.${G.tab?` You still owe $${G.tab}.`:' You\u2019re square.'}`),900); }
   const choices=[];
@@ -1743,7 +1743,7 @@ function charmPop(t){ if(popEl&&popEl._for===t){ closePop(); return; } closePop(
   const mv=dir=>{ const i=G.charms.indexOf(c), j=i+dir; if(i<0||j<0||j>=G.charms.length||offbook(G,G.charms[j])!==offbook(G,c)) return; [G.charms[i],G.charms[j]]=[G.charms[j],G.charms[i]]; SFX.tok(); closePop(); refreshRack(); saveRun(); if(F) updOdds(); const nt=$(`#rack .token[data-c="${c}"]`); if(nt) charmPop(nt); };
   popEl.querySelector('#pleft').onclick=()=>mv(-1); popEl.querySelector('#pright').onclick=()=>mv(1);
   popEl.querySelector('#psell').onclick=()=>{ loseCharm(c); G.gold+=v; G.stats.earned+=v; SFX.stamp(); SFX.coin(); updTop(); toast(`Sold <b>${d.name}</b> for $${v}.`); closePop(); if(window.__paint) window.__paint(); if(!F) saveRun(); }; }
-document.addEventListener('pointerdown',e=>{ if(popEl&&!popEl.contains(e.target)&&!e.target.closest('.token,#owe,[data-q]')) closePop(); });
+document.addEventListener('pointerdown',e=>{ if(popEl&&!popEl.contains(e.target)&&!e.target.closest('.token,#owe,[data-q],.stamp,.stat,.dk')) closePop(); });
 document.addEventListener('click',e=>{ const o=e.target.closest('#owe'); if(!o||!G||!G.tab) return; e.stopPropagation(); anchorPop(o,`<div class="pn">Your tab: $${G.tab}</div><div class="pd">You owe the bartender. It comes out of your next winnings automatically, before you see them. He won\u2019t front more than $${TAB_LIMIT} total.</div>`); });
 
 /* ================= REST ================= */
@@ -1880,9 +1880,7 @@ const TIPS={
   quirk:['Read their tags','Their tags are on their nameplate, top right. Hover one (or click it) to read it. “Hits ×” is how hard their wins land on you.'],
   counter:['House rules','Bosses and the sharks upstairs draw a house rule at random every night. Maybe your × odds don’t count, maybe one of your charms sits out each round. Same face, different trick, so read their tags every time.'],
   boss:['The owner','Bosses have a signature move, printed on their door before you sit down, and it gets worse once they’re at half nerve. No boss goes down in one round: the first big hit stops at half, and then the gloves come off.'],
-  shake:['Shakes','A Shake rethrows the dice you picked without banking them. You get one every round (Bent Spoon gives another, free). It costs you: their score counts 1 lower for the round. Worth it on a 5 or a 6; think twice on a 3.'],
-  raise:['Raised','Stakes are doubled this round: whatever the winner hits for, it lands twice. Raise when they finished high and your throw looks good. Fold when it looks hopeless: you eat a small fixed hit instead of a big one.'],
-  intent:['Read the table','The tag next to their Hits is what they’re up to this round, and the one after it is next round. Leaning in hits harder and Counting crowns makes your first-throw crowns score 1. Sweating, Getting tired and On tilt are your openings: that’s when to Raise.'],
+  intent:['Read the table','The tag next to their Hits is what they’re up to this round, and the one after it is next round. Leaning in hits harder and Counting crowns makes your first-throw crowns score 1. Sweating, Getting tired and On tilt are your openings: that’s the round to drink your Absinthe.'],
   deed:['Deeds','A deed is yours for the rest of the night: strong, with a catch. Your deeds sit next to your cash; hover one to read it again.'],
   plays:['Plays','Some banks are Plays: two 1s at once, three of a kind, a 1-2-3 ladder, three crowns, or finishing on 3 or less. Each one you make widens your win by its level and adds odds. Every 4th time you make a Play, it levels up for the rest of the night.'],
   guard:['Guard','Guard soaks hits before your nerve does, and unlike a drink it stays between rounds at this table. Hip Flask, The Bulldog and The Bodyguard build it; Haymaker turns it into bigger wins.'],
@@ -1948,12 +1946,11 @@ function menuPage(tab){
     <div class="set"><span class="lab">Screen shake</span><div class="opts" data-k="shake"><button class="opt ${SET.shake?'on':''}" data-v="1">On</button><button class="opt ${!SET.shake?'on':''}" data-v="0">Off</button></div></div>`;
   return `<div class="secthead">House Rules</div><ol class="hr">
     <li data-i="1"><span>Each round you draw six dice from your bag. Your opponent throws first and sets the number to beat.</span></li>
-    <li data-i="2"><span>Throw your dice. Bank at least one, then throw the rest again. Keep going until every die is banked. Once a round you can <b>Shake</b>: rethrow the dice you picked without banking them, but their score counts 1 lower for it.</span></li>
-    <li data-i="3"><span>After your first throw, before you bank: <b>Raise</b> to double the stakes, or <b>Fold</b> to take a small fixed hit and skip the round.</span></li>
+    <li data-i="2"><span>Throw your dice. Bank at least one, then throw the rest again. Keep going until every die is banked.</span></li>
     <li data-i="4"><span>Banked dice add up. Lowest total wins the round. A <span class="kw crown">\u265B</span> crown counts for nothing.</span></li>
     <li data-i="5"><span>Win and you hit for the gap <b>\u00d7 your odds</b>. Your odds start at 1. Charms, finishes and drinks add to them (+) or multiply them (\u00d7). Every boss you beat adds +1 for good.</span></li>
     <li data-i="6"><span>Lose and they hit you for the gap \u00d7 <i>their</i> odds, which climb every act.</span></li>
-    <li data-i="7"><span>Their nameplate shows what they’re up to this round and next (Leaning in, Sweating, Raises…). Bosses can’t lose more than half their nerve in one round.</span></li>
+    <li data-i="7"><span>Their nameplate shows what they’re up to this round and next (Leaning in, Sweating, On tilt…). Bosses can’t lose more than half their nerve in one round.</span></li>
     <li data-i="8"><span><b>Guard</b> soaks hits before your nerve and stays between rounds at a table. Hit for more than they had left and the overkill pays $1 per 10.</span></li>
     <li data-i="9"><span><b>Plays</b>: two 1s at once, three of a kind, a 1-2-3, three crowns, or finishing on 3 or less. Each adds its level to your winning margin, plus odds. Every 4th time you make one, it levels up.</span></li>
     <li data-i="10"><span>Read their tags. Bosses and the sharks upstairs draw a random house rule each night that works against your build.</span></li>

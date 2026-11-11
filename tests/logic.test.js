@@ -312,18 +312,17 @@ test('The Echo doubles crowns from the first throw; Double Take doubles 1s', () 
   const R = L.newRound(); L.noteBank(R, ['C', 'C'], ['d6', 'd6'], ['echo']); L.noteBank(R, ['C'], ['d6'], ['echo']); assert.equal(R.crowns, 5);
   const S = L.newRound(); L.noteBank(S, [1], ['d6'], ['doubletake']); assert.equal(S.ones, 2); assert.ok(S.snake);
 });
-test('Raise doubles both ways; intents: Leaning in +1, Sweating halves, Raises doubles; Fold costs 2x their odds', () => {
-  assert.equal(L.settle(3, 5, L.newRound(), [], O([], 100, 1), env({ raise: 1 })).dmg, 4);
-  assert.equal(L.settle(7, 5, L.newRound(), [], O([], 100, 3), env({ raise: 1 })).dmg, 12);
+test('Intents: Leaning in +1 to their Hits, Sweating halves them, Getting tired +2 to their score, On tilt x2 odds', () => {
   assert.equal(L.settle(7, 5, L.newRound(), [], O([], 100, 3), env({ intent: 'lean' })).dmg, 8);
   assert.equal(L.settle(7, 5, L.newRound(), [], O([], 100, 3), env({ intent: 'sweat' })).dmg, 4);
-  assert.equal(L.settle(7, 5, L.newRound(), [], O([], 100, 3), env({ intent: 'raise', raise: 1 })).dmg, 24);
-  assert.equal(L.foldDmg(O([], 100, 3)), 6); assert.equal(L.foldDmg(O([], 100, 1)), 2);
+  assert.equal(L.targetOf(8, L.newRound(), [], [], { intent: 'tired' }), 10);
+  assert.equal(L.oddsOf(L.newRound(), [], env({ intent: 'tilted' })).odds, 2);
+  assert.ok(!L.INTENTS.raise);
 });
 test('Bosses always reach their second half; toss price climbs $3', () => {
   assert.equal(L.gateDmg({ boss: true }, 100, 100, false, 80), 50); assert.equal(L.gateDmg({ boss: true }, 100, 100, true, 80), 80);
   assert.equal(L.gateDmg({}, 100, 100, false, 80), 80); assert.equal(L.gateDmg({ boss: true }, 60, 100, false, 5), 5);
-  assert.equal(L.tossPrice({}), 6); assert.equal(L.tossPrice({ tossed: 2 }), 12); assert.equal(L.shakesFor(['spoon'], {}), 2);
+  assert.equal(L.tossPrice({}), 6); assert.equal(L.tossPrice({ tossed: 2 }), 12);
 });
 test('Deeds: Still +1 slot and +$2 prices; Brass caps a loss at 12; Deep Pockets draws 7 and hits 2 harder; Black Book makes Plays x1.5; Bad Rep +3 odds', () => {
   const G = { deeds: [], hp: 50, maxHp: 50, rep: 0 };
@@ -334,7 +333,6 @@ test('Deeds: Still +1 slot and +$2 prices; Brass caps a loss at 12; Deep Pockets
   assert.equal(L.settle(5, 3, L.newRound(), [], O([], 100, 1), env({ deeds: ['pockets'] })).dmg, 4);
   const T = L.newRound(); L.noteBank(T, [2, 2, 2], ['d6', 'd6', 'd6'], []); assert.equal(L.oddsOf(T, [], env({ plays: {}, deeds: ['blackbook'] })).odds, 1.5);
   const C = { deeds: [], rep: 0 }; L.takeDeed(C, 'badrep'); assert.equal(C.rep, 3);
-  assert.ok(L.shakesFor([], { deeds: ['loadedcup'] }) > 50); assert.equal(L.shakesFor(['spoon'], {}), 2);
 });
 test('Limits: Lead Die never crowns; Last Orders doubles restocks; Double Down at the top', () => {
   assert.ok(!L.DT.lead.faces.includes('C')); assert.equal(L.LIMITS.length, 12);
@@ -349,8 +347,7 @@ test('Floor plan: 9 rows, owner on top, alley/bar rows, lines never cross, every
     for (let r = 0; r < 7; r++) { const a = M[r][0].to.includes(1), b = M[r][1].to.includes(0), c = M[r][1].to.includes(2), d = M[r][2].to.includes(1); assert.ok(!(a && b) && !(c && d));
       M[r + 1].forEach(n => assert.ok(M[r].some(o => o.to.includes(n.x)))); } }
 });
-test('Round 2: Shakes take 1 off their score, Getting tired +2, On tilt x2, Plays add margin, Guard soaks and carries', () => {
-  assert.equal(L.targetOf(8, L.newRound(), [], [], { shook: 2 }), 6); assert.equal(L.targetOf(8, L.newRound(), [], [], { intent: 'tired' }), 10);
+test('Round 2: Plays add margin, Guard soaks and carries, overkill pays', () => {
   assert.equal(L.oddsOf(L.newRound(), [], env({ intent: 'tilted' })).odds, 2);
   const R = L.newRound(); L.noteBank(R, [1, 1], ['d6', 'd6'], []);
   assert.equal(L.settle(4, 7, R, [], O([], 100, 1), env({ plays: {} })).margin, 4);

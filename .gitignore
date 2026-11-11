@@ -4,3 +4,4 @@ __pycache__/
 *.png
 !build/*.png
 .DS_Store
+!docs/img/*.png

@@ -583,8 +583,6 @@ button.tabnum.owe{border:0;background:none;padding:0;cursor:pointer;font:inherit
 /* in-round choices: Shake, Nudge, Bump, Raise, Fold */
 .acts .minis{display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-end;margin-bottom:6px}
 .acts .minis .btn.small{padding:5px 10px 4px;font-size:13px}
-.acts .btn.raise{color:var(--odds);box-shadow:inset 0 0 0 1.5px #f0c04088}
-.acts .btn.fold{color:var(--ox-hi);box-shadow:inset 0 0 0 1.5px #ff5a6a66}
 .stamp.intent{background:#2a2010;color:var(--odds)} .stamp.intent.i-steady{color:var(--cream-2);background:#0003}
 .stamp.intent.i-lean,.stamp.intent.i-raise{background:#4a1018;color:#ffb0b8}
 .stamp.intent.i-sweat{background:#103a2a;color:#9ff0c8}
@@ -623,7 +621,6 @@ button.tabnum.owe{border:0;background:none;padding:0;cursor:pointer;font:inherit
 .cards.deeds .card{padding:10px 8px 14px} .cards.deeds .card .art{height:40px}
 /* round 2 */
 body.paying #pays b,body.paying #pays small{visibility:hidden}
-.eq.raised{box-shadow:inset 0 0 0 2px var(--odds),0 0 14px #f0c04055}
 .duel{position:relative}
 .guard{display:none;position:absolute;left:0;bottom:-20px;font-family:var(--f-ui);font-size:12px;color:#062a24;background:var(--nerve);padding:2px 8px 1px;border-radius:99px;white-space:nowrap}
 .guard.on{display:block}
@@ -670,3 +667,8 @@ body.paying #odds b,body.paying #eqgap b{visibility:hidden}
   .legend{grid-template-columns:1fr 1fr 1fr;font-size:10px} .legend .mn{width:16px;height:16px;padding:2px}
 }
 .alleym #choices{display:grid;grid-template-columns:1fr 1fr;gap:8px} .alleym #choices .entry{margin:0}
+/* in-fight toasts: a stack on the left under the top bar */
+#toasts{position:fixed;left:12px;z-index:70;display:flex;flex-direction:column;gap:6px;align-items:flex-start;pointer-events:none;max-width:min(320px,34vw)}
+.toast.side{position:relative;left:auto;top:auto;text-align:left;max-width:100%;font-size:13.5px;padding:8px 12px;animation:tsts 3.4s var(--out) forwards}
+.toast.side b{font-size:15px}
+@keyframes tsts{0%{opacity:0;transform:translateX(-24px)}7%{opacity:1;transform:none}88%{opacity:1;transform:none}100%{opacity:0;transform:translateX(-12px)}}

@@ -34,8 +34,8 @@ Browser checks need `pip install playwright && python3 -m playwright install chr
 - **Card text = code.** Every charm/die/quirk `desc` must say exactly what the code does. Add a unit test in
   `tests/logic.test.js` for any new rule a player can read.
 - **Balance targets** (good bot, 800 runs): Penny Ante 22-40% (aim ~30), Quarter (lim 3) 9-26%, The Big Board (lim 10) 1-12%.
-  The sim also mirrors the floor plan (`genMap`), Shakes, Raise/Fold, intents, Plays, deeds and every limit; sim flags
-  `noshake=1 noraise=1 nointent=1 notip=1 nodeed=1 drink=<k>|none` switch a system off to measure it.
+  The sim also mirrors the floor plan (`genMap`), intents, Plays, Guard, deeds and every limit; sim flags
+  `nointent=1 nodeed=1 noplaylv=1 drink=<k>|none` switch a system off to measure it. Bots: pro, good, mid.
   Deaths should spread across Acts II-III, not pile on one fight. Changing a band is a design decision: say why in the PR.
 - **Table zones never overlap.** Back right, from the cup out to the corner: their banked dice. Middle: their throws. Front left, from the corner: your banked dice.
   Banked dice in a row may overlap slightly; dice in different zones never touch. Front: your tray. Every die stays on the felt. `fitCam()` zooms the camera to fit the zones; never move dice to make room.
