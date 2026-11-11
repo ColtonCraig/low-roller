@@ -76,7 +76,7 @@ Some banks are **Plays**. Each one you make in a round **adds its level to your 
 | Clean Hands | Finish a round on 3 or less. | +2 |
 
 Every Play starts at level 1. **Every 4th time you make one it levels up** for the rest of the night. The back alley's
-*Run the numbers* also levels your most-made Play. Your levels are in Menu → Your Night.
+*Run the numbers* also levels your most-made Play. Your levels, and how close each Play is to its next level, are in Menu → Your Night.
 
 ## Guard
 **Guard** soaks hits before your nerve does, and unlike a drink it **stays between rounds** at a table (it resets when you
@@ -84,21 +84,22 @@ sit down somewhere new). It only loses what it soaks. Build it with Hip Flask, T
 Protection Racket deed; Haymaker turns it into bigger wins. Your Guard shows under your score on the slip.
 
 ## Your opponent: Hits, tags and intents
-Their **nameplate** (top right) has everything. **Tap any tag** to read it.
-- **Hits ×N**: how hard their wins land. It climbs every act.
+Their **nameplate** (top right) has everything, top to bottom:
+- **If they win a round: gap ×N**: how hard their wins land on your nerve (their Hits). It climbs every act.
+- **This round / Next round**: what they're up to, in plain words. Green means it helps you, red means it hurts you. You see next round's coming so you can plan your drinks.
+- **Their tricks**: their tags. **Tap one** to read it.
 - **Plays Tight / Loose**: Tight only keeps 1s and crowns; Loose keeps anything 2 or under.
 - **Tags (quirks)**: their special rules (list below).
 - **House rules (counters)**: bosses and sharks draw one at random each night, built to punish one kind of build.
-- **Intent**: what they're up to *this round*, and the one after it (**Next:**) so you can plan your drinks.
 
 | Intent | What it does |
 |---|---|
-| Steady | Nothing special. |
-| Leaning in | Their Hits +1 this round. |
-| Sweating | Their Hits are halved this round (rounded up). |
-| Counting crowns | Your crowns score 1 on your first throw this round. |
-| Getting tired | Their score counts 2 higher this round. |
-| On tilt | Win this round and you get ×2 odds. |
+| Steady | Playing it straight. |
+| Leaning in | If they win, they hit you 1 harder. |
+| Sweating | If they win, their hit is halved. |
+| Counting crowns | Your crowns score 1 on your first throw. |
+| Getting tired | Their score counts 2 higher. |
+| On tilt | Win the round: you get ×2 odds. |
 
 **Bosses** have a signature move printed on their door, and get worse at half nerve. **No boss loses more than half their
 nerve in one round**, so you always see their second half. One **burning door** per room is a high-stakes shark: 40% more

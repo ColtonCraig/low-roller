@@ -950,7 +950,7 @@ function charmDesc(c){ const d=CHARMS[c].desc, gr=G&&G.grow||{}; if(!G||!G.charm
   return d; }
 
 /* ================= CHARM ICONS: little 3D props, rendered once in the room's own light and pixel grid ================= */
-const CHARM_ICON={}, SVC_ICON={}, DIE_ICON={}; const ICON_PX=36;
+const CHARM_ICON={}, SVC_ICON={}, DIE_ICON={}, DRINK_ICON={}; const ICON_PX=36;
 function buildCharmIcons(){ if(!GL_OK||!R) return; try{
   const S=ICON_PX, rt=new THREE.WebGLRenderTarget(S,S,{minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter,format:THREE.RGBAFormat});
   const scn=new THREE.Scene();
@@ -1060,6 +1060,17 @@ function buildCharmIcons(){ if(!GL_OK||!R) return; try{
     stranger(g){ add(g,Cy(.62,.62,.05,14),M(0x2a2a30),0,.3,0); add(g,Cy(.34,.4,.4,12),M(0x2a2a30),0,.52,0); add(g,Cy(.41,.41,.1,12),M(0x7a1424),0,.4,0); add(g,Bx(.5,.06,.2),M(0x2a2a30),0,.73,0); },
   };
   Object.keys(SV).forEach(k=>{ SVC_ICON[k]=snap(propG(SV[k])); });
+  // drinks: real bottles and glasses, same lighting as the charms
+  const tint=(c,o=.62)=>new THREE.MeshLambertMaterial({color:c,transparent:true,opacity:o,emissive:c,emissiveIntensity:.18});
+  const DK={
+    gin(g){ add(g,Cy(.28,.3,.9,10),tint(0x9fd8ff,.55),0,.45,0); add(g,Cy(.12,.26,.22,10),tint(0x9fd8ff,.55),0,1.0,0); add(g,Cy(.08,.08,.22,8),tint(0x9fd8ff,.55),0,1.2,0); add(g,Cy(.09,.09,.1,8),M(0xb08a5a),0,1.34,0); add(g,Bx(.42,.34,.02),CREAM,0,.46,.29); add(g,Bx(.3,.06,.02),M(0x2a5a9a),0,.5,.3); },
+    absinthe(g){ add(g,Cy(.3,.14,.5,10),glass,0,.6,0); add(g,Cy(.26,.14,.3,10),E(0x6ad43a,.55),0,.5,0); add(g,Cy(.03,.03,.3,5),glass,0,.2,0); add(g,Cy(.2,.22,.04,10),glass,0,.05,0); add(g,Bx(.9,.02,.12),SILVER,0,.88,0,0,.2); add(g,Bx(.16,.16,.16),M(0xffffff),0,.97,0,.2,.5,0); },
+    soda(g){ add(g,Cy(.26,.26,.8,12),tint(0x8fd0c0,.5),0,.4,0); add(g,Cy(.2,.26,.2,10),SILVER,0,.9,0); add(g,Bx(.1,.22,.1),SILVER,0,1.08,0); add(g,Bx(.44,.06,.08),SILVER,.18,1.02,0,0,0,-.25); add(g,Cy(.03,.03,.3,5),SILVER,-.2,1.08,0,0,0,.4); for(let k=0;k<3;k++) add(g,Sp(.04,4),M(0xffffff),-.08+k*.08,.3+k*.16,.2); },
+    bitters(g){ add(g,Cy(.24,.26,.5,10),M(0x5a1a10,{emissive:0x1a0402}),0,.25,0); add(g,Cy(.1,.22,.16,10),M(0x5a1a10),0,.58,0); add(g,Cy(.05,.05,.16,6),M(0x5a1a10),0,.72,0); add(g,Cy(.08,.06,.1,8),M(0xffd090),0,.84,0); add(g,Bx(.4,.4,.02),M(0xf4e8c8),0,.26,.25); add(g,Bx(.24,.04,.02),RED,0,.34,.26); add(g,Bx(.2,.03,.02),BLACK,0,.22,.26); },
+    bourbon(g){ add(g,Bx(.56,.7,.3),tint(0xc07a2a,.7),0,.38,0); add(g,Cy(.12,.22,.16,8),tint(0xc07a2a,.7),0,.8,0); add(g,Cy(.07,.07,.2,8),tint(0xc07a2a,.7),0,.96,0); add(g,Cy(.09,.09,.08,8),BLACK,0,1.08,0); add(g,Bx(.42,.3,.02),M(0x1a1410),0,.4,.16); add(g,Bx(.3,.05,.02),GOLD,0,.46,.17); },
+    sidecar(g){ add(g,Co(.44,.4,12),glass,0,.76,0,Math.PI); add(g,Co(.36,.32,12),E(0xf0a040,.5),0,.8,0,Math.PI); add(g,To(.4,.03,12),M(0xfff8e0),0,.9,0,Math.PI/2); add(g,Cy(.03,.03,.5,5),glass,0,.4,0); add(g,Cy(.22,.24,.04,10),glass,0,.14,0); add(g,To(.1,.03,6),E(0xffc020,.5),.34,.94,0,.3,0,.6); },
+  };
+  Object.keys(DK).forEach(k=>{ DRINK_ICON[k]=snap(propG(DK[k])); });
   // every die, crown up, in its own skin and shape
   Object.keys(DT).forEach(t=>{ try{ const o=makeDie3D({type:t,uid:-1}); setFaces(o,'C',false); ALLDICE.delete(o); o.mats.forEach((m,i)=>m.emissive.setHex(baseEmissive(o,i))); if(o.restQ) o.mesh.quaternion.copy(o.restQ);
     const g=new THREE.Group(); g.add(o.mesh); DIE_ICON[t]=snap(g,.42); }catch(e){ console.warn('dieicon',t,e); } });
@@ -1077,12 +1088,14 @@ function neonSign(text,color='#ff4f86'){ const u=PX||2, W=Math.min(innerWidth-24
   cv.className='neonimg'; cv.style.width=w*u+'px'; cv.style.height=hh*u+'px'; cv.style.animation='blink 7s steps(1) infinite'; return cv; }
 let decoDice=[], decoTimer=null;
 function clearDeco(){ clearInterval(decoTimer); decoTimer=null; const d=decoDice; decoDice=[]; if(d.length) gatherYours(d); }
+// browsers only allow sound after you touch the page: the first tap or key anywhere (title screen included) starts the music
+['pointerdown','touchend','keydown','click'].forEach(ev=>addEventListener(ev,()=>{ const a=ac(); if(a){ const hint=document.getElementById('soundhint'); if(hint) hint.remove(); } },{capture:true,passive:true}));
 function renderTitle(){
   G=null; F=null; setActTheme(0); const SAVED=loadRun(); clearLabels(); lampDim=1;
   if(foe) foeWalkOut();
   screen(`<div class="hud pe"><div class="spacer"></div>${soundBtns()}</div>
   <div class="title pe">
-    <div><div id="neonslot"></div><div class="est" style="margin-top:8px">The Rusty Nail \u00b7 Est. 1926</div></div>
+    <div><div id="neonslot"></div><div class="est" style="margin-top:8px">The Rusty Nail \u00b7 Est. 1926</div>${!AC||AC.state!=='running'?'<div id="soundhint" class="soundhint">\u266b Tap anywhere for the band</div>':''}</div>
     <div class="tmid"><div class="rules paper"><div class="secthead">House rules</div>
       <ol><li data-i="1"><span>Throw six dice. Bank at least one, rethrow the rest.</span></li>
       <li data-i="2"><span>Lowest total wins. A <span class="kw crown">\u265B</span> crown is 0.</span></li>
@@ -1373,6 +1386,10 @@ async function bank(){
   if(F.tHid){ const o=F.them[F.tHid.i]; F.tHid=null; if(o){ setFaces(o,o.face,false); uprightTop(o); sparksAt(dieScreen(o)); } const adj=tAdj(); $('#sitting').innerHTML=`<span>Sitting on</span><b>${F.target}</b>${adj?`<em>(${F.oScore} ${adj>0?'+':'\u2212'} ${Math.abs(adj)})</em>`:''}`; setVs(F.target); SFX.paper(); }
   const faces=sel.map(o=>o.face), oddsBefore=curOdds().odds, partsBefore=curOdds().parts;
   const fins=finsOf(sel), vals=bankVals(faces,ctx(),live(),sel.length===tray().length,sel.map(o=>o.inst.fin),rackOf(G));
+  { const nums=faces.filter(f=>typeof f==='number'); // charms that changed what this bank scores light up
+    if(F.throwNo<=1&&nums.includes(1)) fire('penny','1s score 0'); if(nums.includes(2)) fire('deuces','2s score 1',1);
+    if(new Set(faces).size<faces.length) fire('jacks','Repeats 0',2); if(nums.includes(1)||faces.some(f=>f==='C'||f==='G')) fire('ringer','1s 3, crowns \u22121',3);
+    if(sel.length===tray().length&&vals.length&&Math.max(...vals)>=3&&nC('lastcall')) fire('lastcall','\u22121',4); }
   const ph0=playsHit(F.R,{}), ones0=F.R.ones||0, cr0=F.R.crowns||0; noteBank(F.R,faces,sel.map(o=>o.inst.type),live(),fins,rackOf(G));
   { const nc=faces.filter(f=>f==='C'||f==='G').length; if(nc&&F.R.throws===1&&(F.R.crowns-cr0)>nc) fire('echo','+'+nc+' crown'+(nc>1?'s':''),1); const n1=faces.filter(f=>f===1).length; if(n1) fire('doubletake','+'+n1+' one'+(n1>1?'s':''),1); }
   if(nC('bulldog')&&(F.R.ones||0)>ones0){ const g=(F.R.ones-ones0); F.wall=(F.wall||0)+g*nC('bulldog'); updGuard(); fire('bulldog','+'+g+' Guard'); }
@@ -1545,13 +1562,23 @@ function refreshChits(){ const e=$('#chits'); if(e) e.innerHTML=chitsHTML(); }
 let BOOK=(()=>{ try{ return JSON.parse(localStorage.getItem('lr-book')||'{}'); }catch(e){ return {}; } })(), bookT=0;
 function seen(cat,key){ if(key==null) return; const b=BOOK[cat]||(BOOK[cat]={}); if(b[key]) return; b[key]=1; clearTimeout(bookT); bookT=setTimeout(()=>{ try{ localStorage.setItem('lr-book',JSON.stringify(BOOK)); }catch(e){} },400); }
 const ALL_FOES=()=>{ const out=[]; ACTS.forEach(A=>{ const f=A.foes; [...f.t1,...f.t2,...f.e1,...f.e2,f.boss,...(f.bosses||[])].forEach(d=>{ if(d&&!out.some(x=>x.n===d.n)) out.push(d); }); }); return out; };
-function bookHTML(){ const cats=[['c','Charms',Object.keys(CHARMS).map(k=>[k,CHARMS[k].name,CHARMS[k].desc])],['d','Dice',Object.keys(DT).map(k=>[k,DT[k].name,DT[k].desc])],
-    ['f','Finishes',FIN_KEYS.map(k=>[k,FINISHES[k].name,FINISHES[k].desc])],['x','Fixtures',FIX_KEYS.map(k=>[k,FIXTURES[k].name,FIXTURES[k].desc])],['k','Drinks',DRINK_KEYS.map(k=>[k,DRINKS[k].name,DRINKS[k].desc])],
-    ['o','Faces at the table',ALL_FOES().map(d=>[d.n,d.n,d.s])],['q','Tags',Object.keys(QUIRKS).map(k=>[k,QUIRKS[k].name,QUIRKS[k].desc])]];
-  const all=cats.reduce((a,c)=>a+c[2].length,0), got=cats.reduce((a,[k,,L])=>a+L.filter(([id])=>BOOK[k]&&BOOK[k][id]).length,0);
-  return `<div class="secthead">The Collection<small>${got} of ${all} found. Kept across every night you play.</small></div>`+cats.map(([k,n,L])=>{ const have=L.filter(([id])=>BOOK[k]&&BOOK[k][id]).length;
-    return `<div class="secthead" style="margin-top:12px">${n}<small>${have}/${L.length}</small></div><div class="bookgrid">${L.map(([id,nm,d])=>BOOK[k]&&BOOK[k][id]?`<span class="bk" data-tip="${nm}: ${String(d).replace(/"/g,'&quot;')}">${nm}</span>`:'<span class="bk unk">???</span>').join('')}</div>`; }).join(''); }
-function drinkCard(k,price){ seen('k',k); return h(`<button class="card k-drink"><span class="k">Drink</span><span class="art">${drinkIco(k).replace('width="18" height="26"','width="40" height="58"')}</span><span class="mid"><span class="n">${DRINKS[k].name}</span><span class="d">${kw(DRINKS[k].desc)}</span></span>${price!=null?`<span class="p">$${price}</span>`:''}</button>`); }
+let bookCat='c', bookSel=null;
+function bookCats(){ return [['c','Charms',Object.keys(CHARMS).map(k=>[k,CHARMS[k].name,CHARMS[k].desc])],['d','Dice',Object.keys(DT).map(k=>[k,DT[k].name,DT[k].desc])],
+    ['k','Drinks',DRINK_KEYS.map(k=>[k,DRINKS[k].name,DRINKS[k].desc])],['f','Finishes',FIN_KEYS.map(k=>[k,FINISHES[k].name,FINISHES[k].desc])],['x','Fixtures',FIX_KEYS.map(k=>[k,FIXTURES[k].name,FIXTURES[k].desc])],
+    ['o','Faces',ALL_FOES().map(d=>[d.n,d.n,d.s])],['q','Tags',Object.keys(QUIRKS).map(k=>[k,QUIRKS[k].name,QUIRKS[k].desc])]]; }
+const bookHas=(k,id)=>!!(BOOK[k]&&BOOK[k][id]);
+function bookArt(k,id,nm){ const img=k==='c'?CHARM_ICON[id]:k==='d'?DIE_ICON[id]:k==='k'?DRINK_ICON[id]:null;
+  return img?`<img src="${img}" alt="">`:`<span class="bkl">${String(nm).replace(/^(The|A) /,'').slice(0,1)}</span>`; }
+// The Collection: one shelf at a time, icons you tap to read. Kept across every night you play.
+function bookHTML(){ const cats=bookCats(), all=cats.reduce((a,c)=>a+c[2].length,0), got=cats.reduce((a,[k,,L])=>a+L.filter(([id])=>bookHas(k,id)).length,0);
+  const cur=cats.find(c=>c[0]===bookCat)||cats[0], [ck,cn,L]=cur, sel=bookSel&&L.find(([id])=>id===bookSel&&bookHas(ck,id));
+  return `<div class="bkhead"><div><b>${got}</b> of ${all} found</div><div class="bkbar"><i style="width:${100*got/all}%"></i></div><small>Kept across every night you play.</small></div>
+    <div class="bkcats">${cats.map(([k,n,LL])=>{ const have=LL.filter(([id])=>bookHas(k,id)).length; return `<button class="bkcat ${k===ck?'on':''}" data-bc="${k}">${n}<small>${have}/${LL.length}</small></button>`; }).join('')}</div>
+    <div class="bkdetail ${sel?'':'hint'}">${sel?`<div class="bkart big">${bookArt(ck,sel[0],sel[1])}</div><div><b>${sel[1]}</b><span>${kw(String(sel[2]))}</span></div>`:`Tap anything on the ${cn.toLowerCase()} shelf to read it.`}</div>
+    <div class="bkgrid">${L.map(([id,nm])=>bookHas(ck,id)?`<button class="bkt ${sel&&sel[0]===id?'on':''}" data-bi="${String(id).replace(/"/g,'&quot;')}" title="${String(nm).replace(/"/g,'&quot;')}"><span class="bkart">${bookArt(ck,id,nm)}</span><span class="bkn">${nm}</span></button>`:`<span class="bkt unk"><span class="bkart">?</span><span class="bkn">Not yet</span></span>`).join('')}</div>`; }
+function wireBook(body){ body.querySelectorAll('.bkcat').forEach(b=>b.onclick=()=>{ SFX.paper(); bookCat=b.dataset.bc; bookSel=null; body.innerHTML=bookHTML(); wireBook(body); });
+  body.querySelectorAll('.bkt[data-bi]').forEach(b=>b.onclick=()=>{ SFX.pick(); bookSel=b.dataset.bi; body.innerHTML=bookHTML(); wireBook(body); }); }
+function drinkCard(k,price){ seen('k',k); return h(`<button class="card k-drink"><span class="k">Drink</span><span class="art">${DRINK_ICON[k]?drinkIco(k,true):drinkIco(k).replace('width="18" height="26"','width="40" height="58"')}</span><span class="mid"><span class="n">${DRINKS[k].name}</span><span class="d">${kw(DRINKS[k].desc)}</span></span>${price!=null?`<span class="p">$${price}</span>`:''}</button>`); }
 function plainCard(k,ico,n,d,price){ return h(`<button class="card"><span class="k">${k}</span><span class="art">${svcIcon(ico)}</span><span class="mid"><span class="n">${n}</span><span class="d">${kw(d)}</span></span>${price!=null?`<span class="p">$${price}</span>`:''}</button>`); }
 const charmPool=(tier)=>Object.keys(CHARMS).filter(c=>!G.charms.includes(c)&&(!tier||CHARMS[c].tier===tier));
 const rarePool=()=>[...charmPool('r').map(c=>({k:'charm',c,price:CHARMS[c].price,rare:1})),{k:'die',t:'shaved',price:DT.shaved.price,rare:1}];
@@ -1751,7 +1778,7 @@ function rackDrag(e,t){ if(e.button>0||!G) return; e.preventDefault(); const c=t
 // your coat: up to two drinks. Drink one on your turn; it lasts the round (Bourbon and a Sidecar work any time)
 function coatHTML(){ if(!G) return ''; const d=G.drinks||[]; let s=''; for(let i=0;i<DRINK_MAX;i++){ const k=d[i]; s+=k?`<button class="drink" data-dk="${k}" data-tip="${DRINKS[k].name}: ${DRINKS[k].desc} Click to drink.">${drinkIco(k)}</button>`:'<span class="drink empty"></span>'; }
   return `<div class="coat plate pe" id="coat" data-tip="Your coat: room for ${DRINK_MAX} drinks.">${s}</div>`; }
-function drinkIco(k){ const C={gin:'#c8e8ff',absinthe:'#7ad04a',soda:'#e8f4ff',bitters:'#a0402a',bourbon:'#c07a2a',sidecar:'#f0c040'}[k]||'#ccc';
+function drinkIco(k,big){ if(DRINK_ICON[k]) return `<span class="dicon ${big?'big':''}"><img src="${DRINK_ICON[k]}" alt=""></span>`; const C={gin:'#c8e8ff',absinthe:'#7ad04a',soda:'#e8f4ff',bitters:'#a0402a',bourbon:'#c07a2a',sidecar:'#f0c040'}[k]||'#ccc';
   return `<svg viewBox="0 0 20 28" width="18" height="26"><rect x="7" y="1" width="6" height="6" rx="1" fill="#3a2a1a"/><path d="M5 9 Q5 7 7 7 H13 Q15 7 15 9 V25 Q15 27 13 27 H7 Q5 27 5 25 Z" fill="${C}" opacity=".9"/><rect x="6" y="14" width="8" height="6" fill="#f4ead2" opacity=".85"/></svg>`; }
 function refreshCoat(){ const c=$('#coat'); if(c){ c.replaceWith(h(coatHTML())); } }
 function drink(k){ if(!G||!(G.drinks||[]).includes(k)) return;
@@ -1956,15 +1983,25 @@ let menuEl=null, menuTab='night';
 const SPEEDS=[[1,'Unhurried'],[1.6,'Brisk'],[2.4,'Quick']];
 function fmtTime(ms){ const s=Math.floor(ms/1000), m=Math.floor(s/60); return `${m}:${String(s%60).padStart(2,'0')}`; }
 function srow(l,v){ return `<div class="srow"><span class="sl">${l}</span><span class="leader"></span><span class="sv">${v}</span></div>`; }
+// ---- Your Night: where you are, how it's going, your Plays and Deeds
+function nightHTML(){ const st=G.stats, tile=(v,l,cls='')=>`<div class="ntile ${cls}"><b>${v}</b><span>${l}</span></div>`;
+  const where=G.mode==='endless'?`Lap ${G.lap+1} · Act ${ROMAN[G.act]}`:`Act ${ROMAN[G.act]}`;
+  const bb=hasDeed(G,'blackbook');
+  const plays=PLAY_KEYS.map(k=>{ const P=PLAYS[k], lv=playLv(G.plays,k), made=(G.playHits||{})[k]||0, toNext=PLAY_EVERY-(made%PLAY_EVERY);
+    return `<div class="nplay ${made?'':'never'}"><div class="nph"><span class="npn">${P.name}</span><span class="nlv">Lv ${lv}</span></div>
+      <div class="npd">${P.desc}</div>
+      <div class="npe">Pays <b class="kw odds">+${lv} margin</b> and <b class="kw odds">${bb?'×1.5':'+'+P.per*lv} odds</b> the round you make it.</div>
+      <div class="npbar"><i style="width:${100*(made%PLAY_EVERY)/PLAY_EVERY}%"></i></div><div class="npm">Made ${made}× · ${toNext} more to reach Lv ${lv+1}</div></div>`; }).join('');
+  return `<div class="nhero"><div class="nwhere"><span class="sc">${where}</span><b>${ACTS[G.act].name}</b><span>Floor ${G.floor+1} of ${FLOORS.length}</span></div>
+      <div class="nhp"><span class="sc">Nerve</span><b>${G.hp}<small>/${G.maxHp}</small></b><span class="g">$${G.gold}</span></div></div>
+    <div class="ntiles">${tile(G.won,'Tables won')}${tile(`${st.won}<small>–</small>${st.lost}${st.push?`<small>–</small>${st.push}`:''}`,'Rounds won–lost'+(st.push?'–push':''))}${tile(st.best,`Biggest hit${st.bestWho?` (${st.bestWho})`:''}`,'red')}${tile(fmtTime(Date.now()-st.t0),'At the tables')}</div>
+    <div class="ntiles small">${tile(st.dealt,'Nerve you broke','red')}${tile(st.taken,'Nerve you lost','teal')}${tile(st.crowns,'Crowns banked','gold')}${tile(`$${st.earned}`,'Cash earned','green')}${tile(`$${st.spent}`,'Cash spent','green')}${best()?tile(best(),'Longest night ever'):''}</div>
+    <div class="secthead" style="margin-top:16px">Your Plays</div>
+    <div class="nnote">Bank a pattern and it pays you extra that round. Every 4th time you make one, it levels up for the rest of the night.</div>
+    <div class="nplays">${plays}</div>
+    ${(G.deeds||[]).length?`<div class="secthead" style="margin-top:16px">Your Deeds</div><div class="ndeeds">${G.deeds.map(k=>`<div class="ndeed"><b>${DEEDS[k].name}</b><span>${kw(DEEDS[k].desc)}</span></div>`).join('')}</div>`:''}`; }
 function menuPage(tab){
-  if(tab==='night'){ if(!G) return '<div class="empty">No run in progress. Take a seat first.</div>'; const st=G.stats;
-    return `<div class="secthead">Your Night So Far<small>${G.mode==='endless'?'Stay all night':`Act ${ROMAN[G.act]}`} at ${ACTS[G.act].name}</small></div>
-      <div class="stats">${srow('Floor',`${ROMAN[G.act]} \u00b7 ${G.floor+1}/${FLOORS.length}${G.mode==='endless'?` \u00b7 lap ${G.lap+1}`:''}`)}${srow('Tables won',G.won)}${srow('Rounds won',`${st.won} of ${st.rounds}`)}${srow('Rounds lost',st.lost)}${srow('Pushes',st.push)}
-      ${srow('Nerve broken',st.dealt)}${srow('Nerve lost',st.taken)}${srow('Biggest hit',st.best)}${srow('Crowns banked',st.crowns)}${srow('Dice banked',st.banked)}${srow('Cash earned',`$${st.earned}`)}${srow('Cash spent',`$${st.spent}`)}${srow('Time at the tables',fmtTime(Date.now()-st.t0))}
-      ${best()?srow('Longest night ever',`${best()} tables`):''}</div>
-      <div class="secthead" style="margin-top:12px">Your Plays<small>Each one you make adds its level to your margin and its odds. Every 4th time you make one, it levels up.</small></div>
-      <div class="stats">${PLAY_KEYS.map(k=>{ const lv=playLv(G.plays,k); return srow(`${PLAYS[k].name} <small style="opacity:.7">${PLAYS[k].desc} Made ${(G.playHits||{})[k]||0}\u00d7.</small>`,`Lv ${lv} \u00b7 +${lv} margin, ${hasDeed(G,'blackbook')?'\u00d71.5':'+'+PLAYS[k].per*lv} odds`); }).join('')}</div>
-      ${(G.deeds||[]).length?`<div class="secthead" style="margin-top:12px">Your Deeds</div><div class="stats">${G.deeds.map(k=>srow(DEEDS[k].name,DEEDS[k].desc)).join('')}</div>`:''}`; }
+  if(tab==='night'){ if(!G) return '<div class="empty">No run in progress. Take a seat first.</div>'; return nightHTML(); }
   if(tab==='bag'){ if(!G) return '<div class="empty">No run in progress.</div>'; return `<div class="secthead">Your Dice<small>${G.bag.length} in the bag. Six come out each round.</small></div><div id="mb1"></div><div class="mrule"></div><div class="secthead">Your Charms<small>Always working. You carry ${slotsUsed(G)} of ${charmSlots(G)}${G.charms.length>slotsUsed(G)?`, plus ${G.charms.length-slotsUsed(G)} off the books`:''}.</small></div><div id="mb2"></div>${(G.fix||[]).length?`<div class="mrule"></div><div class="secthead">Fixtures<small>Yours for the night.</small></div><div class="list">${G.fix.map(f=>`<div class="item"><div><div class="iname">${FIXTURES[f].name}</div><div class="idesc">${kw(FIXTURES[f].desc)}</div></div></div>`).join('')}</div>`:''}${chitsHTML()?`<div class="mrule"></div><div class="secthead">Chits waiting<small>They spend themselves.</small></div><div class="chitrow">${chitsHTML()}</div>`:''}`; }
   if(tab==='book') return bookHTML();
   if(tab==='settings') return `<div class="secthead">Settings<small>Saved on this device.</small></div>
@@ -2010,6 +2047,7 @@ function openMenu(tab){ ac(); if(menuEl){ setMenuTab(tab||menuTab); return; } PA
 }
 function setMenuTab(tab){ menuTab=tab; const body=menuEl.querySelector('#pbody'); menuEl.querySelectorAll('.ptab').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
   body.innerHTML=menuPage(tab); body.classList.remove('turn'); void body.offsetWidth; body.classList.add('turn');
+  if(tab==='book') wireBook(body);
   if(tab==='bag'&&G){ body.querySelector('#mb1').appendChild(diceList()); body.querySelector('#mb2').appendChild(charmList()); }
   if(tab==='settings'){ const wire=(id,key)=>{ const r=body.querySelector('#'+id); r.oninput=()=>{ SET[key]=r.value/10; body.querySelector('#'+id+'v').textContent=r.value; saveSet(); if(key==='sfx') SFX.bank(0); }; }; wire('volm','music'); wire('vols','sfx');
     const tr=body.querySelector('#tipreset'); if(tr) tr.onclick=e=>{ e.stopPropagation(); try{ localStorage.removeItem('lr-tips'); }catch(x){} SET.tips=true; saveSet(); SFX.stamp(); tr.textContent='Will do'; body.querySelectorAll('[data-k=tips] .opt[data-v]').forEach(x=>x.classList.toggle('on',x.dataset.v==='1')); };

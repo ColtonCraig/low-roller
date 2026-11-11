@@ -306,7 +306,7 @@ function theirScore(oRaw,R,charms,q,rack){ let o=oRaw+nOf(charms,'bouncer',rack)
 function mimicOf(charms,rack){ if(!charms||!charms.includes('mimic')) return null; const rk=rack||charms, r=rk[rk.indexOf('mimic')+1]; return r&&r!=='mimic'&&charms.includes(r)?r:null; }
 // your rack as it looks on screen, left to right: charms in their slots, empty slots as null, then off-book charms
 function rackOf(G){ const on=G.charms.filter(c=>!offbook(G,c)), off=G.charms.filter(c=>offbook(G,c)); while(on.length<charmSlots(G)) on.push(null); return on.concat(off); }
-const MIMIC_FLAT=['jacks','penny','deuces','sleight','nearmiss','mimic'];  // copying these changes nothing
+const MIMIC_FLAT=['jacks','penny','deuces','ringer','rabbitp','sleight','nearmiss','mimic'];  // copying these changes nothing
 const nOf=(charms,k,rack)=>(charms&&charms.includes(k)?1:0)+(mimicOf(charms,rack)===k?1:0);
 // their final number to beat: their dice plus everything that moves it (charms, quirks, drinks, intents)
 function targetOf(oRaw,R,charms,q,env){ return Math.max(0,theirScore(oRaw,R,charms,q,env&&env.rack)+(env&&env.drink&&env.drink.soda?2*env.drink.soda:0)+(env&&env.intent==='tired'?2:0)); }
