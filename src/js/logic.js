@@ -390,13 +390,13 @@ const DRINKS={
   sidecar: {name:'Sidecar',    price:3, desc:'$6, right now.'},
 };
 const DRINK_KEYS=Object.keys(DRINKS), DRINK_MAX=2;
-// ---- Plays: patterns you bank in a round. Every Play starts at level 1; a Hot Tip from the bar adds a level.
+// ---- Plays: patterns you bank in a round. Every Play starts at level 1 and levels up every 4th time you make it.
 const PLAYS={ pair:{name:'Pair of Ones',desc:'Bank two 1s in one go.',per:1},
   trips:{name:'Three of a Kind',desc:'Bank three of the same face in one go.',per:2},
   ladder:{name:'The Ladder',desc:'Bank a 1, a 2 and a 3 in the same round.',per:2},
   court:{name:'Crown Court',desc:'Bank 3 or more crowns in a round.',per:3},
   clean:{name:'Clean Hands',desc:'Finish a round on 3 or less.',per:2} };
-const PLAY_KEYS=Object.keys(PLAYS), TIP_PRICE=5;
+const PLAY_KEYS=Object.keys(PLAYS);
 const playLv=(plays,k)=>((plays||{})[k]||0)+1;
 // Plays also widen your win: +1 to your margin per level of every Play you made this round
 function playsPot(R,env){ if(!env||!env.plays) return 0; return playsHit(R,env).reduce((a,k)=>a+playLv(env.plays,k),0); }
@@ -571,4 +571,4 @@ function shopDie(act,not,taste){ const t=rollTier(act,RARITY_DICE,taste), pool=S
 function shopDice(act,n,taste){ const out=[]; for(let i=0;i<n;i++) out.push(shopDie(act,out,taste)); return out; }
 /*LOGIC-END*/
 
-if(typeof module!=='undefined'&&module.exports) module.exports={LIMIT_V2,targetOf,soak,overkillPay,playsPot,notePlays,PLAY_EVERY,LIMIT_V1,DEEDS,DEED_KEYS,hasDeed,takeDeed,handSize,genMap,mapReach,wpick,bumpLowest,PLAYS,PLAY_KEYS,TIP_PRICE,playLv,playsHit,shakesFor,foldDmg,INTENTS,INTENT_W,rollIntent,intentT,theirOdds,stakesOf,gateDmg,tossPrice,DRINKS,DRINK_KEYS,DRINK_MAX,FINISHES,FIN_KEYS,luckyHit,finVal,FIXTURES,FIX_KEYS,fixOffer,hasFix,charmSlots,barPrice,restockPrice,CHITS,CHIT_KEYS,QUICK_WIN,CRATES,crateSize,offbookP,RULE_Q,BOSS_RULES,SHARK_RULES,jinxPick,regenOf,rulesFor,ENDLESS_GROW,OFFBOOK_P,OFFBOOK_FEE,offbook,slotsUsed,afterRound,afterFight,rollTier,shopDie,shopDice,RARITY,RARITY_DICE,ACT_HP,DT,SHOP_DICE,CHARMS,QUIRKS,ACTS,FLOORS,HAND,ACT_ODDS,rnd,pick,shuffle,facesOf,rollInst,rollFace,effVal,aiRound,makeOpp,newRound,bankVals,noteBank,oddsOf,settle,genFloors,fileDie,gildDie,canFile,canGild,LIMITS,limitMods,POCKETS,pocketStart,theirScore,breaksAt,bombDmg,isRaid,bossOf,EXTRA_Q};
+if(typeof module!=='undefined'&&module.exports) module.exports={LIMIT_V2,targetOf,soak,overkillPay,playsPot,notePlays,PLAY_EVERY,LIMIT_V1,DEEDS,DEED_KEYS,hasDeed,takeDeed,handSize,genMap,mapReach,wpick,bumpLowest,PLAYS,PLAY_KEYS,playLv,playsHit,shakesFor,foldDmg,INTENTS,INTENT_W,rollIntent,intentT,theirOdds,stakesOf,gateDmg,tossPrice,DRINKS,DRINK_KEYS,DRINK_MAX,FINISHES,FIN_KEYS,luckyHit,finVal,FIXTURES,FIX_KEYS,fixOffer,hasFix,charmSlots,barPrice,restockPrice,CHITS,CHIT_KEYS,QUICK_WIN,CRATES,crateSize,offbookP,RULE_Q,BOSS_RULES,SHARK_RULES,jinxPick,regenOf,rulesFor,ENDLESS_GROW,OFFBOOK_P,OFFBOOK_FEE,offbook,slotsUsed,afterRound,afterFight,rollTier,shopDie,shopDice,RARITY,RARITY_DICE,ACT_HP,DT,SHOP_DICE,CHARMS,QUIRKS,ACTS,FLOORS,HAND,ACT_ODDS,rnd,pick,shuffle,facesOf,rollInst,rollFace,effVal,aiRound,makeOpp,newRound,bankVals,noteBank,oddsOf,settle,genFloors,fileDie,gildDie,canFile,canGild,LIMITS,limitMods,POCKETS,pocketStart,theirScore,breaksAt,bombDmg,isRaid,bossOf,EXTRA_Q};

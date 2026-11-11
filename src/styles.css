@@ -663,3 +663,10 @@ body.paying #pays b,body.paying #pays small{visibility:hidden}
 }
 @media (max-width:1180px){ .nameplate{width:200px;padding:8px 10px 9px} .nameplate .stamp{font-size:11px} }
 body.paying #odds b,body.paying #eqgap b{visibility:hidden}
+/* short screens: alley fits, legend fits, drink bottles stay in their rows */
+.svc.rows .card.k-drink .art{height:34px;width:24px;overflow:hidden} .svc.rows .card.k-drink .art svg{width:20px;height:30px}
+@media (max-height:780px){
+  .entries .entry.simple{padding-top:8px;padding-bottom:8px} .modal .prose{margin:4px 0;font-size:13px}
+  .legend{grid-template-columns:1fr 1fr 1fr;font-size:10px} .legend .mn{width:16px;height:16px;padding:2px}
+}
+.alleym #choices{display:grid;grid-template-columns:1fr 1fr;gap:8px} .alleym #choices .entry{margin:0}
