@@ -135,7 +135,7 @@ ${img('bar.png', 'The bar')}
 
 ## Charms
 Charms sit in your rack at the top and are **always working**. You hold **five** (six with the Back Booth fixture or The Still deed).
-Tap a charm to read it, sell it for half, or move it left/right (**order only matters for The Mimic**, which copies the charm to its right).
+Tap a charm to read it or sell it for half. **Drag a charm to any slot** to move it. Order only matters for **The Mimic**: it copies whatever charm sits right of it, so that charm works twice (a little purple arrow on The Mimic and a purple ring on the copied charm show it, and both pulse when it fires). A few charms don't do more twice: Pair of Jacks, Lucky Penny, Deuces Wild, Sleight of Hand and Near Miss.
 Rarer charms tend to multiply. The full list is in [Everything, listed](#everything-listed).
 
 ## Dice

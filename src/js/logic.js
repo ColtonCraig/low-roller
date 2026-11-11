@@ -86,7 +86,7 @@ const CHARMS={
   flask:   {name:'Hip Flask',     ico:'F', tier:'c', price:5, desc:'You sit down at every table with 6 Guard.'},
   bulldog: {name:'The Bulldog',   ico:'D', tier:'u', price:8, desc:'You get +1 Guard for every 1 you bank.'},
   haymaker:{name:'Haymaker',      ico:'H', tier:'r', price:15, rare:true, desc:'You sit down at every table with 4 Guard. Win a round: you win it by 1 more per Guard you have.'},
-  mimic:   {name:'The Mimic',     ico:'M', tier:'r', price:15, rare:true, desc:'Copies the odds the charm to its right gives you. Order your rack.'},
+  mimic:   {name:'The Mimic',     ico:'M', tier:'r', price:15, rare:true, desc:'Copies whatever the charm to its right does, so it works twice. Drag charms to set the order.'},
   thumb:   {name:'Loaded Thumb',  ico:'T', tier:'u', price:9, desc:'Twice per table: click Nudge, then a die in your tray, to turn it down by 1. Crowns don’t move.'},
   echo:    {name:'The Echo',      ico:'E', tier:'u', price:9, desc:'Crowns you bank on your first throw of a round count as two crowns each.'},
   doubletake:{name:'Double Take', ico:'D', tier:'u', price:8, desc:'Every 1 you bank counts as two 1s (for Snake Eyes and Pair of Ones).'},
@@ -299,15 +299,22 @@ function pocketStart(k){ const P={hp:50,gold:8,bag:['d6','d6','d6','d6','d6','d6
   if(k==='ghost'){ P.hp=40; P.fix=['booth']; }
   return P; }
 // what they're really sitting on, after charms and quirks that move it
-function theirScore(oRaw,R,charms,q){ let o=oRaw+(charms.includes('bouncer')?1:0)-(q.includes('edge')?1:0)+(q.includes('sloppy')?1:0);
-  if(charms.includes('heckler')) o+=Math.min(1,R.crowns); if(q.includes('copycat')&&R.crowns) o-=1; return Math.max(0,o); }
+function theirScore(oRaw,R,charms,q,rack){ let o=oRaw+nOf(charms,'bouncer',rack)-(q.includes('edge')?1:0)+(q.includes('sloppy')?1:0);
+  o+=nOf(charms,'heckler',rack)*Math.min(1,R.crowns); if(q.includes('copycat')&&R.crowns) o-=1; return Math.max(0,o); }
+// ---- The Mimic copies the charm to its right in your rack (rack order = left to right on screen). Odds charms are
+// copied as a second odds part ('The Mimic' in the payout); every other effect counts the copied charm twice via nOf.
+function mimicOf(charms,rack){ if(!charms||!charms.includes('mimic')) return null; const rk=rack||charms, r=rk[rk.indexOf('mimic')+1]; return r&&r!=='mimic'&&charms.includes(r)?r:null; }
+// your rack as it looks on screen, left to right: charms in their slots, empty slots as null, then off-book charms
+function rackOf(G){ const on=G.charms.filter(c=>!offbook(G,c)), off=G.charms.filter(c=>offbook(G,c)); while(on.length<charmSlots(G)) on.push(null); return on.concat(off); }
+const MIMIC_FLAT=['jacks','penny','deuces','sleight','nearmiss','mimic'];  // copying these changes nothing
+const nOf=(charms,k,rack)=>(charms&&charms.includes(k)?1:0)+(mimicOf(charms,rack)===k?1:0);
 // their final number to beat: their dice plus everything that moves it (charms, quirks, drinks, intents)
-function targetOf(oRaw,R,charms,q,env){ return Math.max(0,theirScore(oRaw,R,charms,q)+(env&&env.drink&&env.drink.soda?2*env.drink.soda:0)+(env&&env.intent==='tired'?2:0)); }
+function targetOf(oRaw,R,charms,q,env){ return Math.max(0,theirScore(oRaw,R,charms,q,env&&env.rack)+(env&&env.drink&&env.drink.soda?2*env.drink.soda:0)+(env&&env.intent==='tired'?2:0)); }
 // Guard soaks hits and carries from round to round at a table; it only loses what it soaks
 function soak(guard,dmg){ const s=Math.min(guard||0,dmg); return {dmg:dmg-s,guard:(guard||0)-s,soaked:s}; }
 // overkill: every 10 past what they had left pays $1, up to $10
 const overkillPay=(dmg,hpLeft)=>Math.min(10,Math.floor(Math.max(0,dmg-hpLeft)/10));
-const breaksAt=(type,charms)=>DT[type].breaks?DT[type].breaks+(charms.includes('glassblower')?2:0):0;
+const breaksAt=(type,charms,rack)=>DT[type].breaks?DT[type].breaks+2*nOf(charms,'glassblower',rack):0;
 const bombDmg=max=>Math.max(2,Math.round(max*.08));
 const isRaid=(opp,round,p2)=>opp.sig==='raid'&&round>0&&round%(p2?2:3)===0;
 // floor pools: F table, E shark, S bar, R back alley, ? event, B boss
@@ -340,16 +347,16 @@ function makeOpp(def,kind,act,floor,lap,easy,lv,hpMul){ let bag=def.bag.slice();
   return {...def, hp:Math.round(oppHP(def,kind,act,floor,lap,easy)*LM.hp*(hpMul||1)), odds:(lap?ACT_ODDS[2]+3*lap+act-2:ACT_ODDS[act])+(kind==='B'&&q.indexOf('ironjaw')<0?1:0)+(kind==='E'?1:0)+(kind==='F'&&floor>=3?1:0)+((act>=2||lap)&&kind==='B'?LM.odds:0), bag, q}; }
 // ---- a round's running record; everything that pays is computed from this ----
 function newRound(){ return {crowns:0,gilt:0,ember:0,roller:0,ones:0,threes:0,glass:0,gold:0,bomb:0,snake:false,singles:true,throws:0,evens:0,trips:false,lastBank:0,bubbly:0,viper:0,cnt:{}}; }
-function bankVals(faces,ctx,charms,final,fins){ let v=faces.map((f,i)=>finVal(effVal(f,ctx),fins&&fins[i]));
+function bankVals(faces,ctx,charms,final,fins,rack){ let v=faces.map((f,i)=>finVal(effVal(f,ctx),fins&&fins[i]));
   if(charms.includes('jacks')){ const s=new Set(); v=faces.map((f,i)=>{ if(s.has(f)) return 0; s.add(f); return v[i]; }); }
-  if(final&&charms.includes('lastcall')){ let m=0; v.forEach((x,i)=>{ if(x>v[m]) m=i; }); if(v[m]>=4) v[m]-=1; }
+  if(final) for(let n=nOf(charms,'lastcall',rack);n>0;n--){ let m=0; v.forEach((x,i)=>{ if(x>v[m]) m=i; }); if(v[m]>=4) v[m]-=1; }
   return v; }
-function noteBank(R,faces,types,charms,fins){ if(fins&&fins.includes('marked')){ const f2=[],t2=[],n2=[]; faces.forEach((f,i)=>{ f2.push(f); t2.push(types[i]); n2.push(fins[i]==='marked'?null:fins[i]); if(fins[i]==='marked'){ f2.push(f); t2.push(types[i]); n2.push(null); } }); R.marked=(R.marked||0)+fins.filter(x=>x==='marked').length; faces=f2; types=t2; fins=n2; }
+function noteBank(R,faces,types,charms,fins,rack){ if(fins&&fins.includes('marked')){ const f2=[],t2=[],n2=[]; faces.forEach((f,i)=>{ f2.push(f); t2.push(types[i]); n2.push(fins[i]==='marked'?null:fins[i]); if(fins[i]==='marked'){ f2.push(f); t2.push(types[i]); n2.push(null); } }); R.marked=(R.marked||0)+fins.filter(x=>x==='marked').length; faces=f2; types=t2; fins=n2; }
   R.throws++; if(faces.length!==1) R.singles=false;
   (fins||[]).forEach(f=>{ if(!f) return; R.fin={...(R.fin||{})}; R.fin[f]=(R.fin[f]||0)+1; });
-  const ch=charms||[];
-  faces.forEach((f,i)=>{ if(f==='G'||f==='C'){ if(ch.includes('echo')&&R.throws===1) R.crowns++; } if(f==='G'){ R.crowns++; R.gilt++; } if(f==='C'){ R.crowns++; if(types[i]==='ember') R.ember++; if(types[i]==='gamble') R.roller++; } });
-  { const n1=faces.filter(f=>f===1).length*(ch.includes('doubletake')?2:1); R.ones+=n1; if(n1>=2) R.snake=true; }
+  const ch=charms||[], nE=nOf(ch,'echo',rack), nD=nOf(ch,'doubletake',rack);
+  faces.forEach((f,i)=>{ if(f==='G'||f==='C'){ if(nE&&R.throws===1) R.crowns+=nE; } if(f==='G'){ R.crowns++; R.gilt++; } if(f==='C'){ R.crowns++; if(types[i]==='ember') R.ember++; if(types[i]==='gamble') R.roller++; } });
+  { const n1=faces.filter(f=>f===1).length*(1+nD); R.ones+=n1; if(n1>=2) R.snake=true; }
   R.threes+=faces.filter(f=>f===3).length; R.glass+=types.filter(t=>t==='glass').length;
   faces.forEach((f,i)=>{ if(f==='C'&&types[i]==='gilded') R.gold++; if(f==='C'&&types[i]==='bomb') R.bomb++; });
   R.cnt={...(R.cnt||{})}; const here={}; faces.forEach((f,i)=>{ R.cnt[f]=(R.cnt[f]||0)+1; here[f]=(here[f]||0)+1;
@@ -358,7 +365,7 @@ function noteBank(R,faces,types,charms,fins){ if(fins&&fins.includes('marked')){
 // After every round: growing charms and round money. Returns $ to pay out. (game endRound and the sim both call this)
 function afterRound(G,winner,free){ const has=c=>G.charms.includes(c); G.grow=G.grow||{}; let pay=0;
   if(winner==='you'){ if(has('piggy')) G.grow.piggy=(G.grow.piggy||0)+2; if(has('moonshine')) G.grow.moon=(G.grow.moon||0)+1; }
-  if(winner==='them'&&!free){ if(has('piggy')) G.grow.piggy=0; if(has('consolation')) pay+=2; }
+  if(winner==='them'&&!free){ if(has('piggy')) G.grow.piggy=0; pay+=2*nOf(G.charms,'consolation',rackOf(G)); }
   return pay; }
 // ---- Fixtures: permanent upgrades. One is on offer at the bar each room until you buy it.
 const FIXTURES={
@@ -405,12 +412,13 @@ const PLAY_EVERY=4;
 function notePlays(G,R,env){ G.playHits=G.playHits||{}; G.plays=G.plays||{}; const up=[]; playsHit(R,env).forEach(k=>{ G.playHits[k]=(G.playHits[k]||0)+1; if(G.playHits[k]%PLAY_EVERY===0){ G.plays[k]=(G.plays[k]||0)+1; up.push(k); } }); return up; }
 function playsHit(R,env){ const c=R.cnt||{}, out=[]; if(R.snake) out.push('pair'); if(R.trips) out.push('trips'); if(c[1]&&c[2]&&c[3]) out.push('ladder'); if((R.crowns||0)>=3) out.push('court'); if(env&&env.done&&env.score!=null&&env.score<=3) out.push('clean'); return out; }
 // ---- Intents: what the opponent is up to this round. Shown a round ahead.
-const INTENTS={ steady:{name:'Steady',desc:'Nothing special.'},
-  lean:{name:'Leaning in',desc:'Their Hits +1 this round.'},
-  sweat:{name:'Sweating',desc:'Their Hits are halved this round (rounded up).'},
-  crowns:{name:'Counting crowns',desc:'Your crowns score 1 on your first throw this round.'},
-  tired:{name:'Getting tired',desc:'Their score counts 2 higher this round.'},
-  tilted:{name:'On tilt',desc:'Win this round and you get ×2 odds.'} };
+// what they're up to each round. short = the plain line on their nameplate; you = good (1) or bad (-1) for you
+const INTENTS={ steady:{name:'Steady',desc:'Nothing special.',short:'Playing it straight.',you:0},
+  lean:{name:'Leaning in',desc:'Their Hits +1 this round.',short:'If they win, they hit you 1 harder.',you:-1},
+  sweat:{name:'Sweating',desc:'Their Hits are halved this round (rounded up).',short:'If they win, their hit is halved.',you:1},
+  crowns:{name:'Counting crowns',desc:'Your crowns score 1 on your first throw this round.',short:'Your crowns score 1 on your first throw.',you:-1},
+  tired:{name:'Getting tired',desc:'Their score counts 2 higher this round.',short:'Their score counts 2 higher.',you:1},
+  tilted:{name:'On tilt',desc:'Win this round and you get ×2 odds.',short:'Win the round: you get ×2 odds.',you:1} };
 const INTENT_W={F:{steady:4,tired:2,sweat:2,tilted:2,lean:1,crowns:1},E:{steady:3,lean:2,tilted:2,crowns:1,sweat:1,tired:1},B:{steady:2,lean:3,crowns:1,sweat:1,tilted:1,tired:1}};
 function rollIntent(kind){ const w=INTENT_W[kind]||INTENT_W.F; let t=Math.random()*Object.values(w).reduce((a,b)=>a+b,0); for(const k in w){ t-=w[k]; if(t<0) return k; } return 'steady'; }
 const intentT=(opp,intent)=>opp.t;
@@ -446,7 +454,7 @@ function crateSize(G){ return hasFix(G,'crates')?4:3; }
 function jinxPick(charms,q){ return q.includes('jinx')&&charms.length?pick(charms):null; }
 function regenOf(opp){ return opp.q.includes('regen')?Math.max(1,Math.ceil(opp.hp*.03)):0; }
 // After a fight you win: interest. Returns $.
-function afterFight(G){ const i=Math.min(5,Math.floor(Math.max(0,G.gold)/10)); return (G.charms.includes('savings')?i:0)+(hasFix(G,'vault')?i:0); }
+function afterFight(G){ const i=Math.min(5,Math.floor(Math.max(0,G.gold)/10)); return nOf(G.charms,'savings',rackOf(G))*i+(hasFix(G,'vault')?i:0); }
 // env: {gold, wins (rounds won in a row before this one), margin, score, done}
 function oddsOf(R,charms,env){ const P=[]; let add=0, mul=1; const has=c=>charms.includes(c);
   const A=(l,n)=>{ if(n){ add+=n; P.push([l,(n<0?'\u2212':'+')+Math.abs(n),n]); } }, M=(l,x)=>{ if(x!==1){ mul*=x; P.push([l,'×'+(+x.toFixed(x<2?2:1)),x]); } };
@@ -503,7 +511,7 @@ function oddsOf(R,charms,env){ const P=[]; let add=0, mul=1; const has=c=>charms
   if(has('straight')&&cnt[1]&&cnt[2]&&cnt[3]) M('Straight Shooter',5);
   if(has('bigshot')) M('Big Shot',Math.pow(1.2,charms.length));
   if(env.intent==='tilted') M('On tilt',2);
-  { const rk=env.rack||charms, mi=charms.includes('mimic')?rk.indexOf('mimic'):-1, rt=mi>=0&&rk[mi+1]; if(rt&&CHARMS[rt]&&charms.includes(rt)){ const pt=P.find(x=>x[0]===CHARMS[rt].name&&typeof x[2]==='number'); if(pt){ if(pt[1][0]==='×') M('The Mimic',pt[2]); else A('The Mimic',pt[2]); } } }
+  { const rt=mimicOf(charms,env.rack); if(rt&&CHARMS[rt]){ const pt=P.find(x=>x[0]===CHARMS[rt].name&&typeof x[2]==='number'); if(pt){ if(pt[1][0]==='×') M('The Mimic',pt[2]); else A('The Mimic',pt[2]); } } }
   if(env.raid) return {odds:1, add:0, mul:1, parts:[['Raid! Odds forced to','=1']], raid:true};
   let odds=Math.max(1,Math.max(1,1+add)*mul); const oq=env.q||[];
   if(oq.includes('flat')&&mul!==1){ odds=Math.max(1,1+add); P.push(['Flat Rate','× off']); }
@@ -512,8 +520,8 @@ function oddsOf(R,charms,env){ const P=[]; let add=0, mul=1; const has=c=>charms
 const fmtOdds=x=>(Math.round(x*10)/10).toString();
 // final reckoning of a round
 function settle(p,oRaw,R,charms,opp,env){ const q=opp.q, has=c=>charms.includes(c);
-  const o=targetOf(oRaw,R,charms,q,env);
-  if(p<o){ const fin=!env.preview, pot=playsPot(R,{...env,score:p,done:fin})+(has('haymaker')?(env.guard||0):0); const margin=Math.max(1,o-p-(has('bouncer')?1:0))+(has('cut')?2:0)+pot; const O=oddsOf(R,charms,{...env,margin:o-p-(has('bouncer')?1:0),score:p,done:fin});
+  const o=targetOf(oRaw,R,charms,q,env), N=k=>nOf(charms,k,env.rack);
+  if(p<o){ const fin=!env.preview, pot=playsPot(R,{...env,score:p,done:fin})+N('haymaker')*(env.guard||0); const margin=Math.max(1,o-p-N('bouncer'))+2*N('cut')+pot; const O=oddsOf(R,charms,{...env,margin:o-p-N('bouncer'),score:p,done:fin});
     let dmg=Math.max(1,Math.round(margin*O.odds)), armor=false, capped=false;
     if(q.includes('ironjaw')){ const cap=Math.ceil((opp.hp||1)/3); if(dmg>cap){ dmg=cap; capped=true; } }
     if(q.includes('armor')&&!env.wonOnce){ dmg=0; armor=true; }
@@ -524,7 +532,7 @@ function settle(p,oRaw,R,charms,opp,env){ const q=opp.q, has=c=>charms.includes(
   if(p>o||house||sharp){ const gap=house?2:sharp?1:p-o, tOdds=theirOdds(opp,env); let dmg=Math.ceil(gap*tOdds);
     if(q.includes('hot')&&env.lossStreak>0) dmg+=env.lossStreak;
     if(q.includes('grudge')&&env.oppHalf) dmg+=2;
-    if(has('thick')) dmg-=3; dmg=Math.max(1,dmg); if(has('highstakes')) dmg+=1; if(env.deeds&&env.deeds.includes('pockets')) dmg+=2; if(env.deeds&&env.deeds.includes('brass')) dmg=Math.min(12,dmg);
+    dmg-=3*N('thick'); dmg=Math.max(1,dmg); dmg+=N('highstakes'); if(env.deeds&&env.deeds.includes('pockets')) dmg+=2; if(env.deeds&&env.deeds.includes('brass')) dmg=Math.min(12,dmg);
     return {winner:'them',gap,dmg,odds:tOdds,oFinal:o,house,sharp}; }
   return {winner:'push',dmg:0,oFinal:o}; }
 // bar services that change a die for good
@@ -565,4 +573,4 @@ function shopDie(act,not,taste){ const t=rollTier(act,RARITY_DICE,taste), pool=S
 function shopDice(act,n,taste){ const out=[]; for(let i=0;i<n;i++) out.push(shopDie(act,out,taste)); return out; }
 /*LOGIC-END*/
 
-if(typeof module!=='undefined'&&module.exports) module.exports={LIMIT_V2,targetOf,soak,overkillPay,playsPot,notePlays,PLAY_EVERY,LIMIT_V1,DEEDS,DEED_KEYS,hasDeed,takeDeed,handSize,genMap,mapReach,wpick,bumpLowest,PLAYS,PLAY_KEYS,playLv,playsHit,INTENTS,INTENT_W,rollIntent,intentT,theirOdds,gateDmg,tossPrice,DRINKS,DRINK_KEYS,DRINK_MAX,FINISHES,FIN_KEYS,luckyHit,finVal,FIXTURES,FIX_KEYS,fixOffer,hasFix,charmSlots,barPrice,restockPrice,CHITS,CHIT_KEYS,QUICK_WIN,CRATES,crateSize,offbookP,RULE_Q,BOSS_RULES,SHARK_RULES,jinxPick,regenOf,rulesFor,ENDLESS_GROW,OFFBOOK_P,OFFBOOK_FEE,offbook,slotsUsed,afterRound,afterFight,rollTier,shopDie,shopDice,RARITY,RARITY_DICE,ACT_HP,DT,SHOP_DICE,CHARMS,QUIRKS,ACTS,FLOORS,HAND,ACT_ODDS,rnd,pick,shuffle,facesOf,rollInst,rollFace,effVal,aiRound,makeOpp,newRound,bankVals,noteBank,oddsOf,settle,genFloors,fileDie,gildDie,canFile,canGild,LIMITS,limitMods,POCKETS,pocketStart,theirScore,breaksAt,bombDmg,isRaid,bossOf,EXTRA_Q};
+if(typeof module!=='undefined'&&module.exports) module.exports={rackOf,mimicOf,nOf,MIMIC_FLAT,LIMIT_V2,targetOf,soak,overkillPay,playsPot,notePlays,PLAY_EVERY,LIMIT_V1,DEEDS,DEED_KEYS,hasDeed,takeDeed,handSize,genMap,mapReach,wpick,bumpLowest,PLAYS,PLAY_KEYS,playLv,playsHit,INTENTS,INTENT_W,rollIntent,intentT,theirOdds,gateDmg,tossPrice,DRINKS,DRINK_KEYS,DRINK_MAX,FINISHES,FIN_KEYS,luckyHit,finVal,FIXTURES,FIX_KEYS,fixOffer,hasFix,charmSlots,barPrice,restockPrice,CHITS,CHIT_KEYS,QUICK_WIN,CRATES,crateSize,offbookP,RULE_Q,BOSS_RULES,SHARK_RULES,jinxPick,regenOf,rulesFor,ENDLESS_GROW,OFFBOOK_P,OFFBOOK_FEE,offbook,slotsUsed,afterRound,afterFight,rollTier,shopDie,shopDice,RARITY,RARITY_DICE,ACT_HP,DT,SHOP_DICE,CHARMS,QUIRKS,ACTS,FLOORS,HAND,ACT_ODDS,rnd,pick,shuffle,facesOf,rollInst,rollFace,effVal,aiRound,makeOpp,newRound,bankVals,noteBank,oddsOf,settle,genFloors,fileDie,gildDie,canFile,canGild,LIMITS,limitMods,POCKETS,pocketStart,theirScore,breaksAt,bombDmg,isRaid,bossOf,EXTRA_Q};

@@ -364,5 +364,28 @@ test('Plays level every 4th time you make one; Marked counts its face twice; The
   assert.equal(+L.oddsOf(K, ['mimic', 'kingpin'], env()).odds.toFixed(3), +(Math.pow(1.35, 2) ** 2).toFixed(3));
   assert.equal(L.oddsOf(K, ['kingpin', 'mimic'], env()).odds, Math.pow(1.35, 2));
 });
+test('The Mimic copies non-odds effects too, only from the slot right of it', () => {
+  const G = { charms: ['mimic', 'cigar'], offbook: [] };
+  assert.equal(L.mimicOf(G.charms, L.rackOf(G)), 'cigar');
+  assert.equal(L.nOf(G.charms, 'cigar', L.rackOf(G)), 2);           // Victory Cigar heals twice
+  assert.equal(L.nOf(['cigar', 'mimic'], 'cigar'), 1);                // left of it: no copy
+  // an empty slot between them breaks the copy; an off-book charm sits after the empty slots
+  const G2 = { charms: ['mimic', 'tip'], offbook: ['tip'] };
+  assert.equal(L.mimicOf(G2.charms, L.rackOf(G2)), null);
+  // a jinxed neighbor is switched off, and the Mimic doesn't skip over it
+  assert.equal(L.mimicOf(['mimic', 'tip'], ['mimic', 'cigar', 'tip']), null);
+  // settle: Thick Skin and Dealer's Cut count twice
+  const lose1 = L.settle(9, 5, R0(), ['thick'], opp([], 2), env()), lose2 = L.settle(9, 5, R0(), ['mimic', 'thick'], opp([], 2), env({ rack: ['mimic', 'thick'] }));
+  assert.equal(lose1.dmg - lose2.dmg, 3);
+  const w1 = L.settle(3, 7, R0(), ['cut'], opp(), env()), w2 = L.settle(3, 7, R0(), ['mimic', 'cut'], opp(), env({ rack: ['mimic', 'cut'] }));
+  assert.equal(w2.margin - w1.margin, 2);
+  // Consolation pays $4, Savings Bond doubles, Glassblower adds 4 rounds, Last Call takes 2 off
+  assert.equal(L.afterRound({ charms: ['mimic', 'consolation'], grow: {} }, 'them', false), 4);
+  assert.equal(L.afterFight({ charms: ['mimic', 'savings'], gold: 30 }), 6);
+  assert.equal(L.breaksAt('glass', ['mimic', 'glassblower']) - L.breaksAt('glass', ['glassblower']), 2);
+  assert.deepEqual(L.bankVals([6, 2], {}, ['mimic', 'lastcall'], true), [4, 2]);
+  // The Echo: a first-throw crown counts three times
+  const R = R0(); L.noteBank(R, ['C'], ['d6'], ['mimic', 'echo']); assert.equal(R.crowns, 3);
+});
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

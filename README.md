@@ -138,7 +138,7 @@ for a chit instead of fighting. **Tap a stop to see which card it is; tap again 
 
 ## Charms
 Charms sit in your rack at the top and are **always working**. You hold **five** (six with the Back Booth fixture or The Still deed).
-Tap a charm to read it, sell it for half, or move it left/right (**order only matters for The Mimic**, which copies the charm to its right).
+Tap a charm to read it or sell it for half. **Drag a charm to any slot** to move it. Order only matters for **The Mimic**: it copies whatever charm sits right of it, so that charm works twice (a little purple arrow on The Mimic and a purple ring on the copied charm show it, and both pulse when it fires). A few charms don't do more twice: Pair of Jacks, Lucky Penny, Deuces Wild, Sleight of Hand and Near Miss.
 Rarer charms tend to multiply. The full list is in [Everything, listed](#everything-listed).
 
 ## Dice
@@ -332,7 +332,7 @@ Beat the house to raise the **limit**. Each one stacks on every limit below it.
 | Straight Shooter | Rare | $15 | Bank a 1, a 2 and a 3 in the same round: you get ×5 odds. |
 | The Bookie | Rare | $15 | Win a round: you get $1 per point you won by, up to $8. |
 | The Crown Room | Rare | $16 | Bank 3 or more crowns in a round: you get ×3 odds. |
-| The Mimic | Rare | $15 | Copies the odds the charm to its right gives you. Order your rack. |
+| The Mimic | Rare | $15 | Copies whatever the charm to its right does, so it works twice. Drag charms to set the order. |
 | The Ringer | Rare | $17 | Your crowns score −1 instead of 0, but your 1s score 3. |
 
 ### Dice (22)
