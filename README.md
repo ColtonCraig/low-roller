@@ -74,6 +74,9 @@ Some banks are **Plays**. Each one you make in a round **adds its level to your 
 | The Ladder | Bank a 1, a 2 and a 3 in the same round. | +2 |
 | Crown Court | Bank 3 or more crowns in a round. | +3 |
 | Clean Hands | Finish a round on 3 or less. | +2 |
+| Big Hand | Bank 4 or more dice in one go. | +2 |
+| Two and Through | Finish a round in 2 throws or fewer. | +2 |
+| High Society | Bank 2 or more crowns in one go. | +2 |
 
 Every Play starts at level 1. **Every 4th time you make one it levels up** for the rest of the night. The back alley's
 *Run the numbers* also levels your most-made Play. Tap **Plays** in the top bar any time to see each Play's level, what it pays, and how close it is to the next level (it lights up when you make one). They're also in Menu → Your Night.
@@ -156,6 +159,10 @@ Toss the bad ones at the bar, file their high faces down, or crown them. Full li
 | Chrome | Bank it: you get ×1.25 odds this round. |
 | Featherweight | Its 1s score 0. |
 | Marked | Bank it: everything that counts its face counts it twice (crowns, 1s, Plays, charms). |
+| Sterling | Bank it: you get +1 Guard. |
+| Inked | Its crowns count as two crowns. |
+| Weighted | Its 5s and higher score 1 less. |
+| Blessed | Bank it: you heal 1 nerve. |
 
 **Fixtures** (one is offered at the bar each room; yours for good):
 | Fixture | Price | Effect |
@@ -169,6 +176,10 @@ Toss the bad ones at the bar, file their high faces down, or crown them. Full li
 | Expensive Taste | $10 | Rare charms and dice turn up twice as often. |
 | Cooked Books | $10 | Off the Books charms turn up three times as often. |
 | Velvet Rope | $12 | +8 max nerve, and you heal 8 now. |
+| Ice Box | $9 | Your coat holds one more drink. |
+| Back Door | $8 | Tossing a die costs $3 less. |
+| Jukebox | $10 | You sit down at every table with 5 Guard. |
+| Chandelier | $10 | Tables pay $1 more. |
 | Wall Safe | $9 | Win a fight: you get $1 per $10 you’re holding (up to $5). Stacks with Savings Bond. |
 
 **Crates:**
@@ -187,6 +198,10 @@ Toss the bad ones at the bar, file their high faces down, or crown them. Full li
 | Bitters | $4 | If you lose this round, their odds count as 1. |
 | Bourbon | $4 | Heal 10 nerve. |
 | Sidecar | $3 | $6, right now. |
+| Rye | $4 | +6 Guard, right now. |
+| Mimosa | $4 | +2 odds per crown you bank this round. |
+| Old Fashioned | $5 | If you win this round, you win it by 3 more. |
+| Dirty Martini | $6 | ×3 odds this round. You lose 4 nerve (never your last). |
 
 **Chits** are small favors, earned by beating a shark quickly or walking past a table:
 | Chit | Effect |
@@ -205,12 +220,15 @@ Toss the bad ones at the bar, file their high faces down, or crown them. Full li
 |---|---|---|---|---|
 | The Rusty Nail | Big Sal | The owner. Beat her and the Nail is yours. | Once she’s at half nerve, she slams the table on your first throw each round: your two best dice get rerolled. | No more smiles: Sal adds Haze and plays tight |
 | The Rusty Nail | Mama Rosa | Runs the kitchen. Every round she wins, she heals what she took. | Every round she wins, she heals what she hit you for. | Second helpings: Rosa adds Hot Streak |
+| The Rusty Nail | Fast Eddie | Runs the numbers out back. You draw one die fewer at his table. | You draw one die fewer every round, and he has Hot Streak. At half nerve he adds Short Fuse. | Clock’s ticking: Eddie adds Short Fuse and plays tight |
 | The Velvet Room | The Countess | She runs the room upstairs. Every round she swaps one of your dice for an Octo. | Swaps one of your dice for an Octo every round (two at half nerve). | The gloves come off: Two swaps a round, and House Edge |
 | The Velvet Room | Zambini | A stage magician. One of your dice lands face-down every throw. | One of your dice lands face-down every throw. Two at half nerve. | For my next trick: Two dice hidden, and Copycat |
+| The Velvet Room | The Maestro | Leads the house band. You never see his next move, and your last bank scores 1 more. | You can’t see his next move, and your final bank each round scores 1 more. At half nerve he adds Odd Job. | Crescendo: The Maestro adds Odd Job |
 | The Back Room | The House | Nobody’s seen his face. Ties go to the house. | Every tie goes to the opponent and hits you for 2. | The house always wins: Haze, and he plays tight |
 | The Back Room | The Chief | Every third round is a raid: your odds drop to 1. | Every third round is a raid and your odds drop to 1. Every other round at half nerve. | Up against the wall: Raids every other round, and Sharp |
+| The Back Room | The Banker | Owns the paper on the whole block. Crowns cost you, and small wins barely count. | Every crown costs you $1, and rounds you win by 2 or less hit half as hard. At half nerve he adds Loudmouth. | Calling it in: The Banker adds Loudmouth |
 
-Each room has two possible owners, picked at random every night.
+Each room has three possible owners, picked at random every night.
 
 **Deeds:** beat an owner and you can take the deed to one of their rackets: strong, with a catch, for the rest of the night.
 | Deed | What it does |
@@ -221,6 +239,9 @@ Each room has two possible owners, picked at random every night.
 | Deep Pockets | You draw 7 dice a round. Rounds you lose hit you 2 harder. |
 | Bad Reputation | +3 odds for good. Everyone you face has 15% more nerve. |
 | The Black Book | Your Plays multiply: each one you make gives ×1.5 odds instead of its + odds. |
+| The Numbers Game | You get ×1.5 odds, always. Tables pay $3 less. |
+| The Pawn Shop | Everything at the bar costs a quarter less. −8 max nerve. |
+| Hired Muscle | Rounds you win, you win by 2 more. Rounds you lose hit you 1 harder. |
 
 ## Limits and pockets
 Beat the house to raise the **limit**. Each one stacks on every limit below it.
@@ -249,8 +270,14 @@ Beat the house to raise the **limit**. Each one stacks on every limit below it.
 | The Bootlegger | Gin and Absinthe in your coat and $12, but only 45 nerve. | 4 owners beaten |
 | The Jeweler | One House Die already has a ruby, but only $3 and rubies at the bar start at $10. | 5 owners beaten |
 | The Mechanic | Lucky Felt already installed (+1 odds, always). No cash, no Octos. | 6 owners beaten |
+| The Socialite | A Royal Die and a Coronet instead of Octos, and Crown Jewels. Only $3. | 7 owners beaten |
 | The Heavy | 55 nerve and Thick Skin, but only $2. | 8 owners beaten |
+| The Snake Charmer | Two Boxcars instead of Octos, and Snake Eyes. Only 42 nerve. | 9 owners beaten |
 | The Ghost | Back Booth already installed (6 charm slots), but only 40 nerve. | 10 owners beaten |
+| The Drifter | Only six dice (one Loaded), Short Stack, and $12. | 12 owners beaten |
+| The Glazier | Three Glass Dice instead of three House Dice, and Glassblower. | 14 owners beaten |
+| The Banker’s Nephew | $30 and Bar Fly, but only 36 nerve. | 16 owners beaten |
+| The Showman | Every Play starts at level 2, and you carry a Gin. Only 42 nerve. | 18 owners beaten |
 
 ## Tips and strategy
 - **Bank crowns and 1s first.** A crown is a free 0. With few dice left, take what's low and stop chasing.
@@ -265,45 +292,75 @@ Beat the house to raise the **limit**. Each one stacks on every limit below it.
 - **Mind the house rules.** Flat Rate turns off ×; The Vig halves your odds; Jinx benches a charm each round. Have a plan B.
 
 ## Everything, listed
-### Charms (67)
+### Charms (112)
 | Charm | Rarity | Price | What it does |
 |---|---|---|---|
+| Aces Up | Common | $5 | You get +2 odds per 1 you bank on your first throw of a round. |
 | Consolation | Common | $4 | Lose a round: you get $2 (not when Rabbit’s Foot takes the hit). |
 | Crown Jewels | Common | $6 | You get +1 odds per crown you bank. |
 | Dealer's Cut | Common | $5 | When you win a round, your “ahead by” counts 2 higher. |
+| Deep Breath | Common | $5 | You heal 2 nerve every round you win. |
+| Eight Ball | Common | $5 | You get +3 odds per eight-sided die you bank. |
 | Even Money | Common | $5 | You get +2 odds per 2, 4 or 6 you bank. |
+| First Blood | Common | $5 | While the opponent is at full nerve: you get +6 odds. |
+| Full Stomach | Common | $5 | While you’re at full nerve: you get +5 odds. |
 | Glassblower | Common | $5 | You get +2 odds per Glass Die you bank. Your Glass Dice last 2 more rounds. |
 | Gold Tooth | Common | $5 | You get $1 per crown you bank. |
+| Heavy Pour | Common | $5 | Bank 4 or more dice in one go: you get +5 odds this round. |
 | Hip Flask | Common | $5 | You sit down at every table with 6 Guard. |
 | Hot Hand | Common | $5 | You heal 1 nerve per crown you bank. |
+| House Rules | Common | $6 | You get +2 odds per House Die you bank. |
 | Iron Liver | Common | $6 | You get +12 max nerve. |
 | Near Miss | Common | $5 | You lose a round by exactly 1: nobody gets hit. |
+| Odd Man Out | Common | $5 | You get +2 odds per 1, 3 or 5 you bank. |
 | Opening Act | Common | $6 | Your first round at each table: you get ×2 odds. |
 | Packed House | Common | $6 | You get +1 odds per 2 dice in your bag. |
 | Restless | Common | $5 | Grows +2 odds every time you restock the bar. Never resets. |
 | Savings Bond | Common | $6 | Win a fight: you get $1 per $10 you’re holding (up to $5). |
 | Shiner | Common | $5 | Finish a round without banking a crown: you get +6 odds. |
 | Slow Burn | Common | $6 | You get +1 odds per round you’ve won in a row at this table. |
+| The Barback | Common | $5 | Your coat holds one more drink. |
+| The Bully | Common | $5 | At a regular’s table (not a shark or an owner): you get +5 odds. |
 | The Collection | Common | $5 | You get +4 odds per charm you hold (this one too). |
+| The Doorman | Common | $5 | You get +2 Guard at the end of every round, win or lose. |
+| The Fence | Common | $4 | Charms sell for full price, and tossing a die costs $3 less. |
 | Thick Skin | Common | $5 | Rounds you lose hit you 3 less (at least 1). |
 | Three’s Company | Common | $5 | You get +2 odds per 3 you bank. |
 | Ticket Stub | Common | $5 | You get +2 odds per chit you’ve earned this run. |
 | Tip Jar | Common | $5 | You get $2 for every round you win. |
+| Two-Step | Common | $5 | You get +2 odds per 2 you bank. |
 | Victory Cigar | Common | $5 | You heal 6 nerve after every fight you win. |
+| Well Drinks | Common | $5 | You get +2 odds per common charm you hold (this one too). |
+| Adrenaline | Uncommon | $9 | While you’re at half nerve or less: you get ×2 odds. |
 | All In | Uncommon | $10 | Bank every die on your first throw: you get ×3 odds. |
 | Bar Fly | Uncommon | $9 | You get +1 odds per $6 you’re holding. |
 | Bent Spoon | Uncommon | $9 | Once per round: pick one of your dice and reroll it. |
 | Blood Money | Uncommon | $8 | You get +6 odds. You lose 1 nerve every round (never your last). |
+| Brick Wall | Uncommon | $8 | You get +1 odds per 2 Guard you have. |
 | Bump the Table | Uncommon | $8 | Once per table, after they throw: click Bump and their lowest die gets thrown again. |
+| Closing Time | Uncommon | $9 | From round 4 on at a table: you get ×2 odds. |
+| Comeback Kid | Uncommon | $9 | Lost your last round at this table: you get ×2.5 odds. |
+| Coronation | Uncommon | $9 | Bank 2 or more crowns in one go: you get +6 odds this round. |
 | Crate Rat | Uncommon | $7 | Grows +3 odds every crate you open. Never resets. |
 | Deuces Wild | Uncommon | $9 | Your 2s score 1. |
 | Double Take | Uncommon | $8 | Every 1 you bank counts as two 1s (for Snake Eyes and Pair of Ones). |
+| Empty Pockets | Uncommon | $7 | While you’re holding $5 or less: you get +8 odds. |
+| Even Steven | Uncommon | $8 | Finish a round on an even score: you get +4 odds. |
+| Giant Killer | Uncommon | $9 | Against sharks and owners: you get ×1.5 odds. |
+| Happy Hour | Uncommon | $8 | You get +3 odds per drink in your coat. |
 | Jackpot | Uncommon | $9 | Bank three of a kind in one go: you get ×2 odds this round. |
 | Loaded Thumb | Uncommon | $9 | Twice per table: click Nudge, then a die in your tray, to turn it down by 1. Crowns don’t move. |
+| Lone Wolf | Uncommon | $8 | You get +2 odds every time you bank exactly one die. |
+| Long Night | Uncommon | $8 | You get +1 odds per throw you’ve banked from this round. |
 | Long Shot | Uncommon | $8 | Win a round by 1 or 2: you get ×2.5 odds. |
+| Mixed Drinks | Uncommon | $8 | You get +2 odds per different kind of die you bank in a round. |
+| Nightcap | Uncommon | $8 | Any round you have a drink: you get ×1.5 odds. |
+| Nothing Doing | Uncommon | $8 | You get +4 odds per 0 or −1 you bank. |
 | One at a Time | Uncommon | $10 | Bank exactly one die every throw for a whole round: you get +4 odds. |
 | Pair of Jacks | Uncommon | $9 | In each bank you make, repeat faces score 0. (3, 3, 5 counts as 3 + 0 + 5.) |
 | Piggy Bank | Uncommon | $8 | Grows +2 odds every round you win. Breaks back to 0 when you lose one (unless Rabbit’s Foot takes the hit). |
+| Poker Face | Uncommon | $8 | Any round they’re Leaning in or Counting crowns: you get ×2 odds. |
+| Quick Draw | Uncommon | $8 | Finish a round in 2 throws or fewer: you get +6 odds. |
 | Rabbit's Foot | Uncommon | $9 | The first round you lose at each table doesn’t hurt you. |
 | Shoeshine | Uncommon | $8 | Your finished dice give +2 more odds when you bank them. |
 | Short Stack | Uncommon | $9 | You get +2 odds per die your bag is short of 9. |
@@ -317,26 +374,41 @@ Beat the house to raise the **limit**. Each one stacks on every limit below it.
 | The Echo | Uncommon | $9 | Crowns you bank on your first throw of a round count as two crowns each. |
 | The Finisher | Uncommon | $9 | Opponent at half nerve or less: you get ×2.5 odds. |
 | The Heckler | Uncommon | $10 | Your first crown each round adds 1 to the opponent’s score. |
+| The High Road | Uncommon | $8 | You get +3 odds per 5 or higher you bank. |
 | The Regular | Uncommon | $9 | You get +1 odds per round already played at this table. |
+| The Showman | Uncommon | $9 | You get +3 odds per Play you make in a round. |
 | Tommy Gun | Uncommon | $8 | You get +2 odds per die in your final bank each round. |
+| Top Shelf | Uncommon | $9 | You get +3 odds per rare charm you hold. |
+| Wheel of Fortune | Uncommon | $8 | Every round: 1 in 3 chance you get ×3 odds. |
 | Big Shot | Rare | $16 | You get ×1.2 odds per charm you hold (this one too). |
+| Clean Sweep | Rare | $16 | Finish a round on 0 or less: you get ×4 odds. |
 | Double Down | Rare | $16 | Won your last round at this table: you get ×3 odds. |
+| Glass Jaw | Rare | $15 | You get ×2.5 odds. −15 max nerve. |
 | Haymaker | Rare | $15 | You sit down at every table with 4 Guard. Win a round: you win it by 1 more per Guard you have. |
+| Heavyweight | Rare | $15 | Win a round while finishing on 10 or more: you get ×3 odds. |
 | High Stakes | Rare | $15 | You get ×2 odds, but rounds you lose hit you 1 harder. |
 | Kingpin | Rare | $18 | You get ×1.35 odds per crown you bank. Stacks. |
 | Last Call | Rare | $16 | Your final bank each round: its highest die counts 1 less, if it’s a 4 or more. |
+| Lone Star | Rare | $16 | You get +7 odds per empty charm slot. |
 | Low Ball | Rare | $16 | Finish a round on 3 or less: you get ×3 odds. |
 | Lucky Penny | Rare | $17 | Your first throw each round: your 1s score 0. |
+| Midas | Rare | $17 | You get ×1.1 odds per $10 you’re holding, up to ×2. |
 | Moonshine | Rare | $16 | Ferments: gains ×0.05 odds every round you win. Never resets. |
+| No Kings | Rare | $15 | Finish a round without banking a crown: you get ×2 odds. |
+| Practice Makes | Rare | $15 | Your Plays level up every 3rd time you make them instead of every 4th. |
 | Rabbit Punch | Rare | $15 | Your Lucky dice hit every time, and give +6 instead of +4. |
+| Sevens | Rare | $15 | Finish a round on exactly 7: you get ×4 odds. |
+| Six-Shooter | Rare | $15 | Bank a 6 or higher in a round: you get ×2 odds. |
 | Sleight of Hand | Rare | $15 | Your first throw each round: every die that lands on 5 or more gets one free rethrow. |
+| Snake Pit | Rare | $17 | You get ×1.2 odds per 1 you bank. Stacks. |
 | Straight Shooter | Rare | $15 | Bank a 1, a 2 and a 3 in the same round: you get ×5 odds. |
 | The Bookie | Rare | $15 | Win a round: you get $1 per point you won by, up to $8. |
 | The Crown Room | Rare | $16 | Bank 3 or more crowns in a round: you get ×3 odds. |
 | The Mimic | Rare | $15 | Copies whatever the charm to its right does, so it works twice. Drag charms to set the order. |
 | The Ringer | Rare | $17 | Your crowns score −1 instead of 0, but your 1s score 3. |
+| Travel Light | Rare | $16 | You get ×1.25 odds per die your bag is short of 8. Stacks. |
 
-### Dice (22)
+### Dice (43)
 | Die | Rarity | Price | Faces | Notes |
 |---|---|---|---|---|
 | Boxcars | Common | $6 | 1 1 1 6 6 ♛ | Three 1s, two 6s. Pairs well with Snake Eyes. |
@@ -346,16 +418,37 @@ Beat the house to raise the **limit**. Each one stacks on every limit below it.
 | High Roller | Common | $6 | 1 2 3 4 5 6 7 8 9 10 11 ♛ | Mostly awful. Bank its crown: you get ×2 odds this round and $3. |
 | House Die | Common | $4 | 1 2 3 4 5 ♛ | The standard die. A crown scores 0. |
 | Loaded Die | Common | $6 | 1 1 2 3 4 ♛ | Weighted low. Never rolls a 5. |
+| Lucky Seven | Common | $6 | 1 1 2 2 3 3 7 ♛ | Eight sides, mostly low. One ugly 7. |
 | Octo | Common | $3 | 1 2 3 4 5 6 7 ♛ | Eight sides. Usually rolls high. |
+| Rusty Die | Common | $4 | 1 2 3 4 5 ♛ | Bank it: you get $1. It falls apart after you draw it for 5 rounds. |
+| Sandbag | Common | $4 | 3 3 3 3 3 3 | Always a 3. Pairs with Three’s Company and Three of a Kind. |
+| Tin Die | Common | $5 | 1 2 2 3 3 4 | Never above a 4. No crown either. |
+| Blank Check | Uncommon | $8 | 0 0 0 9 9 9 | Half 0s, half 9s. No crown. |
 | Champagne | Uncommon | $9 | 1 2 3 4 5 ♛ | Bank its crown: you get ×1.5 odds this round. Stacks. |
 | Cherry Bomb | Uncommon | $8 | 1 2 3 4 5 ♛ | Bank its crown: the opponent loses 8% of their max nerve on the spot (at least 2). |
+| Coronet | Uncommon | $9 | 1 2 3 4 ♛ ♛ | Two crowns, no 5. |
 | Devil's Die | Uncommon | $9 | -1 2 3 4 5 ♛ | One face is −1: it takes a point off your score. |
 | Ember | Uncommon | $7 | 1 2 3 4 5 6 ♛ ♛ | Two crowns on eight sides. Bank a crown: you get +2 odds this round. |
 | Gilded Die | Uncommon | $9 | 1 2 3 4 5 ♛ | Bank its crown: you get $2. |
+| Hot Potato | Uncommon | $7 | 1 1 1 2 2 ♛ | Great faces. Every round you draw it, you lose 1 nerve (never your last). |
+| Iron Die | Uncommon | $8 | 2 2 3 3 4 ♛ | Bank it: you get +2 Guard. |
+| Ivory | Uncommon | $9 | 1 2 2 3 3 ♛ | Never above a 3. |
+| Jade Die | Uncommon | $8 | 1 3 3 3 5 ♛ | Three 3s. Bank its 3: you get +3 odds this round. |
+| Magnet | Uncommon | $8 | 1 2 3 4 5 ♛ | Bank it with another die showing the same face: you get +4 odds this round. |
+| One-Armed Bandit | Uncommon | $7 | 1 2 3 4 5 6 7 ♛ | Eight sides. Bank its crown: you get $5. |
 | Payday | Uncommon | $7 | 1 2 3 4 5 ♛ | Bank its 1: you get $1. |
 | Pebble | Uncommon | $10 | 1 2 3 ♛ | Four sides, all low. |
+| Poker Chip | Uncommon | $8 | 0 7 | Heads it’s a 0. Tails it’s a 7. |
+| Quicksilver | Uncommon | $8 | 1 2 3 4 5 ♛ | Bank it on your first throw: you get +3 odds this round. |
+| Saint’s Die | Uncommon | $8 | 1 2 3 4 5 ♛ | Bank its crown: you heal 3 nerve. |
 | Trick Die | Uncommon | $8 | -1 3 6 6 6 ♛ | Half the time it’s a 6. The −1 takes a point off your score. |
+| Wooden Nickel | Uncommon | $9 | 2 ♛ | Only ever a 2 or a crown. |
+| Anvil | Rare | $12 | 4 5 6 6 ♛ ♛ | Bank it showing 4 or more: you get ×1.5 odds this round. Stacks. |
+| Dynamite | Rare | $12 | 1 2 3 4 5 ♛ | Bank its crown: the opponent loses 16% of their max nerve on the spot. Gone after you draw it for 4 rounds. |
 | Lucky Coin | Rare | $15 | 1 ♛ | Only ever a 1 or a crown. |
+| Moonstone | Rare | $13 | 1 2 3 4 5 ♛ | Bank it in your last bank of the round: you get ×2 odds. |
+| Onyx | Rare | $14 | 0 0 1 2 5 6 | Two 0s, a 1 and a 2. No crown. |
+| Rattler | Rare | $14 | 1 1 1 1 1 6 | Five 1s and one 6. No crown. |
 | Royal Die | Rare | $13 | ♛ ♛ ♛ 4 5 6 | Three crowns, three high faces. Feast or famine. |
 | Shaved Die | Rare | $16 | 1 1 2 2 ♛ ♛ | Two 1s, two 2s, two crowns. |
 | Twin | Rare | $11 | 1 2 3 4 5 ♛ | Copies your lowest other die in the same throw. |
@@ -381,6 +474,12 @@ Beat the house to raise the **limit**. Each one stacks on every limit below it.
 | Two Heads | Both twins throw. The opponent keeps the lower total. |
 | Loudmouth | Your odds count 2 lower (never under 1). |
 | No Royals | Your crowns score 1 instead of 0. |
+| Crown Tax | Every crown you bank costs you $1, paid when the round ends. |
+| Stone Face | You can’t see what they’re up to next round. |
+| Short Table | You draw one die fewer every round. |
+| Tight Lid | The opponent’s score never counts higher than 8. |
+| Big Tipper | You get $1 every round you win here. |
+| Soft Touch | Rounds you win here hit a quarter harder. |
 
 ### House rules (counters)
 | House rule | What it does |
@@ -394,6 +493,9 @@ Beat the house to raise the **limit**. Each one stacks on every limit below it.
 | Second Wind | The opponent gets back 3% of their max nerve after every round. |
 | Snakebit | Your first throw each round: your 1s score 2. |
 | Brass Knuckles | Every round you win, a tenth of the damage comes back at you (1 to 5). |
+| Odd Job | Your 3s score 4. |
+| Last Word | Your final bank each round scores 1 more. |
+| Thick Hide | Rounds you win by 2 or less only hit half as hard. |
 
 ### Regulars and sharks
 | Act | Kind | Name | Who | Plays | Tags |
@@ -403,53 +505,71 @@ Beat the house to raise the **limit**. Each one stacks on every limit below it.
 | Act I | Table | Old Gus | Been here since ’26. | Loose | Haze |
 | Act I | Table | Nickels | Owes everybody five bucks. | Loose | Cover Charge |
 | Act I | Table | Granny Mae | Knits between throws. | Loose | Three Sheets |
+| Act I | Table | Penny Pat | Tips in pennies. Still tips. | Loose | Big Tipper |
+| Act I | Table | Wheezy | Coughs on the dice for luck. | Loose | Soft Touch |
 | Act I | Table | Sleepy Joe | Nods off between throws. | Loose | Three Sheets |
 | Act I | Table | Tipsy Tina | Hand in your pocket. | Loose | Sticky Fingers |
 | Act I | Table | Lefty | Deals with his right. | Loose | Cold Table |
 | Act I | Table | Dutch | Bets the deed. | Loose | Holds a Grudge |
 | Act I | Table | Slim | All elbows. | Loose | Short Fuse |
 | Act I | Table | Hattie | Hands like anchors. | Loose | Heavy Hand |
+| Act I | Table | Stretch | Leans over the whole table. | Loose | Short Table |
+| Act I | Table | Clara Bell | Rings up every crown. | Loose | Crown Tax |
 | Act I | Table | Kitty | Copies everything you do. | Loose | Copycat |
 | Act I | Shark | Knuckles | Bouncer. Off the clock. | Loose | Short Fuse |
 | Act I | Shark | The Kid | Too young to be in here. | Loose | Hot Streak |
+| Act I | Shark | Mumbles | Nobody knows what he said. | Loose | Stone Face |
 | Act I | Shark | Pearl | Never blinks. | Loose | Haze, Sticky Fingers |
 | Act I | Shark | The Twins | Finish each other’s rolls. | Loose | Two Heads |
 | Act I | Shark | Smiley | Grins the whole time. | Loose | Sharp, Cover Charge |
+| Act I | Shark | Brick | Built like the back wall. | Loose | Thick Hide |
 | Act I | Shark | Lenny | Never shuts up. Never. | Loose | Loudmouth, Hot Streak |
 | Act II | Table | Silky Vince | Smells like money. | Loose | Cover Charge |
 | Act II | Table | Madame Ora | Already knows your roll. | Loose | Haze |
 | Act II | Table | Dot | Sells smokes, steals change. | Loose | Sticky Fingers, Nervous Wreck |
 | Act II | Table | Fingers | Counts cards. Wrong game. | Loose | Sticky Fingers |
 | Act II | Table | Velma | Sings between rounds. | Loose | Heavy Hand |
+| Act II | Table | Giggles | Laughs at her own rolls. | Loose | Soft Touch, Haze |
+| Act II | Table | The Bishop | Blesses the pot, then takes it. | Loose | Crown Tax |
 | Act II | Table | Dapper Dan | Tie straight. Odds straighter. | Loose | Sharp |
 | Act II | Table | The Professor | Counts on his fingers. Fast. | Tight | Short Fuse |
 | Act II | Table | Vito | Smiles with his mouth only. | Tight | House Edge |
 | Act II | Table | Mr. Velvet | Named the room after himself. | Tight | Cold Table, Hot Streak |
 | Act II | Table | Rocco | Breaks thumbs on weekends. | Tight | Holds a Grudge, Cover Charge |
 | Act II | Table | Sister Grace | Prays for your dice. | Loose | Haze, House Edge |
+| Act II | Table | Cricket | Never sits still. | Tight | Short Table, Cover Charge |
+| Act II | Table | Olga | Arm-wrestles for the tab. | Tight | Thick Hide |
 | Act II | Table | Miss Fortune | Reads your dice before they land. | Tight | Copycat, Haze |
 | Act II | Shark | Lady Chance | Wears your luck as a necklace. | Tight | Sticky Fingers, Haze, Hot Streak |
 | Act II | Shark | Iron Pete | Never blinks first. | Tight | Short Fuse, Sharp |
+| Act II | Shark | The Sphinx | Has one expression. | Tight | Stone Face, House Edge |
 | Act II | Shark | The Doubles | Back for your wallet. | Tight | Two Heads, Sticky Fingers |
 | Act II | Shark | Madame Noir | Plays with a stranger’s money. | Tight | Cold Table, Cover Charge |
+| Act II | Shark | Dice Mary | Brought her own. All of them. | Tight | Odd Job, Sticky Fingers |
 | Act II | Shark | The Magpie | Anything shiny. | Tight | Sticky Fingers, Copycat |
 | Act III | Table | Specs | Counts your breaths. | Tight | House Edge, Holds a Grudge |
 | Act III | Table | Miss Ruby | Collects debts. | Tight | Sticky Fingers |
 | Act III | Table | Tony Twice | Never says anything once. | Tight | Haze, Hot Streak |
 | Act III | Table | Benny Blue | Plays the horn. Badly. | Tight | Cold Table, Cover Charge |
 | Act III | Table | The Judge | Overrules your dice. | Tight | Sharp, Nervous Wreck |
+| Act III | Table | Two-Bit | Charges for the chair. | Tight | Crown Tax, Cover Charge |
+| Act III | Table | Sarge | Runs the table like a drill. | Tight | Short Table |
 | Act III | Table | Officer Kelly | On the take. On the clock. | Tight | Loudmouth, Cover Charge |
 | Act III | Table | Inky Lou | Writes your name down. | Tight | Short Fuse, Cover Charge |
 | Act III | Table | The Widow | Third husband this year. | Tight | Cold Table, Haze |
 | Act III | Table | Bruno | Doesn’t play. Collects. | Tight | House Edge, Heavy Hand |
 | Act III | Table | Lola | Wears her winnings. | Tight | Sticky Fingers, Hot Streak |
 | Act III | Table | Mack | Takes a cut of every pot. | Loose | Copycat, Cover Charge |
+| Act III | Table | Mother Superior | Raps your knuckles. | Tight | Odd Job, Sharp |
+| Act III | Table | Old Ironsides | Hasn’t felt a thing since ’19. | Tight | Thick Hide, Holds a Grudge |
 | Act III | Table | Lucky Lucy | Has never lost a tie. | Tight | Sharp, Hot Streak |
 | Act III | Shark | The Enforcer | Cracks his knuckles between throws. | Tight | Short Fuse, Sticky Fingers, Heavy Hand |
 | Act III | Shark | The Undertaker | Measures you for a box. | Tight | Holds a Grudge, Heavy Hand, Cold Table |
+| Act III | Shark | The Auditor | Counts every crown twice. | Tight | Crown Tax, Loudmouth, Stone Face |
 | Act III | Shark | Doc | Sews up the losers. Charges extra. | Tight | Sharp, Holds a Grudge, Haze |
 | Act III | Shark | The Ledger | Nobody leaves owing. | Tight | House Edge, Haze |
 | Act III | Shark | Dolores | Buys the table, then the room. | Tight | Loudmouth, Sticky Fingers |
+| Act III | Shark | Big Tiny | The door is behind him. | Tight | Tight Lid, Thick Hide |
 
 ---
 

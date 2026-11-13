@@ -350,8 +350,9 @@ test('Floor plan: 9 rows, owner on top, alley/bar rows, lines never cross, every
 test('Round 2: Plays add margin, Guard soaks and carries, overkill pays', () => {
   assert.equal(L.oddsOf(L.newRound(), [], env({ intent: 'tilted' })).odds, 2);
   const R = L.newRound(); L.noteBank(R, [1, 1], ['d6', 'd6'], []);
-  assert.equal(L.settle(4, 7, R, [], O([], 100, 1), env({ plays: {} })).margin, 4);
-  assert.equal(L.settle(4, 7, R, [], O([], 100, 1), env({ plays: { pair: 2 } })).margin, 6);
+  // Pair of Ones and Two and Through (one throw) both count: +1 margin each at level 1
+  assert.equal(L.settle(4, 7, R, [], O([], 100, 1), env({ plays: {} })).margin, 5);
+  assert.equal(L.settle(4, 7, R, [], O([], 100, 1), env({ plays: { pair: 2 } })).margin, 7);
   assert.deepEqual(L.soak(5, 3), { dmg: 0, guard: 2, soaked: 3 }); assert.deepEqual(L.soak(2, 7), { dmg: 5, guard: 0, soaked: 2 });
   assert.equal(L.settle(2, 5, L.newRound(), ['haymaker'], O([], 100, 1), env({ guard: 5 })).margin, 8);
   assert.equal(L.overkillPay(60, 20), 4); assert.equal(L.overkillPay(500, 20), 10); assert.equal(L.overkillPay(10, 20), 0);
@@ -386,6 +387,63 @@ test('The Mimic copies non-odds effects too, only from the slot right of it', ()
   assert.deepEqual(L.bankVals([6, 2], {}, ['mimic', 'lastcall'], true), [4, 2]);
   // The Echo: a first-throw crown counts three times
   const R = R0(); L.noteBank(R, ['C'], ['d6'], ['mimic', 'echo']); assert.equal(R.crowns, 3);
+});
+test('Second case of dice: what each one pays when you bank it', () => {
+  const R = R0(); L.noteBank(R, [3, 'C', 'C', 4], ['rust', 'slot', 'saint', 'iron'], []);
+  assert.equal(R.cash, 6); assert.equal(R.heal, 3); assert.equal(R.guard, 2); assert.equal(R.big, true); assert.equal(R.crown2, true);
+  const Q = R0(); L.noteBank(Q, [2, 3, 5, 5], ['mercury', 'jade', 'anvil', 'magnet'], []); L.noteBank(Q, [4], ['moon'], []);
+  const parts = Object.fromEntries(L.oddsOf(Q, [], env({ done: true })).parts.map(p => [p[0], p[2]]));
+  assert.equal(parts['Quicksilver'], 3); assert.equal(parts['Jade Die'], 3); assert.equal(parts['Magnet'], 4); assert.equal(parts['Anvil'], 1.5); assert.equal(parts['Moonstone'], 2);
+  const D = R0(); L.noteBank(D, ['C'], ['dynamite'], []); assert.equal(D.bomb, 2);
+  assert.equal(L.DT.chip.faces.length, 2); assert.ok(L.SHOP_DICE.every(d => L.DT[d]));
+});
+test('Second shelf of charms: the card text is what the code does', () => {
+  const od = (R, ch, e) => L.oddsOf(R, ch, env(e)).odds;
+  const R = R0(); L.noteBank(R, [1, 2, 5, 0], ['d6', 'd6', 'd8', 'goose'], []);     // one throw, four dice
+  assert.equal(od(R, ['twostep']), 3); assert.equal(od(R, ['oddball']), 5); assert.equal(od(R, ['aces']), 3); assert.equal(od(R, ['bigbank']), 6);
+  assert.equal(od(R, ['eightball']), 4); assert.equal(od(R, ['purist']), 5); assert.equal(od(R, ['rainbow']), 7); assert.equal(od(R, ['highroad']), 4); assert.equal(od(R, ['zero']), 5);
+  assert.equal(od(R, ['lonewolf']), 1); assert.equal(od(R, ['marathon']), 2); assert.equal(od(R, ['quickdraw'], { done: true }), 7); assert.equal(od(R, ['evensteven'], { done: true, score: 8 }), 5);
+  assert.equal(od(R, ['bully'], { kind: 'F' }), 6); assert.equal(od(R, ['bully'], { kind: 'E' }), 1); assert.equal(od(R, ['giantkiller'], { kind: 'B' }), 1.5);
+  assert.equal(od(R, ['firstblood'], { oppFull: true }), 7); assert.equal(od(R, ['fullstomach'], { hp: 50, maxHp: 50 }), 6); assert.equal(od(R, ['adrenaline'], { hp: 20, maxHp: 50 }), 2);
+  assert.equal(od(R, ['broke'], { gold: 5 }), 9); assert.equal(od(R, ['broke'], { gold: 6 }), 1); assert.equal(od(R, ['midas'], { gold: 35 }), 1.3); assert.equal(od(R, ['midas'], { gold: 500 }), 2);
+  assert.equal(od(R, ['brickwall'], { guard: 7 }), 4); assert.equal(od(R, ['happyhour'], { coat: 2 }), 7); assert.equal(od(R, ['lonestar'], { free: 3 }), 22);
+  assert.equal(od(R, ['topshelf', 'kingpin', 'midas']), 7); assert.equal(od(R, ['welldrinks', 'tip']), 5);
+  assert.equal(od(R, ['closingtime'], { round: 4 }), 2); assert.equal(od(R, ['closingtime'], { round: 3 }), 1); assert.equal(od(R, ['comeback'], { lossStreak: 1 }), 2.5);
+  assert.equal(od(R, ['pokerface'], { intent: 'lean' }), 2); assert.equal(od(R, ['nightcap'], { drink: { gin: 1 } }), 6); assert.equal(od(R, ['wheel'], { wheel: true }), 3); assert.equal(od(R, ['wheel']), 1);
+  assert.equal(od(R, ['heavyweight'], { done: true, score: 10, margin: 2 }), 3); assert.equal(od(R, ['sevens'], { done: true, score: 7 }), 4); assert.equal(od(R, ['sweep'], { done: true, score: 0 }), 4);
+  assert.equal(od(R, ['snakepit']), 1.2); assert.equal(od(R, ['regicide'], { done: true }), 2); assert.equal(od(R, ['glassjaw']), 2.5); assert.equal(od(R, ['travellight'], { bag: 6 }), 1.5625);
+  const S = R0(); L.noteBank(S, [6, 'C', 'C'], ['d8', 'd6', 'd6'], []); assert.equal(od(S, ['sixgun']), 2); assert.equal(od(S, ['coronation']), 7); assert.equal(od(S, ['regicide'], { done: true }), 1);
+  assert.equal(od(S, ['showman'], { plays: {}, done: true }), 1 + 3 * 2 + 2 + 2);   // High Society and Two and Through: +3 each, plus the Plays' own +2 and +2
+  // not odds: Deep Breath heals, The Fence sells at full price and cuts the toss, The Barback and Ice Box widen the coat, Practice Makes
+  const G = { charms: ['deepbreath'], hp: 10, maxHp: 50, grow: {} }; L.afterRound(G, 'you', false); assert.equal(G.hp, 12);
+  assert.equal(L.sellValue({ charms: ['fence'] }, 'kingpin'), 18); assert.equal(L.sellValue({ charms: [] }, 'kingpin'), 9);
+  assert.equal(L.tossPrice({ charms: ['fence'], tossed: 1 }), 6); assert.equal(L.tossPrice({ charms: [], fix: ['backdoor'] }), 3);
+  assert.equal(L.drinkMax({ charms: ['barback'], fix: ['icebox'] }), 4); assert.equal(L.playEvery({ charms: ['practice'] }), 3);
+  assert.equal(L.CHARMS.glassjaw.hp, -15); assert.equal(L.CHARMS.liver.hp, 12);
+});
+test('New tricks, drinks, finishes, deeds, fixtures and Plays', () => {
+  assert.equal(L.effVal(3, { odd: true }), 4);                                                       // Odd Job
+  assert.deepEqual(L.bankVals([2, 3], { lastword: true }, [], true), [3, 3]); assert.deepEqual(L.bankVals([2, 3], { lastword: true }, [], false), [2, 3]);
+  assert.equal(L.theirScore(12, R0(), [], ['lid']), 8);                                              // Tight Lid
+  const base = L.settle(3, 5, R0(), [], opp([], 2), env()).dmg;
+  assert.equal(L.settle(3, 5, R0(), [], opp(['thickhide'], 2), env()).dmg, Math.ceil(base / 2));     // win by 2: half
+  assert.equal(L.settle(1, 5, R0(), [], opp(['thickhide'], 2), env()).dmg, L.settle(1, 5, R0(), [], opp([], 2), env()).dmg);
+  assert.equal(L.settle(1, 9, R0(), [], opp(['soft'], 2), env()).dmg, Math.round(L.settle(1, 9, R0(), [], opp([], 2), env()).dmg * 1.25));
+  const w = L.settle(3, 5, R0(), [], opp(), env()).margin;
+  assert.equal(L.settle(3, 5, R0(), [], opp(), env({ drink: { oldf: 1 } })).margin, w + 3);
+  assert.equal(L.settle(3, 5, R0(), [], opp(), env({ deeds: ['muscle'] })).margin, w + 2);
+  assert.equal(L.settle(9, 5, R0(), [], opp([], 2), env({ deeds: ['muscle'] })).dmg, L.settle(9, 5, R0(), [], opp([], 2), env()).dmg + 1);
+  const R = R0(); L.noteBank(R, ['C'], ['d6'], [], ['inked']); assert.equal(R.crowns, 2);
+  assert.equal(L.oddsOf(R, [], env({ drink: { mimosa: 1 } })).odds, 5); assert.equal(L.oddsOf(R0(), [], env({ drink: { martini: 1 } })).odds, 3);
+  assert.equal(L.oddsOf(R0(), [], env({ deeds: ['numbers'] })).odds, 1.5);
+  assert.equal(L.finVal(6, 'weighted'), 5); assert.equal(L.finVal(4, 'weighted'), 4);
+  const F = R0(); L.noteBank(F, [2, 3], ['d6', 'd6'], [], ['sterling', 'blessed']); assert.equal(F.guard, 1); assert.equal(F.heal, 1);
+  assert.equal(L.barPrice({ deeds: ['pawnshop'] }, 12), 9);
+  const G = { charms: [], offbook: [], fix: ['jukebox', 'chandelier'], deeds: ['numbers'] }; assert.equal(L.startGuard(G), 5); assert.equal(L.payMod(G), -2);
+  const P = R0(); L.noteBank(P, [1, 2, 3, 4], ['d6', 'd6', 'd6', 'd6'], []); assert.deepEqual(L.playsHit(P, { done: true, score: 10 }).sort(), ['bighand', 'ladder', 'quick']);
+  assert.ok(L.ACTS.every(a => a.foes.bosses.length === 3)); assert.ok(L.ACTS.every(a => a.foes.bosses.every(b => b.q.every(q => L.QUIRKS[q]))));
+  assert.ok(L.ACTS.every(a => ['t1', 't2', 'e1', 'e2'].every(k => a.foes[k].every(f => (f.q || []).every(q => L.QUIRKS[q]) && f.bag.every(d => L.DT[d])))));
+  for (const p of L.POCKETS) { const S = L.pocketStart(p.k); assert.ok(S.bag.every(d => L.DT[d]) && S.charms.every(c => L.CHARMS[c]), p.k); }
 });
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

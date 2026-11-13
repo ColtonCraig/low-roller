@@ -158,6 +158,27 @@ const SKINS={
   trick: {bg:'#1a1a1e',edge:'#000000',ink:'#e84a5a'},
   bubbly:{bg:'#f2e2a8',edge:'#b8a060',ink:'#6a4a10'},
   viper: {bg:'#3a6a2a',edge:'#1a3a10',ink:'#e8f070'},
+  tin:   {bg:'#b8bcc0',edge:'#787c82',ink:'#2a2e34'},
+  sandbag:{bg:'#c8a46a',edge:'#8a6a3a',ink:'#3a2410'},
+  rust:  {bg:'#9a4a22',edge:'#5a2a10',ink:'#f2d0a0'},
+  seven: {bg:'#1e7a6a',edge:'#0e4238',ink:'#fff0b0'},
+  ivory: {bg:'#fbf6e6',edge:'#d2c49a',ink:'#7a5a2a'},
+  coronet:{bg:'#7a1a3a',edge:'#42081c',ink:'#f0c040'},
+  mercury:{bg:'#c4d0dc',edge:'#7a8a9c',ink:'#1a3a6a',bg2:'#e8f0f8'},
+  jade:  {bg:'#3fa878',edge:'#1c6444',ink:'#f2ffe8'},
+  iron:  {bg:'#4a4e58',edge:'#22252c',ink:'#d8dce8'},
+  saint: {bg:'#f8f0d0',edge:'#d8b860',ink:'#3a6ab0'},
+  slot:  {bg:'#c0202e',edge:'#6a0c14',ink:'#ffe070'},
+  magnet:{bg:'#c0303f',edge:'#6a1420',ink:'#ffffff',bg2:'#d8dce4'},
+  nickel:{bg:'#b08850',edge:'#6a4a20',ink:'#2a1808'},
+  chip:  {bg:'#1e4a8a',edge:'#0e2648',ink:'#ffffff'},
+  blank: {bg:'#e8f0e0',edge:'#9ab08a',ink:'#1a5a2a'},
+  potato:{bg:'#b07a3a',edge:'#6a4418',ink:'#ff5a2a'},
+  anvil: {bg:'#2a2c34',edge:'#0c0d12',ink:'#ffb040'},
+  onyx:  {bg:'#0e0e12',edge:'#000000',ink:'#b8a8ff'},
+  rattler:{bg:'#c8b060',edge:'#7a6420',ink:'#3a1a08'},
+  moon:  {bg:'#2a3a6a',edge:'#101a3a',ink:'#e8f0ff'},
+  dynamite:{bg:'#d82a1a',edge:'#6a0c04',ink:'#1a1a1a'},
 };
 const PIPS={1:[[1,1]],2:[[0,0],[2,2]],3:[[0,0],[1,1],[2,2]],4:[[0,0],[2,0],[0,2],[2,2]],5:[[0,0],[2,0],[1,1],[0,2],[2,2]],6:[[0,0],[2,0],[0,1],[2,1],[0,2],[2,2]]};
 const usesPips=type=>DT[type].faces.every(f=>f==='C'||f<=6);
@@ -693,7 +714,7 @@ async function cupThrow(){ // raise, shake, tip. returns mouth position + direct
 async function cupRest(){ if(!foe) return; const u=foe.userData; await Promise.all([poseArm(u.armR,POSE.restR,420), foeLean(0,420)]); u.mode='idle'; }
 
 /* ---------- 3D dice ---------- */
-const SHAPE={royal:'cube',deuce:'cube',payday:'cube',trick:'cube',bubbly:'cube',viper:'cube',gilded:'cube',bomb:'cube',goose:'cube',boxcar:'cube',devil:'cube',d6:'cube',loaded:'cube',glass:'cube',twin:'cube',d8:'octa',ember:'octa',pebble:'tetra',gamble:'dodeca',coin:'coin'};
+const SHAPE={royal:'cube',deuce:'cube',payday:'cube',trick:'cube',bubbly:'cube',viper:'cube',gilded:'cube',bomb:'cube',goose:'cube',boxcar:'cube',devil:'cube',d6:'cube',loaded:'cube',glass:'cube',twin:'cube',d8:'octa',ember:'octa',pebble:'tetra',gamble:'dodeca',coin:'coin',seven:'octa',slot:'octa',nickel:'coin',chip:'coin'};
 const shapeOf=t=>SHAPE[t]||'cube';
 const geoCache={};
 function basisQuat(n,up){ const z=n.clone().normalize(); const y=up.clone().sub(z.clone().multiplyScalar(up.dot(z))); if(y.lengthSq()<1e-6) y.set(0,1,0).sub(z.clone().multiplyScalar(z.y)); y.normalize(); const x=new THREE.Vector3().crossVectors(y,z); return new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(x,y,z)); }
@@ -721,7 +742,7 @@ function makeDie3D(inst){
     for(let i=0;i<n;i++){ const cv=document.createElement('canvas'); cv.width=cv.height=64; const tex=texFromCanvas(cv);
       o.mats.push(new THREE.MeshLambertMaterial({map:tex,emissiveMap:tex,emissive:new THREE.Color(0x262626),transparent:glass,opacity:glass?.85:1})); o.cvs.push(cv); }
     o.topIdx=sh==='coin'?1:2;
-    if(sh==='coin'){ const c=o.cvs[0].getContext('2d'); c.fillStyle='#9a6a14'; c.fillRect(0,0,64,64); c.fillStyle='#e8b54a'; for(let i=0;i<64;i+=6) c.fillRect(i,0,3,64); o.mats[0].map.needsUpdate=true; }
+    if(sh==='coin'){ const c=o.cvs[0].getContext('2d'); c.fillStyle=SKINS[sk].edge; c.fillRect(0,0,64,64); c.fillStyle=SKINS[sk].bg; for(let i=0;i<64;i+=6) c.fillRect(i,0,3,64); o.mats[0].map.needsUpdate=true; }
     o.mesh=new THREE.Mesh(sd.geo,o.mats); o.size=sh==='coin'?.5:.66;
   } else {
     const body=new THREE.MeshLambertMaterial({color:SKINS[sk].bg,flatShading:true,emissive:new THREE.Color(0x141414)}); o.mats.push(body);
@@ -754,7 +775,7 @@ function setFaces(o,top,hidden){
     o.decals.forEach((d,i)=>{ const v=o.upSet.has(i)?(hidden?'?':top):rollInst(o.inst); drawFace(o.cvs[i],type,v,false); o.mats[i+1].map.needsUpdate=true; });
   } else {
     o.restQ=null;
-    o.cvs.forEach((cv,i)=>{ if(type==='coin'&&i===0) return; let v; if(i===o.topIdx) v=hidden?'?':top; else if(type==='coin') v=top==='C'?1:'C'; else v=rollInst(o.inst); drawFace(cv,type,v); o.mats[i].map.needsUpdate=true; });
+    o.cvs.forEach((cv,i)=>{ if(shapeOf(type)==='coin'&&i===0) return; let v; if(i===o.topIdx) v=hidden?'?':top; else if(shapeOf(type)==='coin'){ const fs=DT[type].faces; v=top===fs[0]?fs[1]:fs[0]; } else v=rollInst(o.inst); drawFace(cv,type,v); o.mats[i].map.needsUpdate=true; });
   }
   o.mats.forEach((m,i)=>m.emissive.setHex(baseEmissive(o,i)));
 }
@@ -874,7 +895,7 @@ function onHover(ev){ if(ev.pointerType!=='mouse') return; const o=pickDie(ev); 
 let G=null, F=null, busy=false;
 function best(){ try{return +localStorage.getItem('lr-best')||0}catch(e){return 0} }
 function saveBest(n){ try{ if(n>best()) localStorage.setItem('lr-best',n);}catch(e){} }
-function newRun(mode,lv,pk){ lv=lv||0; pk=pk||'regular'; const P=pocketStart(pk), hp0=P.hp+limitMods(lv).startHp; G={grow:{},mode,limit:lv,pocket:pk,bossIx:[rnd(2),rnd(2),rnd(2)],act:0,tab:0,lap:0,floor:0,path:[],map:genMap(),trail:[],hp:hp0,maxHp:hp0,gold:P.gold,rep:0,tally:0,filePrice:5,gildPrice:P.gild,bag:P.bag.map(newDie),charms:P.charms.slice(),won:0,used:{},stats:{rounds:0,won:0,lost:0,push:0,dealt:0,taken:0,best:0,bestWho:'',low:50,rich:10,bosses:[],crowns:0,banked:0,earned:0,spent:0,t0:Date.now()}}; if(P.ruby) gildDie(G.bag[0]); (P.fins||[]).forEach((f,i)=>{ if(G.bag[i]) G.bag[i].fin=f; }); G.fix=(P.fix||[]).slice(); G.drinks=(P.drinks||[]).slice(); G.deeds=[]; if(limitMods(lv).lead){ const i=G.bag.findIndex(d=>d.type==='d6'); if(i>=0) G.bag[i]=newDie('lead'); } }
+function newRun(mode,lv,pk){ lv=lv||0; pk=pk||'regular'; const P=pocketStart(pk), hp0=P.hp+limitMods(lv).startHp; G={grow:{},mode,limit:lv,pocket:pk,bossIx:[0,1,2].map(a=>rnd(ACTS[a].foes.bosses.length)),act:0,tab:0,lap:0,floor:0,path:[],map:genMap(),trail:[],hp:hp0,maxHp:hp0,gold:P.gold,rep:0,tally:0,filePrice:5,gildPrice:P.gild,bag:P.bag.map(newDie),charms:P.charms.slice(),won:0,used:{},stats:{rounds:0,won:0,lost:0,push:0,dealt:0,taken:0,best:0,bestWho:'',low:50,rich:10,bosses:[],crowns:0,banked:0,earned:0,spent:0,t0:Date.now()}}; if(P.ruby) gildDie(G.bag[0]); (P.fins||[]).forEach((f,i)=>{ if(G.bag[i]) G.bag[i].fin=f; }); G.fix=(P.fix||[]).slice(); G.drinks=(P.drinks||[]).slice(); G.deeds=[]; if(P.plays) G.plays={...P.plays}; if(limitMods(lv).lead){ const i=G.bag.findIndex(d=>d.type==='d6'); if(i>=0) G.bag[i]=newDie('lead'); } }
 // a Jinx switches one charm off for the round: has() and live() both skip it
 const has=c=>G.charms.includes(c)&&!(F&&F.jinx===c);
 const live=()=>F&&F.jinx?G.charms.filter(c=>c!==F.jinx):G.charms;
@@ -906,8 +927,8 @@ function hud(){ return `<div class="hud pe">
 function wireSound(){ const m=$('#menubtn'), b=$('#bagbtn'), pl=$('#playsbtn'); if(m) m.onclick=()=>openMenu(); if(b) b.onclick=()=>openMenu('bag'); if(pl) pl.onclick=e=>{ e.stopPropagation(); if(popEl&&popEl._for===pl){ closePop(); return; } anchorPop(pl,playsPopHTML()); }; }
 // the Plays card off the top bar: level, what it pays, progress to the next level, and which you've made this round
 function playsPopHTML(){ const now=F&&F.R?playsHit(F.R,{}):[], bb=hasDeed(G,'blackbook');
-  return `<div class="pn">Your Plays</div><div class="pd" style="margin-bottom:8px">Make one and it pays extra that round. Every 4th time, it levels up.</div><div class="plist">${PLAY_KEYS.map(k=>{ const P=PLAYS[k], lv=playLv(G.plays,k), made=(G.playHits||{})[k]||0, n=made%PLAY_EVERY;
-    return `<div class="prow ${now.includes(k)?'hit':''}"><div class="prt"><b>${P.name}</b><span class="nlv">Lv ${lv}</span></div><div class="prd">${P.desc} <span class="pay">+${lv} margin, ${bb?'\u00d71.5':'+'+P.per*lv} odds</span></div><div class="pdots">${[0,1,2,3].map(i=>`<i class="${i<n?'on':''}"></i>`).join('')}<span>${now.includes(k)?'Made this round!':`${PLAY_EVERY-n} to Lv ${lv+1}`}</span></div></div>`; }).join('')}</div>`; }
+  return `<div class="pn">Your Plays</div><div class="pd" style="margin-bottom:8px">Make one and it pays extra that round. Every ${playEvery(G)===3?'3rd':'4th'} time, it levels up.</div><div class="plist">${PLAY_KEYS.map(k=>{ const P=PLAYS[k], lv=playLv(G.plays,k), made=(G.playHits||{})[k]||0, PE=playEvery(G), n=made%PE;
+    return `<div class="prow ${now.includes(k)?'hit':''}"><div class="prt"><b>${P.name}</b><span class="nlv">Lv ${lv}</span></div><div class="prd">${P.desc} <span class="pay">+${lv} margin, ${bb?'\u00d71.5':'+'+P.per*lv} odds</span></div><div class="pdots">${[...Array(PE).keys()].map(i=>`<i class="${i<n?'on':''}"></i>`).join('')}<span>${now.includes(k)?'Made this round!':`${PE-n} to Lv ${lv+1}`}</span></div></div>`; }).join('')}</div>`; }
 function updTop(){ if(G&&G.stats) G.stats.rich=Math.max(G.stats.rich||0,G.gold); const b=$('#hpbar'); if(b){ b.style.width=Math.max(0,100*G.hp/G.maxHp)+'%'; $('#hptxt').innerHTML=`${Math.max(0,G.hp)}<small>/${G.maxHp}</small>`; const w=$('#hpw'); if(w) w.classList.toggle('low',G.hp<=G.maxHp*.25); } const c=$('#cash'); if(c) c.textContent='$'+G.gold; const o=$('#owe'); if(o) o.textContent=G.tab?`tab $${G.tab}`:''; }
 function heal(n,el){ const b=G.hp; G.hp=Math.min(G.maxHp,G.hp+n); if(G.hp>b&&el) floatEl(el,'+'+(G.hp-b),'heal'); updTop(); }
 function addGold(n,el){ G.gold=Math.max(0,G.gold+n); if(n>0) G.stats.earned+=n; if(el&&n) floatEl(el,(n>0?'+$':'−$')+Math.abs(n),'gold'); if(n>0) SFX.coin(); updTop(); }
@@ -945,7 +966,7 @@ function bagStrip(){ const w=h('<div class="bagstrip"></div>'); const groups=new
     const el=h(`<span class="bchip ${d0.fin?'fin':''}" data-tip="${tipT}"><span class="q">\u00d7${list.length}</span></span>`); el.prepend(iconCanvas(d0.type,'C',30)); w.appendChild(el); }); return w; }
 function facesHTML(d){ const base=DT[d.type].faces, f=facesOf(d); return '<span class="faces">'+f.map((x,i)=>`<span class="f1 ${x!==base[i]?'chg':''} ${x==='C'||x==='G'?'cr':''}">${faceTxt(x)}</span>`).join('')+'</span>'; }
 function charmList(sell){ const w=h('<div class="list cols2"></div>'); if(!G.charms.length){ w.innerHTML='<div class="empty">No charms yet. Every table offers one.</div>'; return w; }
-  G.charms.forEach(c=>{ const d=CHARMS[c]; const el=h(`<div class="item">${chipHTML(c)}<div><div class="iname">${d.name} <span class="tier ${d.tier}">${TIER_NAME[d.tier]}</span></div><div class="idesc">${kw(charmDesc(c))}</div>${sell?`<button class="btn ghost small sell">Sell $${Math.floor(d.price/2)}</button>`:''}</div></div>`);
+  G.charms.forEach(c=>{ const d=CHARMS[c]; const el=h(`<div class="item">${chipHTML(c)}<div><div class="iname">${d.name} <span class="tier ${d.tier}">${TIER_NAME[d.tier]}</span></div><div class="idesc">${kw(charmDesc(c))}</div>${sell?`<button class="btn ghost small sell">Sell $${sellValue(G,c)}</button>`:''}</div></div>`);
     if(sell) el.querySelector('.sell').onclick=()=>sell(c); w.appendChild(el); }); return w; }
 function charmDesc(c){ const d=CHARMS[c].desc, gr=G&&G.grow||{}; if(!G||!G.charms.includes(c)) return d;
   if(c==='tally') return `${d} <b class="tier u">${G.tally} notch${G.tally===1?'':'es'}</b>`;
@@ -955,7 +976,7 @@ function charmDesc(c){ const d=CHARMS[c].desc, gr=G&&G.grow||{}; if(!G||!G.charm
 const ODDSY=c=>/odds/.test(CHARMS[c].desc)||c==='mimic';
 function charmNow(c){ if(!G||!G.charms.includes(c)) return ''; const tgtK=c==='mimic'?mimicOf(G.charms,rackOf(G)):c;
   if(c==='mimic'&&!tgtK) return ''; if(!ODDSY(tgtK)) return c==='mimic'?`<span class="cnow">Right now: doubling <b>${CHARMS[tgtK].name}</b></span>`:'';
-  let parts; try{ parts=F&&F.R&&F.target!=null?curOdds(false).parts:oddsOf(newRound(),G.charms,{rack:rackOf(G),deeds:G.deeds||[],plays:G.plays||{},drink:{},finished:G.bag.filter(d=>d.fin).length,fixOdds:0,bag:G.bag.length,round:1,q:[],gold:G.gold,rep:0,tally:G.tally,wins:0,grow:G.grow||{}}).parts; }catch(e){ return ''; }
+  let parts; try{ parts=F&&F.R&&F.target!=null?curOdds(false).parts:oddsOf(newRound(),G.charms,{rack:rackOf(G),deeds:G.deeds||[],plays:G.plays||{},drink:{},hp:G.hp,maxHp:G.maxHp,kind:'F',oppFull:true,coat:(G.drinks||[]).length,free:Math.max(0,charmSlots(G)-slotsUsed(G)),finished:G.bag.filter(d=>d.fin).length,fixOdds:0,bag:G.bag.length,round:1,q:[],gold:G.gold,rep:0,tally:G.tally,wins:0,grow:G.grow||{}}).parts; }catch(e){ return ''; }
   const pt=parts.find(p=>p[0]===CHARMS[c].name), live=F&&F.R&&F.target!=null, lab=c==='mimic'?`Right now, as ${CHARMS[tgtK].name}`:'Right now';
   if(F&&F.jinx===c) return '<span class="cnow off">Jinxed this round: off</span>';
   if(pt) return `<span class="cnow">${lab}: <b class="${pt[1][0]==='\u00d7'?'m':''}">${pt[1]} odds</b>${live?' this round':''}</span>`;
@@ -1044,6 +1065,51 @@ function buildCharmIcons(){ if(!GL_OK||!R) return; try{
     regular(g){ add(g,Cy(.38,.34,.1,12),M(0x8a1c2a),0,.92,0); add(g,Cy(.08,.08,.8,6),SILVER,0,.48,0); add(g,To(.24,.03,10),SILVER,0,.32,0,Math.PI/2); add(g,Cy(.3,.34,.06,12),SILVER,0,.06,0); },
     heckler(g){ add(g,Co(.36,.8,10,true),M(0xd8b25c,{emissive:0x2a1a00}),.06,.6,0,0,0,Math.PI/2); add(g,Cy(.08,.08,.24,6),BLACK,-.42,.6,0,0,0,Math.PI/2); add(g,Bx(.08,.26,.08),BLACK,-.3,.42,0); },
     doubledown(g){ add(g,Bx(.5,.72,.04),M(0xf0c040,{emissive:0x3a2400}),-.14,.52,0,0,0,.18); add(g,Bx(.5,.72,.04),M(0xf0c040,{emissive:0x3a2400}),.14,.52,.06,0,0,-.18); add(g,Bx(.08,.36,.02),RED,.16,.52,.09,0,0,.6); add(g,Bx(.08,.36,.02),RED,.16,.52,.09,0,0,-.6); },
+    twostep(g){ die(g,-.24,.26,0,.2); die(g,.24,.26,.05,-.2); add(g,Bx(.5,.1,.16),BLACK,-.1,.7,0,0,0,.3); add(g,Bx(.5,.1,.16),BLACK,.2,.86,0,0,0,-.2); },
+    oddball(g){ die(g,0,.3,0,.3); add(g,Sp(.2,8),RED,.3,.72,0); add(g,Sp(.2,8),BLACK,-.3,.72,0); add(g,Sp(.2,8),CREAM,0,.92,0); },
+    aces(g){ card(g,-.2,.5,0,.25,0,RED); card(g,.2,.5,.05,-.25,0,BLACK); add(g,Co(.1,.2,4),GOLD,0,.98,0); },
+    bigbank(g){ add(g,Cy(.3,.24,.6,10),glass,0,.36,0); add(g,Cy(.27,.22,.44,10),AMBER,0,.3,0); add(g,Cy(.1,.1,.7,8),M(0x2a5a2a),.34,.8,0,0,0,1.1); add(g,Sp(.05,5),AMBER,.06,.74,0); },
+    eightball(g){ add(g,Sp(.44,12),BLACK,0,.5,0); add(g,Cy(.2,.2,.04,12),CREAM,0,.6,.38,1.2); add(g,To(.07,.03,8),BLACK,0,.66,.42,1.2); add(g,To(.07,.03,8),BLACK,0,.56,.44,1.2); },
+    purist(g){ add(g,Bx(.8,.6,.06),WOOD,0,.5,0); add(g,Bx(.66,.46,.07),CREAM,0,.5,0); for(let k=0;k<3;k++) add(g,Bx(.46,.04,.02),BLACK,0,.62-k*.12,.05); add(g,Cy(.08,.08,.04,8),RED,.22,.34,.05,Math.PI/2); },
+    bully(g){ add(g,Sp(.3,8),M(0xd8a880),0,.5,0,0,0,0,1.2,1,1); for(let k=0;k<4;k++) add(g,Sp(.09,6),M(0xe8b890),-.2+k*.13,.72,.2); add(g,Bx(.4,.3,.36),M(0x2a3a6a),-.06,.2,0); },
+    firstblood(g){ add(g,Co(.16,.5,4),SILVER,0,.72,0); add(g,Bx(.34,.06,.1),GOLD,0,.44,0); add(g,Cy(.06,.06,.26,6),WOOD,0,.3,0); add(g,Sp(.09,6),E(0xc0202e,.5),.1,.9,.06); add(g,Sp(.06,5),E(0xc0202e,.5),.16,.72,.06); },
+    fullstomach(g){ add(g,Cy(.46,.4,.08,14),CREAM,0,.2,0); add(g,Sp(.28,8),M(0xb0602a),0,.38,0,0,0,0,1.3,.7,1); add(g,Cy(.05,.05,.3,5),CREAM,.34,.5,0,0,0,-.5); add(g,Sp(.1,5),M(0x4a8a3a),-.26,.3,.14); },
+    welldrinks(g){ for(let k=0;k<3;k++){ add(g,Cy(.14,.12,.4,8),glass,(k-1)*.32,.3,0); add(g,Cy(.12,.1,.24,8),k===1?AMBER:M(0xc8e0f0),(k-1)*.32,.24,0); } add(g,Bx(1.1,.06,.36),WOOD,0,.06,0); },
+    deepbreath(g){ add(g,Sp(.3,8),M(0xf0a0a8),-.2,.5,0,0,0,0,1,1.3,1); add(g,Sp(.3,8),M(0xf0a0a8),.2,.5,0,0,0,0,1,1.3,1); add(g,Cy(.06,.06,.36,6),M(0xe08a94),0,.86,0); },
+    doorman(g){ add(g,Bx(.6,.9,.08),M(0x5a1a1a),0,.5,0); add(g,Sp(.05,5),GOLD,.2,.5,.06); add(g,Bx(.24,.06,.06),BLACK,0,.74,.06); add(g,Bx(.7,.06,.14),GOLD,0,.98,0); },
+    barback(g){ add(g,Bx(.8,.5,.5),WOOD,0,.28,0); for(let k=0;k<3;k++){ add(g,Cy(.09,.09,.4,6),M([0x2a5a2a,0x7a3a14,0x2a3a6a][k]),(k-1)*.24,.66,0); add(g,Cy(.04,.04,.14,5),M(0x1a1a1a),(k-1)*.24,.92,0); } },
+    fence(g){ add(g,Bx(.7,.44,.4),M(0x3a3a40),0,.3,0); add(g,Bx(.74,.1,.44),M(0x2a2a30),0,.56,0); add(g,To(.12,.03,8),GOLD,0,.66,0); add(g,Sp(.08,5),E(0x9fe8ff,.6),.2,.68,.1); add(g,Cy(.1,.1,.04,8),GOLD,-.2,.64,.1); },
+    lonewolf(g){ add(g,Co(.3,.6,4),M(0x7a7a84),0,.42,0,0,.78); for(const x of [-.2,.2]) add(g,Co(.1,.26,4),M(0x7a7a84),x,.84,0); add(g,Sp(.05,5),E(0xffe070,.9),-.1,.52,.2); add(g,Sp(.05,5),E(0xffe070,.9),.1,.52,.2); add(g,Co(.08,.2,4),BLACK,0,.3,.24,Math.PI/2); },
+    marathon(g){ add(g,Sp(.4,10),M(0xf4f0d8,{emissive:0x4a4a30}),0,.56,0); add(g,Sp(.34,10),M(0x1a1a2a),.2,.64,.1); add(g,Sp(.04,4),E(0xffffff,1),-.4,.9,0); add(g,Sp(.03,4),E(0xffffff,1),.44,.3,0); },
+    quickdraw(g){ add(g,Bx(.7,.14,.12),SILVER,.1,.62,0); add(g,Bx(.18,.4,.12),WOOD,-.28,.42,0,0,0,.3); add(g,Cy(.12,.12,.16,8),SILVER,-.08,.6,0,Math.PI/2); add(g,Co(.06,.2,5),E(0xfff0a0,.9),.56,.62,0,0,0,-Math.PI/2); },
+    rainbow(g){ [0xc0303f,0xf0bd4a,0x3fa878,0x3a6ab0].forEach((c,k)=>{ add(g,Co(.14,.3,8),M(c),-.36+k*.24,.6,0,Math.PI); add(g,Cy(.02,.02,.26,4),glass,-.36+k*.24,.32,0); add(g,Cy(.1,.1,.03,8),glass,-.36+k*.24,.18,0); }); },
+    highroad(g){ add(g,Bx(.3,.9,.3),M(0x5a5a60),0,.46,0,0,0,.3); add(g,Bx(.06,.2,.02),M(0xf0e0a0),.02,.3,.16,0,0,.3); add(g,Bx(.06,.2,.02),M(0xf0e0a0),-.1,.66,.16,0,0,.3); add(g,Co(.2,.3,4),GOLD,-.26,1.0,0); },
+    zero(g){ add(g,To(.3,.1,14),CREAM,0,.52,0,0,0,0,.8,1.1,1); add(g,Bx(.7,.07,.07),RED,0,.52,.1,0,0,.8); },
+    coronation(g){ add(g,Bx(.6,.2,.5),M(0x7a1a3a),0,.16,0); add(g,Cy(.26,.26,.16,10,true),GOLD,0,.42,0); for(let k=0;k<4;k++){ const an=k*Math.PI/2; add(g,Co(.07,.2,5),GOLD,Math.cos(an)*.22,.6,Math.sin(an)*.22); } add(g,Sp(.08,6),E(0x4a8aff,.6),0,.44,.26); },
+    evensteven(g){ add(g,Cy(.03,.03,.7,5),GOLD,0,.5,0); add(g,Bx(.9,.05,.05),GOLD,0,.84,0); for(const x of [-.4,.4]){ add(g,Cy(.02,.02,.3,4),GOLD,x,.68,0); add(g,Cy(.2,.14,.06,10),GOLD,x,.5,0); } add(g,Cy(.24,.28,.08,10),GOLD,0,.12,0); },
+    broke(g){ add(g,Bx(.6,.5,.1),M(0x5a3a22),0,.4,0); add(g,Bx(.5,.3,.06),M(0xe8dcc0),-.2,.72,.04,0,0,.5); add(g,Bx(.5,.3,.06),M(0xe8dcc0),.2,.72,.04,0,0,-.5); },
+    brickwall(g){ for(let r=0;r<3;r++) for(let c=0;c<3;c++) add(g,Bx(.3,.18,.24),M(r%2?0x9a3a22:0x8a2e1a),-.33+c*.33+(r%2?.08:0),.16+r*.22,0); },
+    happyhour(g){ add(g,Cy(.5,.5,.06,16),CREAM,0,.56,0,Math.PI/2); add(g,To(.5,.05,16),WOOD,0,.56,0); add(g,Bx(.05,.3,.04),BLACK,0,.7,.06); add(g,Bx(.22,.05,.04),BLACK,.1,.56,.06); add(g,Co(.12,.2,6),AMBER,.4,.2,.2,Math.PI); },
+    topshelf(g){ add(g,Bx(1.1,.08,.36),WOOD,0,.3,0); for(let k=0;k<3;k++){ add(g,Cy(.1,.12,.44,8),M([0xf0bd4a,0x7a1a3a,0x2a3a6a][k],{emissive:0x1a1408}),(k-1)*.3,.58,0); add(g,Cy(.05,.05,.14,6),GOLD,(k-1)*.3,.86,0); } add(g,Co(.08,.14,4),GOLD,0,1.02,0); },
+    showman(g){ add(g,Cy(.26,.3,.5,10),BLACK,0,.56,0); add(g,Cy(.5,.5,.05,14),BLACK,0,.3,0); add(g,Cy(.27,.27,.08,10),RED,0,.38,0); add(g,Cy(.03,.03,.8,5),WOOD,.5,.5,0,0,0,-.3); add(g,Sp(.07,5),CREAM,.62,.88,0); },
+    closingtime(g){ add(g,Bx(.8,.5,.06),M(0x1a1a1a),0,.56,0); add(g,Bx(.6,.1,.07),E(0xff3a3a,.9),0,.64,0); add(g,Bx(.4,.08,.07),E(0xff3a3a,.9),0,.46,0); add(g,Cy(.02,.02,.3,4),SILVER,-.3,.94,0); add(g,Cy(.02,.02,.3,4),SILVER,.3,.94,0); },
+    giantkiller(g){ add(g,Cy(.03,.03,.7,5),WOOD,-.1,.46,0,0,0,.5); add(g,Cy(.03,.03,.5,5),WOOD,.16,.5,0,0,0,-.4); add(g,Bx(.24,.1,.1),M(0x5a3a22),.3,.24,0); add(g,Sp(.12,6),M(0x8a8a90),.34,.36,0); add(g,Sp(.2,8),M(0x6a6a70),-.3,.86,0); },
+    comeback(g){ add(g,Sp(.26,8),RED,-.24,.56,0,0,0,0,1,1.2,1); add(g,Sp(.26,8),RED,.24,.56,0,0,0,0,1,1.2,1); add(g,Cy(.2,.2,.14,8),CREAM,-.24,.26,0); add(g,Cy(.2,.2,.14,8),CREAM,.24,.26,0); add(g,Sp(.1,5),RED,-.44,.6,.1); add(g,Sp(.1,5),RED,.44,.6,.1); },
+    adrenaline(g){ add(g,Cy(.1,.1,.6,8),glass,0,.5,0,0,0,.7); add(g,Cy(.08,.08,.3,8),E(0x6ae06a,.7),-.1,.42,0,0,0,.7); add(g,Cy(.015,.015,.4,4),SILVER,.4,.84,0,0,0,.7); add(g,Bx(.26,.05,.1),SILVER,-.3,.24,0,0,0,.7); },
+    pokerface(g){ add(g,Sp(.36,8),CREAM,0,.54,0,0,0,0,.9,1.15,.5); add(g,Bx(.14,.04,.04),BLACK,-.14,.62,.2); add(g,Bx(.14,.04,.04),BLACK,.14,.62,.2); add(g,Bx(.2,.03,.04),BLACK,0,.38,.2); },
+    nightcap(g){ add(g,Co(.3,.3,10),glass,0,.74,0,Math.PI); add(g,Co(.24,.22,10),E(0x8a3ac0,.5),0,.76,0,Math.PI); add(g,Cy(.02,.02,.4,4),glass,0,.4,0); add(g,Cy(.18,.2,.04,10),glass,0,.2,0); add(g,Sp(.06,5),E(0xc0202e,.6),.1,.86,.06); },
+    wheel(g){ add(g,Cy(.5,.5,.08,12),M(0x7a1a1a),0,.56,0,Math.PI/2); for(let k=0;k<6;k++){ const an=k*Math.PI/3; add(g,Bx(.14,.3,.03),k%2?GOLD:CREAM,Math.cos(an)*.28,.56+Math.sin(an)*.28,.06,0,0,an-Math.PI/2); } add(g,Sp(.08,6),GOLD,0,.56,.08); add(g,Co(.08,.16,4),RED,0,1.1,.04,Math.PI); },
+    heavyweight(g){ add(g,Cy(.03,.03,1.0,6),SILVER,0,.5,0,0,0,Math.PI/2); for(const x of [-.4,.4]){ add(g,Cy(.3,.3,.1,12),BLACK,x,.5,0,0,0,Math.PI/2); add(g,Cy(.2,.2,.1,12),BLACK,x*1.3,.5,0,0,0,Math.PI/2); } },
+    sevens(g){ for(let k=0;k<3;k++){ add(g,Bx(.3,.46,.1),CREAM,(k-1)*.32,.5,0); add(g,Bx(.18,.05,.02),RED,(k-1)*.32,.64,.06); add(g,Bx(.05,.26,.02),RED,(k-1)*.32+.03,.48,.06,0,0,.3); } add(g,Bx(1.04,.06,.14),GOLD,0,.22,0); },
+    sweep(g){ add(g,Cy(.03,.03,1.0,5),WOOD,.1,.6,0,0,0,.5); add(g,Bx(.4,.26,.12),M(0xd8b25c),-.26,.2,0,0,0,.5); for(let k=0;k<3;k++) add(g,Sp(.03,4),E(0xffffff,.9),-.5+k*.12,.1+k*.05,.1); },
+    snakepit(g){ add(g,To(.34,.09,14),M(0x3a8a3a),0,.2,0,Math.PI/2); add(g,To(.24,.09,12),M(0x4a9a4a),0,.36,0,Math.PI/2); add(g,Sp(.13,6),M(0x3a8a3a),.1,.56,.14); add(g,Sp(.03,4),E(0xffe070,1),.16,.6,.24); add(g,Bx(.02,.02,.16),RED,.14,.52,.3); },
+    sixgun(g){ add(g,Cy(.3,.3,.3,6),SILVER,0,.5,0,Math.PI/2); for(let k=0;k<6;k++){ const an=k*Math.PI/3; add(g,Cy(.07,.07,.32,6),BLACK,Math.cos(an)*.18,.5+Math.sin(an)*.18,0,Math.PI/2); } add(g,Cy(.05,.05,.34,6),GOLD,0,.5,0,Math.PI/2); },
+    regicide(g){ add(g,Cy(.28,.28,.16,10,true),GOLD,0,.3,0,0,0,.3); for(let k=0;k<3;k++) add(g,Co(.07,.2,5),GOLD,(k-1)*.18-.06,.46,0,0,0,.3); add(g,Bx(.08,.8,.04),SILVER,.2,.66,.1,0,0,-.5); add(g,Bx(.26,.06,.06),BLACK,.42,.34,.1,0,0,-.5); },
+    midas(g){ add(g,Sp(.2,8),GOLD,0,.36,0,0,0,0,1.3,1,.6); for(let k=0;k<4;k++) add(g,Cy(.05,.05,.34,6),GOLD,-.2+k*.13,.66,0,0,0,(k-1.5)*-.12); add(g,Cy(.05,.05,.24,6),GOLD,-.32,.44,0,0,0,.9); add(g,Sp(.04,4),E(0xffffff,.9),.3,.9,0); },
+    glassjaw(g){ add(g,Sp(.36,8),glass,0,.56,0,0,0,0,1,1.1,.9); add(g,Bx(.44,.2,.4),glass,0,.3,.04); add(g,Bx(.03,.3,.02),CREAM,.1,.34,.26,0,0,.5); add(g,Bx(.03,.2,.02),CREAM,-.06,.3,.26,0,0,-.6); },
+    travellight(g){ add(g,Bx(.6,.44,.2),BROWN,0,.34,0); add(g,To(.12,.03,8),BROWN,0,.6,0); add(g,Bx(.08,.44,.22),WOOD,-.16,.34,0); add(g,Bx(.08,.44,.22),WOOD,.16,.34,0); add(g,Co(.1,.16,4),CREAM,.4,.8,0,0,0,.6); },
+    lonestar(g){ for(let k=0;k<5;k++){ const an=k*Math.PI*2/5+Math.PI/2; add(g,Co(.14,.4,4),GOLD,Math.cos(an)*.24,.56+Math.sin(an)*.24,0,0,0,an-Math.PI/2); } add(g,Cy(.2,.2,.1,5),GOLD,0,.56,0,Math.PI/2); },
+    practice(g){ add(g,Cy(.4,.4,.06,14),CREAM,0,.5,0,Math.PI/2); add(g,To(.28,.03,12),RED,0,.5,.03); add(g,Sp(.08,5),RED,0,.5,.05); for(let k=0;k<3;k++) add(g,Cy(.02,.02,.4,4),WOOD,-.1+k*.12,.6+k*.04,.26,1.2,0,.2*k); },
     bookie(g){ add(g,Bx(.76,.14,.56),M(0x1f4a33),0,.18,0,0,.3); add(g,Bx(.7,.1,.5),CREAM,0,.29,0,0,.3); add(g,Bx(.76,.06,.56),M(0x1f4a33),0,.37,0,0,.3); add(g,Bx(.06,.02,.7),RED,.12,.41,0,0,.3); add(g,Cy(.04,.04,.6,6),GOLD,.2,.52,0,0,.3,1.1); },
   };
   R.setClearColor(0x000000,0);
@@ -1082,9 +1148,15 @@ function buildCharmIcons(){ if(!GL_OK||!R) return; try{
     bourbon(g){ add(g,Bx(.56,.7,.3),tint(0xc07a2a,.7),0,.38,0); add(g,Cy(.12,.22,.16,8),tint(0xc07a2a,.7),0,.8,0); add(g,Cy(.07,.07,.2,8),tint(0xc07a2a,.7),0,.96,0); add(g,Cy(.09,.09,.08,8),BLACK,0,1.08,0); add(g,Bx(.42,.3,.02),M(0x1a1410),0,.4,.16); add(g,Bx(.3,.05,.02),GOLD,0,.46,.17); },
     sidecar(g){ add(g,Co(.44,.4,12),glass,0,.76,0,Math.PI); add(g,Co(.36,.32,12),E(0xf0a040,.5),0,.8,0,Math.PI); add(g,To(.4,.03,12),M(0xfff8e0),0,.9,0,Math.PI/2); add(g,Cy(.03,.03,.5,5),glass,0,.4,0); add(g,Cy(.22,.24,.04,10),glass,0,.14,0); add(g,To(.1,.03,6),E(0xffc020,.5),.34,.94,0,.3,0,.6); },
   };
+  Object.assign(DK,{
+    rye(g){ add(g,Cy(.24,.26,.7,8),tint(0x9a4a1a,.75),0,.36,0); add(g,Cy(.1,.22,.2,8),tint(0x9a4a1a,.75),0,.8,0); add(g,Cy(.08,.08,.16,6),BLACK,0,.96,0); add(g,Bx(.4,.26,.02),CREAM,0,.36,.25); add(g,Bx(.2,.04,.02),RED,0,.4,.26); },
+    mimosa(g){ add(g,Cy(.16,.08,.56,10),glass,0,.74,0); add(g,Cy(.14,.07,.4,10),E(0xffb030,.55),0,.7,0); add(g,Cy(.02,.02,.4,4),glass,0,.28,0); add(g,Cy(.16,.18,.04,10),glass,0,.08,0); add(g,To(.1,.03,8),E(0xff8020,.5),.14,1.0,0,.3,0,.4); },
+    oldf(g){ add(g,Cy(.34,.3,.46,10),glass,0,.3,0); add(g,Cy(.3,.27,.28,10),tint(0xa04a1a,.8),0,.22,0); add(g,Bx(.2,.2,.2),M(0xe0f4ff,{transparent:true,opacity:.8}),.04,.38,0,.4,.6,.2); add(g,To(.1,.03,8),E(0xff8020,.5),-.2,.56,.1,.5); add(g,Sp(.06,5),E(0xc0202e,.6),.16,.54,.1); },
+    martini(g){ add(g,Co(.4,.36,12),glass,0,.78,0,Math.PI); add(g,Co(.32,.28,12),tint(0xc8d8b0,.6),0,.82,0,Math.PI); add(g,Cy(.03,.03,.5,5),glass,0,.4,0); add(g,Cy(.22,.24,.04,10),glass,0,.14,0); add(g,Cy(.015,.015,.5,4),WOOD,.1,.9,0,0,0,.5); add(g,Sp(.07,6),M(0x5a7a2a),.02,.84,0); },
+  });
   Object.keys(DK).forEach(k=>{ DRINK_ICON[k]=snap(propG(DK[k])); });
-  // every die, crown up, in its own skin and shape
-  Object.keys(DT).forEach(t=>{ try{ const o=makeDie3D({type:t,uid:-1}); setFaces(o,'C',false); ALLDICE.delete(o); o.mats.forEach((m,i)=>m.emissive.setHex(baseEmissive(o,i))); if(o.restQ) o.mesh.quaternion.copy(o.restQ);
+  // every die in its own skin and shape, crown up (or its best face if it has no crown)
+  Object.keys(DT).forEach(t=>{ try{ const o=makeDie3D({type:t,uid:-1}); setFaces(o,DT[t].faces.includes('C')?'C':DT[t].faces[0],false); ALLDICE.delete(o); o.mats.forEach((m,i)=>m.emissive.setHex(baseEmissive(o,i))); if(o.restQ) o.mesh.quaternion.copy(o.restQ);
     const g=new THREE.Group(); g.add(o.mesh); DIE_ICON[t]=snap(g,.42); }catch(e){ console.warn('dieicon',t,e); } });
   R.setRenderTarget(null); R.setClearColor(0x0a0706,1); rt.dispose();
  }catch(e){ console.warn('icons',e); } }
@@ -1252,7 +1324,7 @@ async function startFight(kind,pre,snap){
   if(!snap&&performance.now()-_fightAt<1500) return; _fightAt=performance.now();
   clearDeco(); ALLDICE.forEach(o=>disposeDie(o));
   const opp=snap?snap.opp:(pre||chooseFoe(kind)); if(G) G.lastFoe=opp.n;
-  F={kind,opp,oppHp:opp.hp,oppMax:opp.hp,round:0,you:[],them:[],phase2:false,labelsOn:false,thumb:2*nOf(G.charms,'thumb',rackOf(G)),wall:6*nOf(G.charms,'flask',rackOf(G))+4*nOf(G.charms,'haymaker',rackOf(G))+(hasDeed(G,'racket')?10:0)};
+  F={kind,opp,oppHp:opp.hp,oppMax:opp.hp,round:0,you:[],them:[],phase2:false,labelsOn:false,thumb:2*nOf(G.charms,'thumb',rackOf(G)),wall:startGuard(G)};
   if(snap) FIGHT_KEYS.forEach(k=>{ if(snap[k]!==undefined) F[k]=snap[k]; }); else saveFight();
   screen(`${hud()}
     <div class="nameplate paper pe" id="plate">
@@ -1285,7 +1357,7 @@ async function startFight(kind,pre,snap){
 // their nameplate body: how hard they hit, what they're up to this round and next (in plain words), and their tricks
 const moodRow=(lab,k,cls)=>{ const I=INTENTS[k]; return `<div class="mrow ${cls} ${I.you>0?'good':I.you<0?'bad':''}"><span class="mlab">${lab}</span><b class="mname">${I.name}</b><span class="mdesc">${I.short}</span></div>`; };
 const quirkChips=()=>`<div class="np-hits">If they win a round: <b>gap \u00d7${fmtOdds(theirOdds(F.opp,{intent:F.intent,round:F.round||1}))}</b> to your nerve</div>`
-  +(F.intent?`<div class="mood">${moodRow('This round',F.intent,'now')}${moodRow('Next round',F.next,'nxt')}</div>`:'')
+  +(F.intent?`<div class="mood">${moodRow('This round',F.intent,'now')}${F.opp.q.includes('stoneface')?'<div class="mrow nxt"><span class="mlab">Next round</span><b class="mname">?</b><span class="mdesc">Stone Face: you can\u2019t tell.</span></div>':moodRow('Next round',F.next,'nxt')}</div>`:'')
   +(F.opp.q.length?`<div class="np-tricks"><span class="mlab">Their tricks \u00b7 tap to read</span><div class="stamps">${F.opp.q.map(q=>`<button class="stamp" data-q="${q}" data-tip="${QUIRKS[q].desc}">${QUIRKS[q].name}</button>`).join('')}</div></div>`:'');
 function msg(x){ const m=$('#msg'); if(m) m.innerHTML=x; }
 function acts(x){ const a=$('#acts'); if(a) a.innerHTML=x; }
@@ -1293,7 +1365,7 @@ function setP(v){ const e=$('#pscore'); if(e) e.innerHTML=`${v<0?'\u2212'+(-v):v
 function setVs(v){ const e=$('#vs'); if(e) e.innerHTML=`${v}<small>Them</small>`; }
 function updOpp(){ const b=$('#obar'); if(!b) return; b.style.width=Math.max(0,100*F.oppHp/F.oppMax)+'%'; $('#otxt').textContent=`${Math.max(0,F.oppHp)}`; }
 function finsOf(list){ return list.map(o=>{ const f=o.inst.fin; if(f!=='lucky') return f||null; return has('rabbitp')||luckyHit(F.pre?F.pre.seed:0,o.inst.uid)?'lucky':null; }); }
-function ctx(){ const q=F.opp.q; return {cold:(q.includes('cold')||F.intent==='crowns')&&F.throwNo<=1,penny:has('penny')&&F.throwNo<=1,deuces:has('deuces'),ringer:has('ringer'),crownless:q.includes('crownless'),snakebit:q.includes('snakebit')&&F.throwNo<=1}; }
+function ctx(){ const q=F.opp.q; return {cold:(q.includes('cold')||F.intent==='crowns')&&F.throwNo<=1,penny:has('penny')&&F.throwNo<=1,deuces:has('deuces'),ringer:has('ringer'),crownless:q.includes('crownless'),snakebit:q.includes('snakebit')&&F.throwNo<=1,odd:q.includes('threes4'),lastword:q.includes('lastword')}; }
 const tray=()=>F.you.filter(o=>!o.banked);
 function minBank(){ return F.opp.q.includes('fuse')&&F.throwNo===1?Math.min(2,tray().length):1; }
 
@@ -1347,12 +1419,13 @@ async function startRound(pre){
   if(foe) foe.userData.lookX=0;
   TS=1;
   if(F.opp.q.includes('tax')&&G.gold>0){ addGold(-1,$('#cash')); toast('<b class="r">Cover Charge.</b> A dollar for the seat.'); }
-  const draw=Math.min(G.bag.length,handSize(G)+(F.heavy?1:0)); if(F.heavy&&G.bag.length<=handSize(G)) F.heavy=false; if(F.heavy){ toast('<b class="r">Heavy Hand.</b> You draw an extra die this round.'); F.heavy=false; }
+  const draw=Math.min(G.bag.length,handSize(G)+(F.heavy?1:0)-(F.opp.q.includes('short')?1:0)); if(F.heavy&&G.bag.length<=handSize(G)) F.heavy=false; if(F.heavy){ toast('<b class="r">Heavy Hand.</b> You draw an extra die this round.'); F.heavy=false; }
   if(isRaid(F.opp,F.round,F.phase2)){ banner('Raid!','Your odds are 1 this round',true); SFX.lose&&SFX.lose(); }
   const hand=seeded(()=>shuffle(G.bag)).slice(0,draw);
   F.hand=hand; F.you=hand.map(makeDie3D);
   if(F.opp.sig==='gift'){ const n=F.phase2?2:1; const idx=seeded(()=>shuffle([...F.you.keys()])).slice(0,n); idx.forEach(i=>{ disposeDie(F.you[i]); F.you[i]=makeDie3D(newDie('d8')); F.hand[i]=null; }); F.hand=F.hand.filter(Boolean); msg(`The Countess swaps ${n===1?'one of your dice':'two of your dice'} for her <b>Octo</b>${n===1?'':'s'}.`); SFX.coin(); }
   F.hand.forEach(d=>{ if(DT[d.type].breaks) d.cracks++; });
+  { const burn=F.hand.filter(d=>DT[d.type].burn).length, k=Math.min(burn,G.hp-1); if(k>0){ G.hp-=k; G.stats.taken+=k; updTop(); floatEl($('#hpbar'),'\u2212'+k,'dmg'); toast('<b class="r">Hot Potato.</b> It burns: \u2212'+k+' nerve.'); } }
   await sleep(150);
   await playerThrow();
 }
@@ -1402,8 +1475,9 @@ async function bank(){
     if(F.throwNo<=1&&nums.includes(1)) fire('penny','1s score 0'); if(nums.includes(2)) fire('deuces','2s score 1',1);
     if(new Set(faces).size<faces.length) fire('jacks','Repeats 0',2); if(nums.includes(1)||faces.some(f=>f==='C'||f==='G')) fire('ringer','1s 3, crowns \u22121',3);
     if(sel.length===tray().length&&vals.length&&Math.max(...vals)>=3&&nC('lastcall')) fire('lastcall','\u22121',4); }
-  const ph0=playsHit(F.R,{}), ones0=F.R.ones||0, cr0=F.R.crowns||0; noteBank(F.R,faces,sel.map(o=>o.inst.type),live(),fins,rackOf(G));
+  const ph0=playsHit(F.R,{}), ones0=F.R.ones||0, cr0=F.R.crowns||0, gd0=F.R.guard||0, cash0=F.R.cash||0, heal0=F.R.heal||0; noteBank(F.R,faces,sel.map(o=>o.inst.type),live(),fins,rackOf(G));
   { const nc=faces.filter(f=>f==='C'||f==='G').length; if(nc&&F.R.throws===1&&(F.R.crowns-cr0)>nc) fire('echo','+'+nc+' crown'+(nc>1?'s':''),1); const n1=faces.filter(f=>f===1).length; if(n1) fire('doubletake','+'+n1+' one'+(n1>1?'s':''),1); }
+  if((F.R.guard||0)>gd0){ F.wall=(F.wall||0)+F.R.guard-gd0; updGuard(); } if((F.R.cash||0)>cash0) addGold(F.R.cash-cash0,$('#cash')); if((F.R.heal||0)>heal0) heal(F.R.heal-heal0,$('#hpbar'));
   if(nC('bulldog')&&(F.R.ones||0)>ones0){ const g=(F.R.ones-ones0); F.wall=(F.wall||0)+g*nC('bulldog'); updGuard(); fire('bulldog','+'+g+' Guard'); }
   playsHit(F.R,{}).filter(k=>!ph0.includes(k)).forEach((k,i)=>setTimeout(()=>{ const lv=playLv(G.plays,k); floatEl($('#eq'),`${PLAYS[k].name}!`,'odds play'); SFX.ding(4+i); { const pb=$('#playsbtn'); if(pb){ pb.classList.remove('ping'); void pb.offsetWidth; pb.classList.add('ping'); setTimeout(()=>pb.classList.remove('ping'),2600); } } tip('plays'); },350+i*300));
   { const gl=sel.filter(o=>o.inst.fin==='goldleaf'&&(o.face===1||o.face==='C'||o.face==='G')).length; if(gl) setTimeout(()=>addGold(gl,$('#cash')),300); if(fins.includes('lucky')) setTimeout(()=>toast('<b class="g">Lucky.</b> +4 odds.'),200); }
@@ -1427,12 +1501,15 @@ function crownFx(o){ const p=dieScreen(o); sparksAt(p, o.face==='G'?'#ff5c6f':nu
   if(o.face==='C'&&o.inst.type==='ember'){ tag('+2 odds'); sparksAt(p,'#ff7a2a'); }
   if(o.face==='C'&&o.inst.type==='gamble'){ tag('\u00d72 odds'); addGold(3,$('#cash')); }
   if(o.face==='C'&&o.inst.type==='gilded'){ tag('+$2'); addGold(2,$('#cash')); }
+  if(o.inst.type==='rust') tag('+$1'); if(o.face==='C'&&o.inst.type==='slot') tag('+$5'); if(o.face==='C'&&o.inst.type==='saint') tag('+3 nerve'); if(o.inst.type==='iron') tag('+2 Guard');
+  if(o.inst.type==='mercury'&&F.throwNo<=1) tag('+3 odds'); if(o.inst.type==='jade'&&o.face===3) tag('+3 odds'); if(o.inst.type==='anvil'&&typeof o.face==='number'&&o.face>=4) tag('\u00d71.5 odds');
+  if(o.face==='C'&&o.inst.type==='dynamite'&&F&&F.oppHp>1){ const d=Math.min(F.oppHp-1,2*bombDmg(F.oppMax)); F.oppHp-=d; G.stats.dealt+=d; updOpp(); floatEl($('#obar'),'\u2212'+d,'dmg'); sparksAt(p,'#ff5a2a'); shake(.3); SFX.hit&&SFX.hit(); }
   if(o.face==='C'&&o.inst.type==='bomb'&&F&&F.oppHp>1){ const d=Math.min(F.oppHp-1,bombDmg(F.oppMax)); F.oppHp-=d; G.stats.dealt+=d; updOpp(); floatEl($('#obar'),'\u2212'+d,'dmg'); sparksAt(p,'#ff5a2a'); shake(.18); SFX.hit&&SFX.hit(); }
   if(nC('hothand')){ heal(nC('hothand'),$('#hpbar')); fire('hothand','+1 nerve',2); }
   if(nC('goldcrown')){ addGold(nC('goldcrown'),$('#cash')); fire('goldcrown','+$1',3); } }
 // what you'd be paid right now, if the round ended on your current score
 const tgt=(R)=>F.target==null?null:targetOf(F.oScore,R||F.R||newRound(),live(),F.opp.q,{drink:F.drink,intent:F.intent,rack:rackOf(G)});
-function oddsEnv(done){ return {rack:rackOf(G),guard:F.wall||0,deeds:G.deeds||[],intent:F.intent,plays:G.plays||{},drink:F.drink||{},finished:G.bag.filter(d=>d.fin).length,fixOdds:hasFix(G,'felt')?1:0,bag:G.bag.length,round:F.round,q:F.opp.q,raid:isRaid(F.opp,F.round,F.phase2),gold:G.gold,rep:G.rep,tally:G.tally,wins:F.wins||0,margin:F.target!=null?tgt()-F.pScore-nC('bouncer'):0,score:F.pScore,done,grow:G.grow||{},oppHalf:F.oppHp<=F.oppMax/2,wonOnce:!!F.wonOnce}; }
+function oddsEnv(done){ return {rack:rackOf(G),guard:F.wall||0,deeds:G.deeds||[],intent:F.intent,plays:G.plays||{},drink:F.drink||{},finished:G.bag.filter(d=>d.fin).length,fixOdds:hasFix(G,'felt')?1:0,bag:G.bag.length,round:F.round,q:F.opp.q,raid:isRaid(F.opp,F.round,F.phase2),gold:G.gold,rep:G.rep,tally:G.tally,wins:F.wins||0,margin:F.target!=null?tgt()-F.pScore-nC('bouncer'):0,score:F.pScore,done,grow:G.grow||{},oppHalf:F.oppHp<=F.oppMax/2,wonOnce:!!F.wonOnce,hp:G.hp,maxHp:G.maxHp,kind:F.kind,lossStreak:F.streak||0,oppFull:F.oppHp>=F.oppMax,coat:(G.drinks||[]).length,free:Math.max(0,charmSlots(G)-slotsUsed(G)),wheel:luckyHit(F.pre?F.pre.seed:0,90017)}; }
 function curOdds(done,R){ return oddsOf(R||F.R||newRound(),live(),oddsEnv(done)); }
 function updOdds(bump,sel){ if(!F) return; let R2=null, add=0; if(sel&&sel.length&&!sel.some(o=>o.hidden)){ R2={...(F.R||newRound())}; noteBank(R2,sel.map(o=>o.face),sel.map(o=>o.inst.type),live(),finsOf(sel),rackOf(G)); add=bankVals(sel.map(o=>o.face),ctx(),live(),sel.length===tray().length,sel.map(o=>o.inst.fin),rackOf(G)).reduce((a,b)=>a+b,0); }
   const full=!!(sel&&sel.length&&sel.length===tray().length); F._prevR=R2; const O=curOdds(full,R2), eq=$('#eq'); if(!eq) return;
@@ -1506,7 +1583,11 @@ async function endRound(){
   if(r.winner==='them'&&!r.free){ F.streak=(F.streak||0)+1; F.wins=0; if(F.opp.q.includes('heavy')) F.heavy=true; }
   else if(r.winner==='you'){ F.streak=0; F.wins=(F.wins||0)+1; }
   G.stats.rounds++;
-  { const pay=(F.R&&F.R.payday||0)+afterRound(G,r.winner,!!r.free); if(pay) addGold(pay,$('#cash')); if(r.winner==='them'&&!r.free) fire('consolation','+$2'); if(r.winner==='them'&&has('piggy')&&!r.free) refreshRack(); }
+  if(F.opp.q.includes('crowntax')&&F.R&&F.R.crowns&&G.gold>0){ const t=Math.min(G.gold,F.R.crowns); addGold(-t,$('#cash')); toast(`<b class="r">Crown Tax.</b> $${t} for your crowns.`); }
+  if(r.winner==='you'&&F.opp.q.includes('generous')) addGold(1,$('#cash'));
+  if(nC('doorman')){ F.wall=(F.wall||0)+2*nC('doorman'); updGuard(); fire('doorman','+2 Guard',2); }
+  if(r.winner==='you'&&nC('deepbreath')&&G.hp<G.maxHp) { floatEl($('#hpbar'),'+'+Math.min(G.maxHp-G.hp,2*nC('deepbreath')),'heal'); fire('deepbreath','+2 nerve',3); }
+  { const pay=(F.R&&F.R.payday||0)+afterRound(G,r.winner,!!r.free); updTop(); if(pay) addGold(pay,$('#cash')); if(r.winner==='them'&&!r.free) fire('consolation','+$2'); if(r.winner==='them'&&has('piggy')&&!r.free) refreshRack(); }
   if(r.winner==='you'){ G.stats.won++; G.stats.dealt+=r.dmg; if(r.dmg>G.stats.best){ G.stats.best=r.dmg; G.stats.bestWho=F.opp.n; }
     await payOut(r);
     const gd=gateDmg(F.opp,F.oppHp,F.oppMax,F.phase2,r.dmg), hpB=F.oppHp; if(gd<r.dmg){ F.gated=true; setTimeout(()=>toast(`<b class="r">${F.opp.n}</b> isn\u2019t going down in one round.`),300); }
@@ -1550,7 +1631,7 @@ async function fightWon(){ const F0kind=F.kind;
   { const last=F.kind==='B'&&G.mode==='run'&&G.act===2&&!(LIM().double&&!G.dbl); G.fight=null; G.rw=last?null:{kind:F.kind}; G.at=last?'victory':'reward'; saveRun(); }
   SFX.fanfare(); banner(F.kind==='B'?`${F.opp.short||ACTS[G.act].short} folds`:'Cleaned out',F.opp.n);
   if(foe) await foeWalkOut(); else await sleep(800);
-  if(F.kind==='B'&&G.mode==='run'&&G.act===2&&LIM().double&&!G.dbl){ G.dbl=1; G.bossIx[2]=1-(G.bossIx[2]||0); G.at='map'; saveRun(); banner('Double Down','The other owner wants a word',true); await sleep(1400); _fightAt=0; const o2=chooseFoe('B'); o2.hp=Math.round(o2.hp*.75); return startFight('B',o2); }
+  if(F.kind==='B'&&G.mode==='run'&&G.act===2&&LIM().double&&!G.dbl){ G.dbl=1; G.bossIx[2]=((G.bossIx[2]||0)+1+rnd(ACTS[2].foes.bosses.length-1))%ACTS[2].foes.bosses.length; G.at='map'; saveRun(); banner('Double Down','The other owner wants a word',true); await sleep(1400); _fightAt=0; const o2=chooseFoe('B'); o2.hp=Math.round(o2.hp*.75); return startFight('B',o2); }
   if(F.kind==='B'&&G.mode==='run'&&G.act===2){ clearSave(); return renderVictory(); }
   renderReward(F.kind);
   if(F0kind==='B') setTimeout(()=>toast(`<b>Reputation +1.</b><br><i>Word gets around. +1 odds for the rest of the night (now +${G.rep}).</i>`),1200);
@@ -1595,8 +1676,8 @@ function plainCard(k,ico,n,d,price){ return h(`<button class="card"><span class=
 const charmPool=(tier)=>Object.keys(CHARMS).filter(c=>!G.charms.includes(c)&&(!tier||CHARMS[c].tier===tier));
 const rarePool=()=>[...charmPool('r').map(c=>({k:'charm',c,price:CHARMS[c].price,rare:1})),{k:'die',t:'shaved',price:DT.shaved.price,rare:1}];
 function stockCharms(n,taste){ const out=[]; for(let i=0;i<n;i++){ let t=rollTier(G.act,null,taste), pool=charmPool(t).filter(c=>!out.includes(c)); if(!pool.length) pool=charmPool().filter(c=>!out.includes(c)); if(pool.length) out.push(pick(pool)); } return out; }
-function gainCharm(c,off){ if(G.charms.includes(c)) return; G.charms.push(c); setTimeout(syncMimic,0); if(off) (G.offbook=G.offbook||[]).push(c); G._newCharm=c; setTimeout(refreshRack,0); if(c==='liver'){ G.maxHp+=12; G.hp=Math.min(G.maxHp,G.hp+12); } if(c==='tally') G.tally=0; updTop(); toast(`<b>${CHARMS[c].name}</b><br><i>${kw(CHARMS[c].desc)}</i>`); }
-function loseCharm(c){ G.charms=G.charms.filter(x=>x!==c); syncMimic(); if(G.offbook) G.offbook=G.offbook.filter(x=>x!==c); setTimeout(refreshRack,0); if(c==='liver'){ G.maxHp-=12; G.hp=Math.min(G.hp,G.maxHp); } updTop(); }
+function gainCharm(c,off){ if(G.charms.includes(c)) return; G.charms.push(c); setTimeout(syncMimic,0); if(off) (G.offbook=G.offbook||[]).push(c); G._newCharm=c; setTimeout(refreshRack,0); if(CHARMS[c].hp){ const d=CHARMS[c].hp; G.maxHp=Math.max(5,G.maxHp+d); G.hp=d>0?Math.min(G.maxHp,G.hp+d):Math.max(1,Math.min(G.hp,G.maxHp)); } if(c==='tally') G.tally=0; updTop(); toast(`<b>${CHARMS[c].name}</b><br><i>${kw(CHARMS[c].desc)}</i>`); }
+function loseCharm(c){ G.charms=G.charms.filter(x=>x!==c); syncMimic(); if(G.offbook) G.offbook=G.offbook.filter(x=>x!==c); setTimeout(refreshRack,0); if(CHARMS[c]&&CHARMS[c].hp){ G.maxHp=Math.max(5,G.maxHp-CHARMS[c].hp); G.hp=Math.min(G.hp,G.maxHp); } updTop(); if($('#coat')) refreshCoat(); }
 function offerCharm(c,done,cancel,off){
   if(off||slotsUsed(G)<charmSlots(G)){ gainCharm(c,off); done&&done(); return; }
   const ov=h(`<div class="overlay pe"><div class="modal paper"><div class="mhead"><div class="sc">Your pockets are full</div><div class="mtitle sm">Trade for ${CHARMS[c].name}?</div></div>
@@ -1610,7 +1691,7 @@ function renderReward(kind){
   F=null; clearLabels(); clearDebris();
   let W=G.rw&&G.rw.choices?G.rw:null;
   if(W) kind=W.kind; else {
-  const quick=kind==='F'&&G._quick, hotW=kind==='E'&&G._hot; G._hot=false; let gold=kind==='B'?20:hotW?15:kind==='E'?10:Math.max(1,5+(quick?3:0)+LIM().pay-(hasDeed(G,'racket')?2:0)); if(G.nb&&G.nb.double){ gold*=2; G.nb.double=false; } G.gold+=gold; G.stats.earned+=gold;
+  const quick=kind==='F'&&G._quick, hotW=kind==='E'&&G._hot; G._hot=false; let gold=kind==='B'?20:hotW?15:kind==='E'?10:Math.max(1,5+(quick?3:0)+LIM().pay+payMod(G)); if(G.nb&&G.nb.double){ gold*=2; G.nb.double=false; } G.gold+=gold; G.stats.earned+=gold;
   if(kind==='E'&&G._quick) setTimeout(()=>{ if(!G) return; gainChit(pick(CHIT_KEYS)); saveRun(); },700);
   if(G.tab>0){ const pay=Math.min(G.gold,G.tab); G.gold-=pay; G.tab-=pay; setTimeout(()=>toast(`The bartender takes <b>$${pay}</b> off your tab.${G.tab?` You still owe $${G.tab}.`:' You\u2019re square.'}`),900); }
   const choices=[];
@@ -1644,7 +1725,7 @@ function renderReward(kind){
   const cn=$('#corner'), items=!cn?[]:[{k:'drink',d:C.d,price:bp(DRINKS[C.d].price)},{k:'heal',price:bp(6)}];
   items.forEach((c,i)=>{ const sold=c.k==='drink'?C.dsold:C.hsold; const el=c.k==='drink'?drinkCard(c.d,c.price):plainCard('Drink','+','A stiff one','+12 nerve',c.price); if(sold){ el.classList.add('sold'); el.dataset.busy=1; }
     el.onclick=()=>{ if(el.dataset.busy) return;
-      if(c.k==='drink'&&(G.drinks||[]).length>=DRINK_MAX&&c.d!=='sidecar'){ toast('Your coat\u2019s full. Drink something first.'); return; }
+      if(c.k==='drink'&&(G.drinks||[]).length>=drinkMax(G)&&c.d!=='sidecar'){ toast('Your coat\u2019s full. Drink something first.'); return; }
       if(c.k==='heal'&&G.hp>=G.maxHp){ toast('You\u2019re steady already.'); return; }
       if(G.gold<c.price){ SFX.unpick(); toast('Not enough cash.'); return; }
       G.gold-=c.price; G.stats.spent+=c.price; SFX.coin(); el.classList.add('sold'); el.dataset.busy=1;
@@ -1735,7 +1816,7 @@ function renderShop(){
     if(c.sold){ el.dataset.busy=1; el.classList.add('sold'); }
     el.onclick=()=>{ if(el.dataset.busy) return; let onTab=0;
       if(c.k==='remove'&&G.bag.length<=HAND){ toast(`Your bag is already down to <b>${HAND}</b>.`); return; }
-      if(c.k==='drink'&&(G.drinks||[]).length>=DRINK_MAX){ toast('Your coat’s full. Drink something first.'); return; }
+      if(c.k==='drink'&&(G.drinks||[]).length>=drinkMax(G)){ toast('Your coat’s full. Drink something first.'); return; }
       if(c.k==='heal'&&G.hp>=G.maxHp){ toast('You\u2019re steady already.'); return; }
       if(pickMode){ toast('Pick a die below first.'); return; }
       if(G.gold<c.price){ if(!canTab(c.price)){ SFX.unpick(); toast('Not enough cash, and your tab is maxed.'); return; } if(!el.dataset.credit){ el.dataset.credit=1; SFX.ui(); toast(`Click again to put <b>$${c.price-G.gold+2}</b> on your tab.`); return; } onTab=c.price-G.gold; }
@@ -1788,9 +1869,9 @@ function rackDrag(e,t){ if(e.button>0||!G) return; e.preventDefault(); const c=t
     const nt=$(`#rack .token[data-c="${c}"]`); if(nt){ nt.classList.add('trig'); } const m=mimicOf(G.charms,rackOf(G)); if(c==='mimic'||m) { const mt=$('#rack .token[data-c="mimic"]'); if(mt&&m) floatAt((()=>{ const r=mt.getBoundingClientRect(); return {x:r.left+r.width/2,y:r.bottom+16}; })(),'Copying '+CHARMS[m].name,'odds small'); } };
   window.addEventListener('pointermove',move); window.addEventListener('pointerup',up); window.addEventListener('pointercancel',up); }
 // your coat: up to two drinks. Drink one on your turn; it lasts the round (Bourbon and a Sidecar work any time)
-function coatHTML(){ if(!G) return ''; const d=G.drinks||[]; let s=''; for(let i=0;i<DRINK_MAX;i++){ const k=d[i]; s+=k?`<button class="drink" data-dk="${k}" data-tip="${DRINKS[k].name}: ${DRINKS[k].desc} Click to drink.">${drinkIco(k)}</button>`:'<span class="drink empty"></span>'; }
-  return `<div class="coat plate pe" id="coat" data-tip="Your coat: room for ${DRINK_MAX} drinks.">${s}</div>`; }
-function drinkIco(k,big){ if(DRINK_ICON[k]) return `<span class="dicon ${big?'big':''}"><img src="${DRINK_ICON[k]}" alt=""></span>`; const C={gin:'#c8e8ff',absinthe:'#7ad04a',soda:'#e8f4ff',bitters:'#a0402a',bourbon:'#c07a2a',sidecar:'#f0c040'}[k]||'#ccc';
+function coatHTML(){ if(!G) return ''; const d=G.drinks||[]; let s=''; for(let i=0;i<Math.max(drinkMax(G),d.length);i++){ const k=d[i]; s+=k?`<button class="drink" data-dk="${k}" data-tip="${DRINKS[k].name}: ${DRINKS[k].desc} Click to drink.">${drinkIco(k)}</button>`:'<span class="drink empty"></span>'; }
+  return `<div class="coat plate pe" id="coat" data-tip="Your coat: room for ${drinkMax(G)} drinks.">${s}</div>`; }
+function drinkIco(k,big){ if(DRINK_ICON[k]) return `<span class="dicon ${big?'big':''}"><img src="${DRINK_ICON[k]}" alt=""></span>`; const C={gin:'#c8e8ff',absinthe:'#7ad04a',soda:'#e8f4ff',bitters:'#a0402a',bourbon:'#c07a2a',sidecar:'#f0c040',rye:'#b0602a',mimosa:'#ffc040',oldf:'#a04a1a',martini:'#c8d8b0'}[k]||'#ccc';
   return `<svg viewBox="0 0 20 28" width="18" height="26"><rect x="7" y="1" width="6" height="6" rx="1" fill="#3a2a1a"/><path d="M5 9 Q5 7 7 7 H13 Q15 7 15 9 V25 Q15 27 13 27 H7 Q5 27 5 25 Z" fill="${C}" opacity=".9"/><rect x="6" y="14" width="8" height="6" fill="#f4ead2" opacity=".85"/></svg>`; }
 function refreshCoat(){ const c=$('#coat'); if(c){ c.replaceWith(h(coatHTML())); } }
 function drink(k){ if(!G||!(G.drinks||[]).includes(k)) return;
@@ -1798,7 +1879,7 @@ function drink(k){ if(!G||!(G.drinks||[]).includes(k)) return;
   if(!['bourbon','sidecar'].includes(k)&&!inFight){ toast('Save that for your turn at the table.'); return; }
   if(inFight&&F.drink&&F.drink[k]){ toast('One of those a round is plenty.'); return; }
   G.drinks.splice(G.drinks.indexOf(k),1); SFX.coin();
-  if(k==='bourbon') heal(10,$('#hpbar')); else if(k==='sidecar') addGold(6,$('#cash')); else { F.drink[k]=1; updOdds(true); }
+  if(k==='bourbon') heal(10,$('#hpbar')); else if(k==='sidecar') addGold(6,$('#cash')); else if(k==='rye'){ F.wall=(F.wall||0)+6; updGuard(); } else { F.drink[k]=1; if(k==='martini'){ const hl=Math.min(4,G.hp-1); if(hl>0){ G.hp-=hl; G.stats.taken+=hl; updTop(); floatEl($('#hpbar'),'\u2212'+hl,'dmg'); } } updOdds(true); }
   toast(`<b class="g">${DRINKS[k].name}.</b> ${DRINKS[k].desc}`); refreshCoat(); saveRun(); }
 document.addEventListener('click',e=>{ const b=e.target.closest('.drink[data-dk]'); if(b){ e.stopPropagation(); drink(b.dataset.dk); } });
 function refreshTabs(){ const b=$('#bagbtn .tc'); if(b&&G) b.textContent=G.bag.length; }
@@ -1809,7 +1890,7 @@ function mimNote(c){ if(!G||!G.charms.includes('mimic')) return ''; const m=mimi
   const box=t=>`<div class="mimnote">${t}</div>`;
   if(c==='mimic') return box(m?(MIMIC_FLAT.includes(m)?`Copying <b>${CHARMS[m].name}</b>, but that one doesn\u2019t do more twice. Drag a different charm to its right.`:`Copying <b>${CHARMS[m].name}</b>: it works twice.`):'Nothing to its right to copy. Drag a charm into the slot right of it.');
   return c===m?box(MIMIC_FLAT.includes(c)?'The Mimic is copying this, but it doesn\u2019t do more twice.':'The Mimic is copying this: it works twice.'):''; }
-function charmPop(t){ if(popEl&&popEl._for===t){ closePop(); return; } closePop(); hideTip(); SFX.paper(); const c=t.dataset.c, d=CHARMS[c], v=Math.floor(d.price/2);
+function charmPop(t){ if(popEl&&popEl._for===t){ closePop(); return; } closePop(); hideTip(); SFX.paper(); const c=t.dataset.c, d=CHARMS[c], v=sellValue(G,c);
   popEl=h(`<div class="pop paper pe qpop">${tipHTML(t)}${mimNote(c)}<div class="row" style="margin-top:12px;justify-content:flex-start"><button class="btn small" id="psell">Sell for $${v}</button><button class="btn ghost small" id="pclose">Keep it</button></div><div class="pd" style="margin-top:6px;font-size:12px;opacity:.75">Drag charms to move them.</div></div>`);
   document.body.appendChild(popEl); popEl._for=t; placePop(popEl,t);
   popEl.querySelector('#pclose').onclick=closePop;
@@ -1953,7 +2034,7 @@ const TIPS={
   boss:['The owner','Bosses have a signature move, printed on their door before you sit down, and it gets worse once they’re at half nerve. No boss goes down in one round: the first big hit stops at half, and then the gloves come off.'],
   intent:['Read the table','The tag next to their Hits is what they’re up to this round, and the one after it is next round. Leaning in hits harder and Counting crowns makes your first-throw crowns score 1. Sweating, Getting tired and On tilt are your openings: that’s the round to drink your Absinthe.'],
   deed:['Deeds','A deed is yours for the rest of the night: strong, with a catch. Your deeds sit next to your cash; hover one to read it again.'],
-  plays:['Plays','Some banks are Plays: two 1s at once, three of a kind, a 1-2-3 ladder, three crowns, or finishing on 3 or less. Each one you make widens your win by its level and adds odds. Every 4th time you make a Play, it levels up for the rest of the night.'],
+  plays:['Plays','Some banks are Plays: two 1s at once, three of a kind, a 1-2-3 ladder, three crowns, four dice at once and more (tap Plays up top for all eight). Each one you make widens your win by its level and adds odds. Every 4th time you make a Play, it levels up for the rest of the night.'],
   guard:['Guard','Guard soaks hits before your nerve does, and unlike a drink it stays between rounds at this table. Hip Flask, The Bulldog and The Bodyguard build it; Haymaker turns it into bigger wins.'],
   hot:['High-stakes room','The burning door is the room’s high-stakes game: a shark with 40% more nerve who hits 1 harder. Beat them for a rare charm and extra cash.'],
   theirs:['They throw first','Watch their total. Whatever they end on is the number you have to get under.'],
@@ -1999,11 +2080,11 @@ function srow(l,v){ return `<div class="srow"><span class="sl">${l}</span><span 
 function nightHTML(){ const st=G.stats, tile=(v,l,cls='')=>`<div class="ntile ${cls}"><b>${v}</b><span>${l}</span></div>`;
   const where=G.mode==='endless'?`Lap ${G.lap+1} · Act ${ROMAN[G.act]}`:`Act ${ROMAN[G.act]}`;
   const bb=hasDeed(G,'blackbook');
-  const plays=PLAY_KEYS.map(k=>{ const P=PLAYS[k], lv=playLv(G.plays,k), made=(G.playHits||{})[k]||0, toNext=PLAY_EVERY-(made%PLAY_EVERY);
+  const plays=PLAY_KEYS.map(k=>{ const P=PLAYS[k], lv=playLv(G.plays,k), made=(G.playHits||{})[k]||0, PE=playEvery(G), toNext=PE-(made%PE);
     return `<div class="nplay ${made?'':'never'}"><div class="nph"><span class="npn">${P.name}</span><span class="nlv">Lv ${lv}</span></div>
       <div class="npd">${P.desc}</div>
       <div class="npe">Pays <b class="kw odds">+${lv} margin</b> and <b class="kw odds">${bb?'×1.5':'+'+P.per*lv} odds</b> the round you make it.</div>
-      <div class="npbar"><i style="width:${100*(made%PLAY_EVERY)/PLAY_EVERY}%"></i></div><div class="npm">Made ${made}× · ${toNext} more to reach Lv ${lv+1}</div></div>`; }).join('');
+      <div class="npbar"><i style="width:${100*(made%PE)/PE}%"></i></div><div class="npm">Made ${made}× · ${toNext} more to reach Lv ${lv+1}</div></div>`; }).join('');
   return `<div class="nhero"><div class="nwhere"><span class="sc">${where}</span><b>${ACTS[G.act].name}</b><span>Floor ${G.floor+1} of ${FLOORS.length}</span></div>
       <div class="nhp"><span class="sc">Nerve</span><b>${G.hp}<small>/${G.maxHp}</small></b><span class="g">$${G.gold}</span></div></div>
     <div class="ntiles">${tile(G.won,'Tables won')}${tile(`${st.won}<small>–</small>${st.lost}${st.push?`<small>–</small>${st.push}`:''}`,'Rounds won–lost'+(st.push?'–push':''))}${tile(st.best,`Biggest hit${st.bestWho?` (${st.bestWho})`:''}`,'red')}${tile(fmtTime(Date.now()-st.t0),'At the tables')}</div>
@@ -2033,7 +2114,7 @@ function menuPage(tab){
     <li data-i="6"><span>Lose and they hit you for the gap \u00d7 <i>their</i> odds, which climb every act.</span></li>
     <li data-i="7"><span>Their nameplate shows what they’re up to this round and next (Leaning in, Sweating, On tilt…). Bosses can’t lose more than half their nerve in one round.</span></li>
     <li data-i="8"><span><b>Guard</b> soaks hits before your nerve and stays between rounds at a table. Hit for more than they had left and the overkill pays $1 per 10.</span></li>
-    <li data-i="9"><span><b>Plays</b>: two 1s at once, three of a kind, a 1-2-3, three crowns, or finishing on 3 or less. Each adds its level to your winning margin, plus odds. Every 4th time you make one, it levels up.</span></li>
+    <li data-i="9"><span><b>Plays</b>: two 1s at once, three of a kind, a 1-2-3, three crowns, four dice at once and more (tap <b>Plays</b> up top for all eight). Each adds its level to your winning margin, plus odds. Every 4th time you make one, it levels up.</span></li>
     <li data-i="10"><span>Read their tags. Bosses and the sharks upstairs draw a random house rule each night that works against your build.</span></li>
     <li data-i="11"><span>Charms are always working; you hold five. A silver Off the Books charm doesn’t take a slot.</span></li>
     <li data-i="12"><span>Dice only matter when they come out of the bag. A die can wear one finish (Polished, Lucky, Chrome, Gold Leaf or Featherweight).</span></li>

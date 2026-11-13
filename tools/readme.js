@@ -156,7 +156,7 @@ ${table(['Drink', 'Price', 'Effect'], Object.values(L.DRINKS).map((f) => [f.name
 ${table(['Chit', 'Effect'], Object.values(L.CHITS).map((f) => [f.name, f.desc]))}
 ## Owners and deeds
 ${table(['Room', 'Owner', 'Who', 'Signature', 'At half nerve'], bosses)}
-Each room has two possible owners, picked at random every night.
+Each room has three possible owners, picked at random every night.
 
 **Deeds:** beat an owner and you can take the deed to one of their rackets: strong, with a catch, for the rest of the night.
 ${table(['Deed', 'What it does'], Object.values(L.DEEDS).map((d) => [d.name, d.desc]))}
