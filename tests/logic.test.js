@@ -419,7 +419,7 @@ test('Second shelf of charms: the card text is what the code does', () => {
   assert.equal(L.sellValue({ charms: ['fence'] }, 'kingpin'), 18); assert.equal(L.sellValue({ charms: [] }, 'kingpin'), 9);
   assert.equal(L.tossPrice({ charms: ['fence'], tossed: 1 }), 6); assert.equal(L.tossPrice({ charms: [], fix: ['backdoor'] }), 3);
   assert.equal(L.drinkMax({ charms: ['barback'], fix: ['icebox'] }), 4); assert.equal(L.playEvery({ charms: ['practice'] }), 3);
-  assert.equal(L.CHARMS.glassjaw.hp, -15); assert.equal(L.CHARMS.liver.hp, 12);
+  assert.equal(L.CHARMS.glassjaw.hp, -10); assert.equal(L.CHARMS.liver.hp, 12);
 });
 test('New tricks, drinks, finishes, deeds, fixtures and Plays', () => {
   assert.equal(L.effVal(3, { odd: true }), 4);                                                       // Odd Job

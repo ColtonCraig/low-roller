@@ -172,7 +172,7 @@ function shop(G,act,floor,smart){
 
 // "good": reads the charms like a decent human (fixed priorities), plays the dice well
 const VAL={flask:4,bulldog:5,haymaker:7,mimic:8,thumb:5,echo:6,doubletake:4,sleight:8,bump:5,bodyguard:6,opener:5,packed:5,stack:6,allin:3,glassblower:3,nearmiss:5,blood:6,threes:3,regular:6,heckler:6,doubledown:8,tally:6,jewels:6,slowburn:6,cut:4,bouncer:6,thick:4,tip:2,goldcrown:2,hothand:3,liver:3,cigar:3,penny:9,spoon:5,lastcall:7,jacks:6,snake:5,patience:4,barfly:5,rabbit:4,closer:7,kingpin:9,lowball:8,highstakes:8,bookie:4,collection:5,consolation:2,savings:3,shiner:4,evens:3,deuces:6,piggy:7,tommy:6,jackpot:5,longshot:5,finisher:7,moonshine:9,crownroom:7,straight:7,ringer:9,bigshot:9,
-  twostep:3,oddball:5,aces:3,bigbank:4,eightball:3,purist:5,bully:5,firstblood:5,fullstomach:4,welldrinks:4,deepbreath:5,doorman:5,barback:2,fence:2,lonewolf:3,marathon:4,quickdraw:5,rainbow:5,highroad:3,zero:2,coronation:4,evensteven:4,broke:4,brickwall:3,happyhour:3,topshelf:4,showman:6,closingtime:5,giantkiller:6,comeback:5,adrenaline:5,pokerface:5,nightcap:3,wheel:6,heavyweight:4,sevens:4,sweep:3,snakepit:7,sixgun:5,regicide:7,midas:7,glassjaw:8,travellight:6,lonestar:6,practice:6};
+  twostep:3,oddball:5,aces:3,bigbank:4,eightball:3,purist:5,bully:5,firstblood:5,fullstomach:4,welldrinks:4,deepbreath:5,doorman:5,barback:2,fence:2,lonewolf:3,marathon:4,quickdraw:5,rainbow:5,highroad:3,zero:2,coronation:4,evensteven:4,broke:4,brickwall:3,happyhour:3,topshelf:4,showman:6,closingtime:5,giantkiller:6,comeback:5,adrenaline:5,pokerface:5,nightcap:3,wheel:6,heavyweight:4,sevens:4,sweep:3,snakepit:7,sixgun:5,regicide:7,midas:7,glassjaw:5,travellight:6,lonestar:6,practice:6};
 const DVAL={lead:-6,gilded:0,bomb:1,goose:1,boxcar:2,d8:-3,d6:0,pebble:2,glass:2,gamble:-1,ember:1,twin:1,loaded:3,devil:3,coin:4,shaved:6,royal:2,deuce:1,payday:1,trick:0,bubbly:3,viper:4,tin:2,sandbag:0,rust:0,seven:1,ivory:4,coronet:3,mercury:1,jade:1,iron:2,saint:1,slot:-2,magnet:1,nickel:3,chip:0,blank:0,potato:4,anvil:-1,onyx:5,rattler:5,moon:2,dynamite:3};
 const worstOf=G=>G.charms.filter(x=>!L.offbook(G,x)).reduce((m,x)=>VAL[x]<VAL[m]?x:m);
 const wantC=(G,c)=>!G.charms.includes(c)&&(L.slotsUsed(G)<L.charmSlots(G)||VAL[c]>VAL[worstOf(G)]+1);
@@ -188,7 +188,20 @@ function shopGood(G,act){ const up=LM.price; const tst=L.hasFix(G,'taste'), stoc
   stock.filter(s=>s.t).forEach(s=>{ if(G.gold>=s.price&&DVAL[s.t]>=3){ G.gold-=s.price; G.bag.push({type:s.t}); } });
   const gl=G.bag.filter(L.canGild).sort((a,b)=>DVAL[b.type]-DVAL[a.type]); if(G.gold>=G.gildPrice+up+3&&gl.length){ G.gold-=G.gildPrice+up; G.gildPrice+=4; L.gildDie(gl[0]); }
   const fl=G.bag.filter(L.canFile).sort((a,b)=>DVAL[b.type]-DVAL[a.type]); if(G.gold>=G.filePrice+up+3&&fl.length){ G.gold-=G.filePrice+up; G.filePrice+=2; L.fileDie(fl[0]); } }
-function event(G,act){ const e=L.rnd(14);
+function event(G,act){ const e=L.rnd(26), keen=SKILL==='good'||SKILL==='pro';
+  // the newer strangers (game: EVENTS, "more strangers")
+  if(e===14){ const un=G.bag.filter(d=>!d.fin); if(G.gold>=6+8&&un.length){ G.gold-=6; L.pick(un).fin=L.pick(L.FIN_KEYS); } }
+  if(e===15){ G.drinks=G.drinks||[]; if(G.drinks.length<L.drinkMax(G)&&G.hp>G.maxHp*.6) G.drinks.push(L.pick(L.DRINK_KEYS.filter(x=>x!=='sidecar'))); else G.hp=Math.min(G.maxHp,G.hp+7); }
+  if(e===16){ if(G.hp<G.maxHp*.5&&G.gold>=4){ G.gold-=4; G.hp=Math.min(G.maxHp,G.hp+8); } else { const k=L.pick(L.PLAY_KEYS); G.plays=G.plays||{}; G.plays[k]=(G.plays[k]||0)+1; } }
+  if(e===17){ if(!keen&&G.maxHp>20&&Math.random()<.5){ G.gold+=25; G.maxHp-=8; G.hp=Math.min(G.hp,G.maxHp); } }
+  if(e===18){ const d=G.bag.find(x=>x.type==='d8')||(keen?null:G.bag.find(x=>x.type==='d6')); if(d&&G.gold>=5){ G.gold-=5; d.type=L.pick(L.SHOP_DICE.filter(x=>DT[x].tier==='u')); delete d.f; d.cracks=0; } }
+  if(e===19){ if(G.hp>G.maxHp*.6){ if(Math.random()<.5) G.gold+=10; else { G.hp-=6; G.gold=Math.max(0,G.gold-6); } } else G.gold=Math.max(0,G.gold-6); }
+  if(e===20){ if(G.hp>G.maxHp*.5){ G.hp-=4; G.gold+=12; } else if(G.gold>=20&&!keen){ G.gold-=10; if(Math.random()<1/3) G.gold+=32; } }
+  if(e===21){ if(G.hp<G.maxHp*.6&&G.gold>=8){ G.gold-=8; G.hp=Math.min(G.maxHp,G.hp+16); } else { G.maxHp+=3; G.hp+=3; } }
+  if(e===22){ /* the Collector: bots keep their charms */ }
+  if(e===23){ const un=L.FIX_KEYS.filter(k=>!L.hasFix(G,k)); if(G.gold>=12+6&&un.length){ G.gold-=12; const f=L.pick(un); (G.fix=G.fix||[]).push(f); if(f==='rope'){ G.maxHp+=8; G.hp=Math.min(G.maxHp,G.hp+8); } } }
+  if(e===24){ const un=G.bag.filter(d=>!d.fin); if(G.gold>=5+6&&un.length){ G.gold-=5; L.pick(un).fin='blessed'; G.hp=Math.min(G.maxHp,G.hp+5); } else if(G.hp>G.maxHp*.7){ G.gold+=7; G.hp-=3; } }
+  if(e===25){ if(G.bag.filter(d=>d.type==='d6'&&!d.fin&&!d.f).length>=2&&G.bag.length>6){ for(let k=0;k<2;k++) G.bag.splice(G.bag.findIndex(d=>d.type==='d6'&&!d.fin&&!d.f),1); G.bag.push({type:L.pick(L.SHOP_DICE.filter(x=>DT[x].tier==='r'))}); } }
   if(e===9){ const fl=G.bag.filter(L.canFile); if(G.gold>=7&&fl.length){ G.gold-=7; L.fileDie(fl.sort((a,b)=>(DVAL[a.type]||0)-(DVAL[b.type]||0))[0]); } }
   if(e===10){ const pool=poolT(G,'u'); if(G.hp>G.maxHp*.5&&L.slotsUsed(G)<L.charmSlots(G)&&pool.length){ G.hp-=8; applyCharm(G,SKILL==='good'?pool.sort((a,b)=>VAL[b]-VAL[a])[0]:L.pick(pool)); } else G.hp=Math.min(G.maxHp,G.hp+8); }
   if(e===11){ if(G.gold>=9){ G.gold-=9; G.bag.push(...L.shopDice(act,2).map(type=>({type}))); } else G.gold+=6; }

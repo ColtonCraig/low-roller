@@ -220,7 +220,7 @@ Toss the bad ones at the bar, file their high faces down, or crown them. Full li
 |---|---|---|---|---|
 | The Rusty Nail | Big Sal | The owner. Beat her and the Nail is yours. | Once she’s at half nerve, she slams the table on your first throw each round: your two best dice get rerolled. | No more smiles: Sal adds Haze and plays tight |
 | The Rusty Nail | Mama Rosa | Runs the kitchen. Every round she wins, she heals what she took. | Every round she wins, she heals what she hit you for. | Second helpings: Rosa adds Hot Streak |
-| The Rusty Nail | Fast Eddie | Runs the numbers out back. You draw one die fewer at his table. | You draw one die fewer every round, and he has Hot Streak. At half nerve he adds Short Fuse. | Clock’s ticking: Eddie adds Short Fuse and plays tight |
+| The Rusty Nail | Fast Eddie | Runs the numbers out back. You draw one die fewer at his table. | You draw one die fewer every round, and he has Hot Streak. At half nerve he adds Short Fuse and House Edge. | Clock’s ticking: Eddie adds Short Fuse and House Edge, and plays tight |
 | The Velvet Room | The Countess | She runs the room upstairs. Every round she swaps one of your dice for an Octo. | Swaps one of your dice for an Octo every round (two at half nerve). | The gloves come off: Two swaps a round, and House Edge |
 | The Velvet Room | Zambini | A stage magician. One of your dice lands face-down every throw. | One of your dice lands face-down every throw. Two at half nerve. | For my next trick: Two dice hidden, and Copycat |
 | The Velvet Room | The Maestro | Leads the house band. You never see his next move, and your last bank scores 1 more. | You can’t see his next move, and your final bank each round scores 1 more. At half nerve he adds Odd Job. | Crescendo: The Maestro adds Odd Job |
@@ -383,7 +383,7 @@ Beat the house to raise the **limit**. Each one stacks on every limit below it.
 | Big Shot | Rare | $16 | You get ×1.2 odds per charm you hold (this one too). |
 | Clean Sweep | Rare | $16 | Finish a round on 0 or less: you get ×4 odds. |
 | Double Down | Rare | $16 | Won your last round at this table: you get ×3 odds. |
-| Glass Jaw | Rare | $15 | You get ×2.5 odds. −15 max nerve. |
+| Glass Jaw | Rare | $15 | You get ×2.5 odds. −10 max nerve. |
 | Haymaker | Rare | $15 | You sit down at every table with 4 Guard. Win a round: you win it by 1 more per Guard you have. |
 | Heavyweight | Rare | $15 | Win a round while finishing on 10 or more: you get ×3 odds. |
 | High Stakes | Rare | $15 | You get ×2 odds, but rounds you lose hit you 1 harder. |
