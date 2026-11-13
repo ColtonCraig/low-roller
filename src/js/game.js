@@ -1612,7 +1612,7 @@ async function endRound(){
   { const pay=(F.R&&F.R.payday||0)+afterRound(G,r.winner,!!r.free); updTop(); if(pay) addGold(pay,$('#cash')); if(r.winner==='them'&&!r.free) fire('consolation','+$2'); if(r.winner==='them'&&has('piggy')&&!r.free) refreshRack(); }
   if(r.winner==='you'){ G.stats.won++; G.stats.dealt+=r.dmg; if(r.dmg>G.stats.best){ G.stats.best=r.dmg; G.stats.bestWho=F.opp.n; }
     await payOut(r);
-    const gd=gateDmg(F.opp,F.oppHp,F.oppMax,F.phase2,r.dmg), hpB=F.oppHp; if(gd<r.dmg){ F.gated=true; setTimeout(()=>toast(`<b class="r">${F.opp.n}</b> isn\u2019t going down in one round.`),300); }
+    const gd=gateDmg(F.opp,F.oppHp,F.oppMax,F.phase2,r.dmg), hpB=F.oppHp; if(gd<r.dmg){ F.gated=true; setTimeout(()=>toast(`<b class="r">Still Standing.</b> ${F.opp.n} isn\u2019t going down in one round.`),300); }
     else if(r.dmg>=hpB){ const ok=overkillPay(r.dmg,hpB); if(ok) setTimeout(()=>{ addGold(ok,$('#cash')); toast(`<b class="g">Overkill.</b> +$${ok} for showing off.`); },700); }
     F.oppHp-=gd; G.stats.dealt+=gd-r.dmg;
     updOpp(); floatEl($('#obar'),'−'+gd,'dmg'+(gd>=F.oppMax*.5?' big':'')); shake(Math.min(.4,.1+.3*r.dmg/F.oppMax)); foeRecoil();
@@ -2159,7 +2159,7 @@ function menuPage(tab){
     <li data-i="4"><span>Banked dice add up. Lowest total wins the round. A <span class="kw crown">\u265B</span> crown counts for nothing.</span></li>
     <li data-i="5"><span>Win and you hit for the gap <b>\u00d7 your odds</b>. Your odds start at 1. Charms, finishes and drinks add to them (+) or multiply them (\u00d7). Every boss you beat adds +1 for good.</span></li>
     <li data-i="6"><span>Lose and they hit you for the gap \u00d7 <i>their</i> odds, which climb every act.</span></li>
-    <li data-i="7"><span>Their nameplate shows what they’re up to this round and next (Leaning in, Sweating, On tilt…). Bosses can’t lose more than half their nerve in one round.</span></li>
+    <li data-i="7"><span>Their nameplate shows what they’re up to this round and next (Leaning in, Sweating, On tilt…). Hit hard enough and any owner goes down in one round (except The House).</span></li>
     <li data-i="8"><span><b>Guard</b> soaks hits before your nerve and stays between rounds at a table. Hit for more than they had left and the overkill pays $1 per 10.</span></li>
     <li data-i="9"><span><b>Plays</b>: two 1s at once, three of a kind, a 1-2-3, three crowns, four dice at once and more (tap <b>Plays</b> up top for all eight). Each adds its level to your winning margin, plus odds. Every 4th time you make one, it levels up.</span></li>
     <li data-i="10"><span>Read their tags. Bosses and the sharks upstairs draw a random house rule each night that works against your build.</span></li>

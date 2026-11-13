@@ -104,8 +104,8 @@ Their **nameplate** (top right) has everything, top to bottom:
 | Getting tired | Their score counts 2 higher. |
 | On tilt | Win the round: you get ×2 odds. |
 
-**Bosses** have a signature move printed on their door, and get worse at half nerve. **No boss loses more than half their
-nerve in one round**, so you always see their second half. One **burning door** per room is a high-stakes shark: 40% more
+**Bosses** have a signature move printed on their door, and get worse at half nerve. **A big enough hit takes any owner down in
+one round**, second half and all. The one exception is The House, who is *Still Standing*: the first hit stops at half his nerve. One **burning door** per room is a high-stakes shark: 40% more
 nerve, hits 1 harder, pays a rare charm.
 
 ## The floor plan
@@ -224,7 +224,7 @@ Toss the bad ones at the bar, file their high faces down, or crown them. Full li
 | The Velvet Room | The Countess | She runs the room upstairs. Every round she swaps one of your dice for an Octo. | Swaps one of your dice for an Octo every round (two at half nerve). | The gloves come off: Two swaps a round, and House Edge |
 | The Velvet Room | Zambini | A stage magician. One of your dice lands face-down every throw. | One of your dice lands face-down every throw. Two at half nerve. | For my next trick: Two dice hidden, and Copycat |
 | The Velvet Room | The Maestro | Leads the house band. You never see his next move, and your last bank scores 1 more. | You can’t see his next move, and your final bank each round scores 1 more. At half nerve he adds Odd Job. | Crescendo: The Maestro adds Odd Job |
-| The Back Room | The House | Nobody’s seen his face. Ties go to the house. | Every tie goes to the opponent and hits you for 2. | The house always wins: Haze, and he plays tight |
+| The Back Room | The House | Nobody’s seen his face. Ties go to the house, and he can’t be finished in one round. | Every tie goes to the opponent and hits you for 2. | The house always wins: Haze, and he plays tight |
 | The Back Room | The Chief | Every third round is a raid: your odds drop to 1. | Every third round is a raid and your odds drop to 1. Every other round at half nerve. | Up against the wall: Raids every other round, and Sharp |
 | The Back Room | The Banker | Owns the paper on the whole block. Crowns cost you, and small wins barely count. | Every crown costs you $1, and rounds you win by 2 or less hit half as hard. At half nerve he adds Loudmouth. | Calling it in: The Banker adds Loudmouth |
 
@@ -248,7 +248,7 @@ Beat the house to raise the **limit**. Each one stacks on every limit below it.
 | # | Limit | Adds |
 |---|---|---|
 |  | Penny Ante | House rules. Nothing extra. |
-| 1 | Nickel | Everyone you face has 10% more nerve. |
+| 1 | Nickel | Everyone you face has 16% more nerve. |
 | 2 | Dime | Bosses bring an extra quirk. |
 | 3 | Quarter | Everything at the bar costs $1 more. |
 | 4 | Half Dollar | You walk in with 5 less nerve. |
@@ -257,7 +257,7 @@ Beat the house to raise the **limit**. Each one stacks on every limit below it.
 | 7 | Lead Slug | One of your House Dice is a cursed Lead Die: 1 1 2 3 4 5, never a crown. It can’t be tossed. |
 | 8 | Gold Eagle | Sharks bring an extra quirk too. No breather on the stairs. |
 | 9 | Last Orders | The bar shelf holds one charm less, and restocks cost double. |
-| 10 | The Big Board | Everyone has 12% more nerve. Tables pay $2 less. |
+| 10 | The Big Board | Everyone has 20% more nerve. Tables pay $2 less. |
 | 11 | Double Down | Beat the last owner and the other one sits down right after, at three-quarter nerve. No breather. |
 
 **Pockets** are who you walk in as. Beating owners unlocks more.
@@ -474,6 +474,7 @@ Beat the house to raise the **limit**. Each one stacks on every limit below it.
 | Two Heads | Both twins throw. The opponent keeps the lower total. |
 | Loudmouth | Your odds count 2 lower (never under 1). |
 | No Royals | Your crowns score 1 instead of 0. |
+| Still Standing | He can’t be finished in one round: the first hit that would take him under half his nerve stops at half. |
 | Crown Tax | Every crown you bank costs you $1, paid when the round ends. |
 | Stone Face | You can’t see what they’re up to next round. |
 | Short Table | You draw one die fewer every round. |

@@ -107,8 +107,8 @@ Their **nameplate** (top right) has everything, top to bottom:
 - **House rules (counters)**: bosses and sharks draw one at random each night, built to punish one kind of build.
 
 ${table(['Intent', 'What it does'], Object.values(L.INTENTS).map((i) => [i.name, i.short]))}
-**Bosses** have a signature move printed on their door, and get worse at half nerve. **No boss loses more than half their
-nerve in one round**, so you always see their second half. One **burning door** per room is a high-stakes shark: 40% more
+**Bosses** have a signature move printed on their door, and get worse at half nerve. **A big enough hit takes any owner down in
+one round**, second half and all. The one exception is The House, who is *Still Standing*: the first hit stops at half his nerve. One **burning door** per room is a high-stakes shark: 40% more
 nerve, hits 1 harder, pays a rare charm.
 
 ## The floor plan

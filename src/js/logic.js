@@ -217,6 +217,7 @@ const QUIRKS={
   snakebit:{name:'Snakebit',    desc:'Your first throw each round: your 1s score 2.'},
   thorns:{name:'Brass Knuckles',desc:'Every round you win, a tenth of the damage comes back at you (1 to 5).'},
   // ---- a rougher crowd ----
+  standing:{name:'Still Standing',desc:'He can’t be finished in one round: the first hit that would take him under half his nerve stops at half.'},
   threes4:{name:'Odd Job',      desc:'Your 3s score 4.'},
   lastword:{name:'Last Word',   desc:'Your final bank each round scores 1 more.'},
   crowntax:{name:'Crown Tax',   desc:'Every crown you bank costs you $1, paid when the round ends.'},
@@ -270,9 +271,9 @@ const ACTS=[
   e1:[{n:'Lady Chance',  s:'Wears your luck as a necklace.',hp:26, bag:['pebble','pebble','loaded','loaded','d6','d6'], t:1, q:['steal','haze','hot'], look:{coat:0x1a0a20,hat:'cloche',hatc:0x6a1a5a,eye:0xff9ad0,scale:1.1}}],
   e2:[{n:'The Doubles',s:'Back for your wallet.',     hp:24, bag:['loaded','loaded','pebble','pebble','d6','glass'], t:1, q:['pair','steal'], look:{coat:0x1e3a36,hat:'bowler',eye:0x9ff5d3,scale:1.15}}],
   boss:{n:'The Countess', s:'Holds court upstairs', hp:42, bag:['loaded','loaded','loaded','pebble','d6','glass'], t:1, q:[], boss:true, sig:'gift', look:{coat:0x2a0a1a,hat:'cloche',hatc:0x12040c,eye:0xd8a8ff,scale:1.3,tie:0xc9a14a}}}},
- {name:'The Back Room', boss:'The House', short:'The House', bossD:'Nobody’s seen his face. Ties go to the house.', est:'NO EXIT',
+ {name:'The Back Room', boss:'The House', short:'The House', bossD:'Nobody’s seen his face. Ties go to the house, and he can’t be finished in one round.', est:'NO EXIT',
   theme:{felt:'#466260',trim:'#a8a288',wall:'#2e302c',pat:'#3a3c36',style:'brick',lamp:0xd8ffe4,neon:'NO EXIT',neonC:'#ff2a2a',neonT:'#ffb0a0'},
-  half:{add:['haze'],t:1,big:'The house always wins',small:'Haze, and he plays tight',note:'Every tie goes to him and costs you 2. At half nerve he adds Haze and plays tight.'},
+  half:{add:['haze'],t:1,big:'The house always wins',small:'Haze, and he plays tight',note:'Every tie goes to him and costs you 2, and one hit can’t take him past half his nerve. At half nerve he adds Haze and plays tight.'},
   foes:{
   t1:[
     {n:'Specs',s:'Counts your breaths.',      hp:24, bag:['loaded','loaded','pebble','coin','d6','d6'], t:1, q:['edge','grudge'], look:{coat:0x2a2a2a,hat:'bowler',eye:0xfff1c0,mustache:true}},
@@ -284,7 +285,7 @@ const ACTS=[
     {n:'Bruno',        s:'Doesn’t play. Collects.',hp:30, bag:['loaded','loaded','loaded','pebble','coin','d6'], t:1, q:['edge','heavy'], look:{coat:0x2a1a10,hat:'cap',eye:0xff5470,scale:1.2}}],
   e1:[{n:'The Enforcer', s:'Cracks his knuckles between throws.',hp:34, bag:['loaded','loaded','loaded','pebble','shaved','coin'], t:1, q:['fuse','steal','heavy'], look:{coat:0x1a1410,hat:'cap',eye:0xff2a2a,scale:1.25}}],
   e2:[{n:'The Ledger',   s:'Nobody leaves owing.',        hp:38, bag:['loaded','loaded','loaded','pebble','pebble','shaved'], t:1, q:['edge','haze'], look:{coat:0x202024,hat:'bowler',eye:0xfff1c0,scale:1.15}}],
-  boss:{n:'The House', s:'Always wins. Usually.', hp:56, bag:['shaved','shaved','coin','loaded','pebble','pebble'], t:1, q:['tax'], boss:true, sig:'house', look:{coat:0x101014,hat:'fedora',band:0xc9a14a,eye:0xffffff,scale:1.4,cigar:true,tie:0x7a1424}}}},
+  boss:{n:'The House', s:'Always wins. Usually.', hp:50, bag:['shaved','shaved','coin','loaded','pebble','pebble'], t:1, q:['tax','standing'], boss:true, sig:'house', look:{coat:0x101014,hat:'fedora',band:0xc9a14a,eye:0xffffff,scale:1.4,cigar:true,tie:0x7a1424}}}},
 ];
 // ---- more faces at every table: extra regulars and sharks, and a second boss for each room ----
 const MORE=[
@@ -364,7 +365,7 @@ function bossOf(act,i){ return ACTS[act].foes.bosses[i||0]; }
 // ---- Limits: raise the limit, the house raises the stakes. Each one stacks on the last. ----
 const LIMITS=[
  {n:'Penny Ante',   d:'House rules. Nothing extra.'},
- {n:'Nickel',       d:'Everyone you face has 10% more nerve.'},
+ {n:'Nickel',       d:'Everyone you face has 16% more nerve.'},
  {n:'Dime',         d:'Bosses bring an extra quirk.'},
  {n:'Quarter',      d:'Everything at the bar costs $1 more.'},
  {n:'Half Dollar',  d:'You walk in with 5 less nerve.'},
@@ -373,9 +374,9 @@ const LIMITS=[
  {n:'Lead Slug',    d:'One of your House Dice is a cursed Lead Die: 1 1 2 3 4 5, never a crown. It can’t be tossed.'},
  {n:'Gold Eagle',   d:'Sharks bring an extra quirk too. No breather on the stairs.'},
  {n:'Last Orders',  d:'The bar shelf holds one charm less, and restocks cost double.'},
- {n:'The Big Board',d:'Everyone has 12% more nerve. Tables pay $2 less.'},
+ {n:'The Big Board',d:'Everyone has 20% more nerve. Tables pay $2 less.'},
  {n:'Double Down',  d:'Beat the last owner and the other one sits down right after, at three-quarter nerve. No breather.'}];
-function limitMods(lv){ lv=lv||0; return {hp:lv>=10?1.12:lv>=1?1.1:1, extraQ:lv>=2, price:lv>=3?1:0, startHp:lv>=4?-5:0, odds:lv>=5?1:0, hideE:lv>=6, lead:lv>=7, extraQE:lv>=8, stairs:lv>=8?0:.5, rest:.4, lastOrders:lv>=9, pay:lv>=10?-2:0, double:lv>=11}; }
+function limitMods(lv){ lv=lv||0; return {hp:lv>=10?1.2:lv>=1?1.16:1, extraQ:lv>=2, price:lv>=3?1:0, startHp:lv>=4?-5:0, odds:lv>=5?1:0, hideE:lv>=6, lead:lv>=7, extraQE:lv>=8, stairs:lv>=8?0:.5, rest:.4, lastOrders:lv>=9, pay:lv>=10?-2:0, double:lv>=11}; }
 // old saves numbered the ladder 0-7; this maps an old limit to the same rung on the new 0-11 ladder
 const LIMIT_V1=[0,1,2,3,4,5,8,10], LIMIT_V2=[0,1,2,3,4,7,5,6,8,9,10,11]; // v1 (8 rungs) and v2 (Lead Slug was 5) to today's ladder
 // ---- Deeds: beat an owner and you can take the deed to one of their rackets. Each is strong and costs you something.
@@ -451,7 +452,7 @@ const HAND=6;
 // ---- scaling: each act is a new tier, like a new ante. HP grows geometrically, their odds climb. ----
 // nerve at the top of each act for a regular / shark / boss. Regulars and sharks ramp up floor by floor.
 // sharks and bosses carry a random counter (rulesFor), so they run lighter on nerve than they used to
-const ACT_HP=[{F:21,E:38,B:44},{F:186,E:196,B:214},{F:1090,E:1020,B:1210}];
+const ACT_HP=[{F:21,E:38,B:108},{F:186,E:196,B:620},{F:1090,E:1020,B:3300}];
 const ACT_ODDS=[1,2,2];           // how hard their wins hit you
 const ENDLESS_GROW=2;              // endless: every room past Act III doubles nerve (and adds +1 to their odds)
 function rnd(n){return Math.floor(Math.random()*n)}
@@ -472,7 +473,7 @@ function oppHP(def,kind,act,floor,lap,easy){ const w=def.hp/tierRef(act,kind), b
 function makeOpp(def,kind,act,floor,lap,easy,lv,hpMul){ let bag=def.bag.slice(); for(let k=0;k<lap;k++){const i=bag.findIndex(b=>b==='d6'||b==='d8'); if(i>=0) bag[i]=k%2?'pebble':'loaded';}
   const LM=limitMods(lv), q=(def.q||[]).slice(); if((LM.extraQ&&kind==='B')||(LM.extraQE&&kind==='E')){ const ex=EXTRA_Q.filter(x=>!q.includes(x)); if(ex.length) q.push(pick(ex)); }
   q.push(...rulesFor(kind,act,lap||0,q));
-  return {...def, hp:Math.round(oppHP(def,kind,act,floor,lap,easy)*LM.hp*(hpMul||1)), odds:(lap?ACT_ODDS[2]+3*lap+act-2:ACT_ODDS[act])+(kind==='B'&&q.indexOf('ironjaw')<0?1:0)+(kind==='E'?1:0)+(kind==='F'&&floor>=3?1:0)+((act>=2||lap)&&kind==='B'?LM.odds:0), bag, q}; }
+  return {...def, hp:Math.round(oppHP(def,kind,act,floor,lap,easy)*LM.hp*(hpMul||1)), odds:(lap?ACT_ODDS[2]+3*lap+act-2:ACT_ODDS[act])+(kind==='B'?(q.indexOf('ironjaw')<0?2:1):0)+(kind==='E'?1:0)+(kind==='F'&&floor>=3?1:0)+((act>=2||lap)&&kind==='B'?LM.odds:0), bag, q}; }
 // ---- a round's running record; everything that pays is computed from this ----
 function newRound(){ return {cash:0,heal:0,guard:0,twos:0,hi:0,sixes:0,low0:0,odd:0,solo:0,first1:0,house:0,oct:0,kinds:{},crowns:0,gilt:0,ember:0,roller:0,ones:0,threes:0,glass:0,gold:0,bomb:0,snake:false,singles:true,throws:0,evens:0,trips:false,lastBank:0,bubbly:0,viper:0,cnt:{}}; }
 function bankVals(faces,ctx,charms,final,fins,rack){ let v=faces.map((f,i)=>finVal(effVal(f,ctx),fins&&fins[i]));
@@ -582,7 +583,8 @@ function theirOdds(opp,env){ const q=opp.q||[]; let o=(env&&env.drink&&env.drink
 // Bump the Table: their lowest banked die gets thrown again. Returns which die and how their total moves.
 function bumpLowest(sim,bag){ let best=null; sim.throws.forEach(th=>th.kept.forEach(i=>{ const f=th.faces[th.left.indexOf(i)], v=effVal(f); if(!best||v<best.v) best={i,f,v}; })); if(!best) return null; const nf=rollFace(bag[best.i]); return {i:best.i,old:best.f,face:nf,delta:effVal(nf)-best.v}; }
 // ---- Bosses always reach their second half: no single round takes them past the halfway mark.
-function gateDmg(opp,hp,max,phase2,dmg){ if(!opp.boss||phase2) return dmg; const half=Math.floor(max/2); return hp>half&&hp-dmg<half?hp-half:dmg; }
+// Still Standing (The House only): the first big hit stops at half his nerve. Every other owner can go down in one round.
+function gateDmg(opp,hp,max,phase2,dmg){ if(!(opp.q||[]).includes('standing')||phase2) return dmg; const half=Math.floor(max/2); return hp>half&&hp-dmg<half?hp-half:dmg; }
 // ---- Toss a die: starts at $6 and costs $3 more each time this run.
 const tossPrice=G=>Math.max(2,6+3*(G.tossed||0)-(hasFix(G,'backdoor')?3:0)-(G.charms&&G.charms.includes('fence')?3:0));
 // ---- Chits: earned by beating a shark in 2 rounds or less, or by walking past a table. Spent on their own when they apply.

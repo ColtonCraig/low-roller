@@ -320,8 +320,11 @@ test('Intents: Leaning in +1 to their Hits, Sweating halves them, Getting tired 
   assert.ok(!L.INTENTS.raise);
 });
 test('Bosses always reach their second half; toss price climbs $3', () => {
-  assert.equal(L.gateDmg({ boss: true }, 100, 100, false, 80), 50); assert.equal(L.gateDmg({ boss: true }, 100, 100, true, 80), 80);
-  assert.equal(L.gateDmg({}, 100, 100, false, 80), 80); assert.equal(L.gateDmg({ boss: true }, 60, 100, false, 5), 5);
+  // only The House (Still Standing) stops at half; every other owner can be finished in one round
+  const H = { boss: true, q: ['standing'] };
+  assert.equal(L.gateDmg(H, 100, 100, false, 80), 50); assert.equal(L.gateDmg(H, 100, 100, true, 80), 80); assert.equal(L.gateDmg(H, 60, 100, false, 5), 5);
+  assert.equal(L.gateDmg({ boss: true, q: [] }, 100, 100, false, 500), 500); assert.equal(L.gateDmg({}, 100, 100, false, 80), 80);
+  assert.ok(L.ACTS.flatMap(a => a.foes.bosses).filter(b => b.q.includes('standing')).length === 1);
   assert.equal(L.tossPrice({}), 6); assert.equal(L.tossPrice({ tossed: 2 }), 12);
 });
 test('Deeds: Still +1 slot and +$2 prices; Brass caps a loss at 12; Deep Pockets draws 7 and hits 2 harder; Black Book makes Plays x1.5; Bad Rep +3 odds', () => {
